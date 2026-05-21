@@ -37,8 +37,8 @@ export default function AdminUsersPage() {
 
 	return (
 		<div>
-			<h1 className='text-3xl font-bold text-gray-900 mb-8'>Users Management</h1>
-			<div className='bg-white rounded-2xl border border-gray-100 overflow-hidden'>
+			<h1 className='text-3xl font-bold text-foreground mb-8'>Users Management</h1>
+			<div className='bg-card rounded-2xl border border-border overflow-hidden'>
 				{isLoading ? (
 					<div className='p-6 space-y-4'>
 						<Skeleton className='w-full h-12' />
@@ -49,20 +49,20 @@ export default function AdminUsersPage() {
 					<div className='overflow-x-auto'>
 						<table className='w-full'>
 							<thead>
-								<tr className='border-b border-gray-100'>
-									<th className='text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider'>Họ tên</th>
-									<th className='text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider'>Email</th>
-									<th className='text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider'>Vai trò</th>
-									<th className='text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider'>Xác thực</th>
-									<th className='text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider'>Trạng thái</th>
-									<th className='text-center px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider'>Thao tác</th>
+								<tr className='border-b border-border'>
+									<th className='text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Họ tên</th>
+									<th className='text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Email</th>
+									<th className='text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Vai trò</th>
+									<th className='text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Xác thực</th>
+									<th className='text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Trạng thái</th>
+									<th className='text-center px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Thao tác</th>
 								</tr>
 							</thead>
 							<tbody>
 								{users?.map((user: any) => (
-									<tr key={user.id} className='border-b border-gray-50 hover:bg-gray-50/50 transition-colors'>
-										<td className='px-6 py-4 font-medium text-sm text-gray-900'>{user.fullName}</td>
-										<td className='px-6 py-4 text-sm text-gray-600'>{user.email}</td>
+									<tr key={user.id} className='border-b border-border hover:bg-secondary/50 transition-colors'>
+										<td className='px-6 py-4 font-medium text-sm text-foreground'>{user.fullName}</td>
+										<td className='px-6 py-4 text-sm text-muted-foreground'>{user.email}</td>
 										<td className='px-6 py-4'>
 											<span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
 												user.role === 'ADMIN' ? 'bg-purple-100 text-purple-700' :
@@ -79,7 +79,7 @@ export default function AdminUsersPage() {
 													Đã xác thực
 												</span>
 											) : (
-												<span className='text-gray-400 text-sm'>Chưa xác thực</span>
+												<span className='text-muted-foreground text-sm'>Chưa xác thực</span>
 											)}
 										</td>
 										<td className='px-6 py-4'>

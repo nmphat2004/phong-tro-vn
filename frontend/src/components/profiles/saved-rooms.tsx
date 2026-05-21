@@ -41,7 +41,7 @@ const SavedRooms = () => {
 							<Button
 								onClick={() => removeSavedRoom(room.id)}
 								disabled={isRemoving}
-								className='absolute top-3 right-3 z-10 w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center hover:scale-110 transition-transform'>
+								className='absolute top-3 right-3 z-10 w-8 h-8 bg-card rounded-full shadow-md flex items-center justify-center hover:scale-110 transition-transform'>
 								<Heart className='text-red-500 fill-red-500' size={18} />
 							</Button>
 							<RoomCard room={room} />

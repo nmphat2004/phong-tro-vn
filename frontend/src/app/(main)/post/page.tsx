@@ -110,7 +110,7 @@ const SortableImageItem = ({
 			<div className='absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2'>
 				<button
 					type='button'
-					className='p-2 bg-white rounded-full hover:scale-110 transition-transform cursor-grab active:cursor-grabbing'
+					className='p-2 bg-card rounded-full hover:scale-110 transition-transform cursor-grab active:cursor-grabbing'
 					{...attributes}
 					{...listeners}>
 					<GripVertical className='w-4 h-4' />
@@ -118,7 +118,7 @@ const SortableImageItem = ({
 				<button
 					type='button'
 					onClick={() => onRemove(index)}
-					className='p-2 bg-white rounded-full hover:scale-110 transition-transform'>
+					className='p-2 bg-card rounded-full hover:scale-110 transition-transform'>
 					<X className='w-4 h-4 text-destructive' />
 				</button>
 			</div>
@@ -203,6 +203,7 @@ const PostRoomPage = () => {
 		formState: { errors },
 		setValue,
 		getValues,
+		trigger,
 	} = useForm<RoomFormData>({
 		resolver: zodResolver(roomSchema) as Resolver<RoomFormData>,
 		mode: 'onBlur',
@@ -255,7 +256,7 @@ const PostRoomPage = () => {
 	const roomTypes = [
 		{ value: 'room', label: 'Phòng trọ', icon: '🏠' },
 		{ value: 'house', label: 'Nhà riêng', icon: '🏡' },
-		{ value: 'shared', label: 'Ở ghép', icon: '👥' },
+		{ value: 'shared', label: 'Ký túc xá', icon: '🏫' },
 		{ value: 'apartment', label: 'Căn hộ chung cư', icon: '🏢' },
 		{ value: 'mini', label: 'Căn hộ mini', icon: '🏘️' },
 		{ value: 'service', label: 'Căn hộ dịch vụ', icon: '🏗️' },
@@ -355,9 +356,15 @@ const PostRoomPage = () => {
 
 	const handleNextStep = async () => {
 		if (currentStep === 1) {
+			const valid = await trigger(['title', 'roomType', 'address', 'price', 'area']);
+			if (!valid) {
+				toast.error('Vui lòng điền đầy đủ thông tin bắt buộc');
+				return;
+			}
 			setCurrentStep(currentStep + 1);
 		} else if (currentStep === 2) {
-			if (!getValues('description') || getValues('description').length < 10) {
+			const valid = await trigger(['description']);
+			if (!valid) {
 				toast.error('Mô tả phải từ 10 ký tự trở lên');
 				return;
 			}
@@ -470,7 +477,7 @@ const PostRoomPage = () => {
 										</div>
 
 										{/* Feature: Paste Google Maps Link */}
-										<div className='p-4 bg-blue-50/50 border border-blue-100 rounded-xl mb-4'>
+										<div className='p-4 bg-primary/5 border border-primary/20 rounded-xl mb-4'>
 											<Label className='text-xs font-bold text-blue-700 uppercase mb-2 block'>
 												Dán link Google Maps
 											</Label>
@@ -478,7 +485,7 @@ const PostRoomPage = () => {
 												<Input
 													id='gmaps-url'
 													placeholder='Dán liên kết từ Google Maps vào đây (ví dụ: https://maps.app.goo.gl/...)'
-													className='bg-white border-blue-200 focus:border-blue-500'
+													className='bg-card border-primary/30 focus:border-primary'
 												/>
 												<Button
 													type='button'
@@ -535,24 +542,24 @@ const PostRoomPage = () => {
 												</p>
 											)}
 											{isPriceLoading && (
-												<div className='rounded-lg p-4 text-sm border bg-gray-50 border-gray-200 animate-pulse mt-3'>
-													<div className='h-4 bg-gray-200 rounded w-3/4 mb-2'></div>
-													<div className='h-3 bg-gray-200 rounded w-1/2'></div>
+												<div className='rounded-lg p-4 text-sm border bg-secondary border-border animate-pulse mt-3'>
+													<div className='h-4 bg-muted rounded w-3/4 mb-2'></div>
+													<div className='h-3 bg-muted rounded w-1/2'></div>
 												</div>
 											)}
 											{priceEstimate && !isPriceLoading && (
 												<div
 													className={`rounded-lg p-4 text-sm border mt-3 animate-in fade-in slide-in-from-top-2 duration-300 ${
 														priceEstimate.currentPriceStatus === 'fair' ?
-															'bg-green-50 border-green-200'
+															'bg-green-500/10 border-green-500/20'
 														: priceEstimate.currentPriceStatus === 'high' ?
-															'bg-orange-50 border-orange-200'
+															'bg-orange-500/10 border-orange-500/20'
 														: priceEstimate.currentPriceStatus === 'very_high' ?
-															'bg-red-50 border-red-200'
-														:	'bg-blue-50 border-blue-200'
+															'bg-red-500/10 border-red-500/20'
+														:	'bg-primary/5 border-primary/20'
 													}`}>
 													<p className='font-medium mb-1'>💡 Gợi ý định giá</p>
-													<p className='text-gray-600'>
+													<p className='text-muted-foreground'>
 														Giá thị trường khu vực:{' '}
 														<strong>
 															{new Intl.NumberFormat('vi-VN').format(
@@ -574,7 +581,7 @@ const PostRoomPage = () => {
 														{priceEstimate.suggestion}
 													</p>
 													{priceEstimate.similarRoomsCount > 0 && (
-														<p className='text-xs text-gray-400 mt-1'>
+														<p className='text-xs text-muted-foreground mt-1'>
 															Dựa trên {priceEstimate.similarRoomsCount} phòng
 															tương tự trong khu vực
 															{priceEstimate.method === 'ai' && ' + AI'}
@@ -582,11 +589,11 @@ const PostRoomPage = () => {
 														</p>
 													)}
 													{priceEstimate.aiInsight && (
-														<div className='mt-2 pt-2 border-t border-gray-200'>
+														<div className='mt-2 pt-2 border-t border-border'>
 															<p className='text-xs font-medium text-purple-700 flex items-center gap-1'>
 																<span>🤖</span> AI nhận xét:
 															</p>
-															<p className='text-xs text-gray-600 mt-0.5'>
+															<p className='text-xs text-muted-foreground mt-0.5'>
 																{priceEstimate.aiInsight}
 															</p>
 														</div>
@@ -880,7 +887,7 @@ const PostRoomPage = () => {
 										)}
 									</div>
 
-									<div className='flex items-start gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg'>
+									<div className='flex items-start gap-3 p-4 bg-primary/5 border border-primary/20 rounded-lg'>
 										<div className='text-blue-600 mt-0.5'>ℹ️</div>
 										<div className='flex-1 text-sm'>
 											<p className='mb-1'>

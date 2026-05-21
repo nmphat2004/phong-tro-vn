@@ -10,15 +10,17 @@ const MainLayout = ({ children }: PropsWithChildren) => {
 	const router = useRouter();
 	const { user } = useAuthStore();
 	const isChatPage = pathname === '/chat';
+	const isRoomDetailPage = pathname.startsWith('/rooms/') && pathname !== '/rooms';
+	const shouldRedirectAdmin = user?.role === 'ADMIN' && !isRoomDetailPage;
 
 	useEffect(() => {
-		if (user?.role === 'ADMIN') {
+		if (shouldRedirectAdmin) {
 			router.replace('/admin/dashboard');
 		}
-	}, [user, router]);
+	}, [shouldRedirectAdmin, router]);
 
-	// Trả về null nếu là Admin để không render các thành phần giao diện người dùng
-	if (user?.role === 'ADMIN') return null;
+	// Trả về null nếu là Admin để không render các thành phần giao diện người dùng (ngoại trừ trang chi tiết phòng)
+	if (shouldRedirectAdmin) return null;
 
 	return (
 		<div className='min-h-screen flex flex-col'>

@@ -87,7 +87,7 @@ const ReviewForm = ({ roomId }: Props) => {
 				placeholder='Chia sẻ trải nghiệm của bạn... (tùy chọn)'
 				value={comment}
 				onChange={(e) => setComment(e.target.value)}
-				className='mb-3 bg-white border-border'
+				className='mb-3 bg-card border-border'
 				rows={3}
 			/>
 			<Button

@@ -108,8 +108,8 @@ const LoginPage = () => {
 	if (isAuthLoading || user) return null;
 
 	return (
-		<div className='min-h-screen flex items-center justify-center bg-primary-foreground p-4'>
-			<Card className='w-full max-w-[440px] bg-white rounded-2xl shadow-lg p-8'>
+		<div className='min-h-screen flex items-center justify-center bg-background p-4'>
+			<Card className='w-full max-w-[440px] bg-card rounded-2xl shadow-lg p-8'>
 				<CardHeader className='text-center mb-5'>
 					<div className='flex items-center justify-center gap-2 font-semibold text-primary text-2xl '>
 						<Home className='w-8 h-8 text-primary text-xl rounded-lg flex items-center justify-center' />{' '}
@@ -130,7 +130,7 @@ const LoginPage = () => {
 									type='email'
 									placeholder='your@email.com'
 									{...register('email')}
-									className='w-full h-11 pl-10 pr-3 bg-input-foreground border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all'
+									className='w-full h-11 pl-10 pr-3 bg-input-background border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all'
 								/>
 							</div>
 							{errors.email && (
@@ -151,7 +151,7 @@ const LoginPage = () => {
 									type={showPassword ? 'text' : 'password'}
 									placeholder='*******'
 									{...register('password')}
-									className='w-full h-11 pl-10 pr-3 bg-input-foreground border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all'
+									className='w-full h-11 pl-10 pr-3 bg-input-background border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all'
 								/>
 
 								<Button
@@ -200,7 +200,7 @@ const LoginPage = () => {
 						type='button'
 						onClick={() => handleGoogleLogin()}
 						disabled={isLoading || isGoogleLoading}
-						className='w-full h-11 border border-border rounded-lg flex items-center justify-center gap-2 bg-white hover:bg-secondary transition-colors disabled:opacity-50'>
+						className='w-full h-11 border border-border rounded-lg flex items-center justify-center gap-2 bg-card hover:bg-secondary transition-colors disabled:opacity-50'>
 						{isGoogleLoading ?
 							<Loader2 className='animate-spin' size={18} />
 						:	<svg width='18' height='18' viewBox='0 0 18 18'>

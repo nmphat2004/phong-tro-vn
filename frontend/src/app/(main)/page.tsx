@@ -51,25 +51,25 @@ const HomePage = () => {
 			icon: Home,
 			title: 'Phòng trọ',
 			description: '10,000+ phòng',
-			color: 'bg-blue-50 text-blue-600',
+			color: 'bg-blue-500/10 text-blue-600',
 		},
 		{
 			icon: Building,
 			title: 'Nhà nguyên căn',
 			description: '2,500+ nhà',
-			color: 'bg-green-50 text-green-600',
+			color: 'bg-green-500/10 text-green-600',
 		},
 		{
 			icon: Building2,
 			title: 'Chung cư mini',
 			description: '1,200+ căn',
-			color: 'bg-purple-50 text-purple-600',
+			color: 'bg-purple-500/10 text-purple-600',
 		},
 		{
 			icon: School,
 			title: 'Ký túc xá',
 			description: 'Dành cho sinh viên',
-			color: 'bg-orange-50 text-orange-600',
+			color: 'bg-orange-500/10 text-orange-600',
 		},
 	];
 
@@ -98,13 +98,7 @@ const HomePage = () => {
 		queryFn: () => getRooms({ sortBy: 'newest', page: 1, limit: 4 }),
 	});
 
-	// Fetch top rated rooms
-	const { data: topRatedRooms, isLoading: ratingLoading } = useQuery({
-		queryKey: ['rooms', 'top-rated'],
-		queryFn: () => getRooms({ sortBy: 'rating', page: 1, limit: 4 }),
-	});
-
-	const isLoading = newestLoading || ratingLoading;
+	const isLoading = newestLoading;
 
 	return (
 		<div className='bg-background flex flex-col'>
@@ -127,16 +121,16 @@ const HomePage = () => {
 					</p>
 
 					{/* Deep Search Panel */}
-					<div className='bg-white rounded-2xl shadow-2xl p-4 md:p-6 w-full text-left'>
+					<div className='bg-card rounded-2xl shadow-2xl p-4 md:p-6 w-full text-left'>
 						<div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
 							<div className='space-y-1'>
-								<label className='text-xs font-semibold text-gray-500 uppercase flex items-center gap-1'>
+								<label className='text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1'>
 									<MapPin className='w-3 h-3' /> Khu vực
 								</label>
 								<select
 									value={searchDistrict}
 									onChange={(e) => setSearchDistrict(e.target.value)}
-									className='w-full px-3 py-2.5 outline-none rounded-lg bg-gray-50 border border-gray-200 focus:border-primary transition-colors focus:ring-1 focus:ring-primary'>
+									className='w-full px-3 py-2.5 outline-none rounded-lg bg-secondary border border-border focus:border-primary transition-colors focus:ring-1 focus:ring-primary'>
 									<option value=''>Tất cả Quận/Huyện</option>
 									{hcmDistricts.map((d) => (
 										<option key={d.name} value={d.name}>
@@ -147,13 +141,13 @@ const HomePage = () => {
 							</div>
 
 							<div className='space-y-1'>
-								<label className='text-xs font-semibold text-gray-500 uppercase flex items-center gap-1'>
+								<label className='text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1'>
 									<Home className='w-3 h-3' /> Loại phòng
 								</label>
 								<select
 									value={roomType}
 									onChange={(e) => setRoomType(e.target.value)}
-									className='w-full px-3 py-2.5 outline-none rounded-lg bg-gray-50 border border-gray-200 focus:border-primary transition-colors focus:ring-1 focus:ring-primary'>
+									className='w-full px-3 py-2.5 outline-none rounded-lg bg-secondary border border-border focus:border-primary transition-colors focus:ring-1 focus:ring-primary'>
 									<option value=''>Tất cả loại phòng</option>
 									{roomTypesList.map((type) => (
 										<option key={type.label} value={type.value}>
@@ -164,13 +158,13 @@ const HomePage = () => {
 							</div>
 
 							<div className='space-y-1'>
-								<label className='text-xs font-semibold text-gray-500 uppercase flex items-center gap-1'>
+								<label className='text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1'>
 									💲 Mức giá
 								</label>
 								<select
 									value={priceRange}
 									onChange={(e) => setPriceRange(e.target.value)}
-									className='w-full px-3 py-2.5 outline-none rounded-lg bg-gray-50 border border-gray-200 focus:border-primary transition-colors focus:ring-1 focus:ring-primary'>
+									className='w-full px-3 py-2.5 outline-none rounded-lg bg-secondary border border-border focus:border-primary transition-colors focus:ring-1 focus:ring-primary'>
 									<option value=''>Chọn mức giá</option>
 									{priceRanges.map((range) => (
 										<option key={range.label} value={range.label}>
@@ -269,12 +263,12 @@ const HomePage = () => {
 							<Link
 								href={`/rooms?roomType=${category.title.replace(/\s+/g, '+')}`}
 								key={category.title}
-								className='bg-white border border-border rounded-xl p-6 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 text-center'>
+								className='bg-card border border-border rounded-xl p-6 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 text-center'>
 								<div
 									className={`w-16 h-16 ${category.color} rounded-full flex items-center justify-center mx-auto mb-4`}>
 									<category.icon className='w-8 h-8' />
 								</div>
-								<h3 className='mb-1 font-bold text-gray-800'>
+								<h3 className='mb-1 font-bold text-foreground'>
 									{category.title}
 								</h3>
 								<p className='text-sm text-muted-foreground'>
@@ -290,7 +284,7 @@ const HomePage = () => {
 			<section className='max-w-7xl mx-auto px-4 py-16 w-full'>
 				<div className='flex items-center justify-between mb-8'>
 					<div>
-						<h2 className='text-2xl font-bold text-gray-900'>
+						<h2 className='text-2xl font-bold text-foreground'>
 							Tin đăng mới nhất
 						</h2>
 						<p className='text-muted-foreground text-sm mt-1'>
@@ -317,41 +311,6 @@ const HomePage = () => {
 							<RoomCard room={room} key={room.id} layout='grid' />
 						))
 					}
-				</div>
-			</section>
-
-			{/* Top Rated Rooms */}
-			<section className='bg-primary/5 py-16 w-full'>
-				<div className='max-w-7xl mx-auto px-4'>
-					<div className='flex items-center justify-between mb-8'>
-						<div>
-							<h2 className='text-2xl font-bold text-gray-900'>
-								Phòng đánh giá cao nhất
-							</h2>
-							<p className='text-muted-foreground text-sm mt-1'>
-								Được xét duyệt bởi người từng thuê
-							</p>
-						</div>
-						<Link
-							href='/rooms?sortBy=rating'
-							className='flex items-center gap-1 text-primary hover:bg-primary/10 px-4 py-2 rounded-lg font-medium transition-colors'>
-							Xem thêm <ChevronRight className='w-4 h-4' />
-						</Link>
-					</div>
-					<div className='grid grid-cols-1 md:grid-cols-4 gap-6'>
-						{isLoading ?
-							Array.from({ length: 4 }).map((_, i) => (
-								<div key={i} className='space-y-4'>
-									<Skeleton className='h-48 w-full rounded-xl' />
-									<Skeleton className='h-4 w-3/4' />
-									<Skeleton className='h-4 w-1/2' />
-								</div>
-							))
-						:	topRatedRooms?.data.map((room: any) => (
-								<RoomCard room={room} key={room.id} layout='grid' />
-							))
-						}
-					</div>
 				</div>
 			</section>
 

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { FakeListingService } from '../fraud/fake-listing.service';
 import { FakeReviewService } from '../fraud/fake-review.service';
@@ -53,6 +53,9 @@ export class AdminService {
   async toggleUserBan(id: string) {
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) throw new NotFoundException('User not found');
+    if (user.role === 'ADMIN') {
+      throw new BadRequestException('Không thể khóa/mở khóa tài khoản Admin');
+    }
 
     return this.prisma.user.update({
       where: { id },

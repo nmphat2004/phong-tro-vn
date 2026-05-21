@@ -9,14 +9,28 @@ import Link from 'next/link';
 
 const RoomRecommendations = () => {
 	const { user } = useAuthStore();
-	const { data, isLoading } = useQuery({
+
+	// Personalized recommendations (only when logged in)
+	const { data: personalizedData, isLoading: personalizedLoading } = useQuery({
 		queryKey: ['recommendations', user?.id],
-		queryFn: () =>
-			user ?
-				api.get('/recommendations').then((r) => r.data)
-			:	api.get('/recommendations/popular').then((r) => r.data),
+		queryFn: () => api.get('/recommendations').then((r) => r.data),
+		enabled: !!user,
 		staleTime: 1000 * 60 * 10,
 	});
+
+	// Popular rooms (always fetch as fallback)
+	const { data: popularData, isLoading: popularLoading } = useQuery({
+		queryKey: ['recommendations', 'popular'],
+		queryFn: () => api.get('/recommendations/popular').then((r) => r.data),
+		staleTime: 1000 * 60 * 10,
+		// Only fetch if: not logged in, OR logged in but personalized returned empty
+		enabled: !user || (!!user && !personalizedLoading && (!personalizedData?.rooms?.length)),
+	});
+
+	const isLoading = user ? personalizedLoading : popularLoading;
+
+	// Use personalized if available, otherwise fallback to popular
+	const data = (user && personalizedData?.rooms?.length) ? personalizedData : popularData;
 
 	if (isLoading) {
 		return (
@@ -73,7 +87,7 @@ const RoomRecommendations = () => {
 							}
 						</div>
 						<div>
-							<h2 className='text-2xl font-bold text-gray-900'>
+							<h2 className='text-2xl font-bold text-foreground'>
 								{isPersonalized ? 'Gợi ý cho bạn' : 'Phòng nổi bật'}
 							</h2>
 							<p className='text-sm text-muted-foreground mt-0.5'>

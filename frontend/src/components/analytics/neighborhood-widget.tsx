@@ -25,10 +25,10 @@ const SCORE_KEYS = [
 ];
 
 const gradeColor: Record<string, string> = {
-	A: 'bg-green-100 text-green-700',
-	B: 'bg-blue-100 text-blue-700',
-	C: 'bg-yellow-100 text-yellow-700',
-	D: 'bg-red-100 text-red-700',
+	A: 'bg-green-500/15 text-green-600',
+	B: 'bg-blue-500/15 text-blue-600',
+	C: 'bg-yellow-500/15 text-yellow-600',
+	D: 'bg-red-500/15 text-red-600',
 };
 
 interface Props {
@@ -77,18 +77,18 @@ export default function NeighborhoodWidget({ lat, lng }: Props) {
 			</div>
 
 			{/* Overall score */}
-			<div className='flex items-center gap-3 bg-gray-50 rounded-lg p-3'>
-				<div className='text-4xl font-bold text-gray-900'>{data.overall}</div>
+			<div className='flex items-center gap-3 bg-secondary rounded-lg p-3'>
+				<div className='text-4xl font-bold text-foreground'>{data.overall}</div>
 				<div>
 					<div className='flex gap-0.5'>
 						{Array.from({ length: 5 }).map((_, i) => (
 							<Star
 								key={i}
-								className={`w-4 h-4 ${i < Math.round(data.overall / 20) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
+								className={`w-4 h-4 ${i < Math.round(data.overall / 20) ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'}`}
 							/>
 						))}
 					</div>
-					<p className='text-xs text-gray-500 mt-0.5'>trên 100 điểm</p>
+					<p className='text-xs text-muted-foreground mt-0.5'>trên 100 điểm</p>
 				</div>
 			</div>
 
@@ -110,12 +110,12 @@ export default function NeighborhoodWidget({ lat, lng }: Props) {
 					return (
 						<div key={key}>
 							<div className='flex justify-between text-sm mb-1'>
-								<span className='text-gray-600'>{SCORE_LABELS[i]}</span>
-								<span className='font-medium text-gray-700'>
+								<span className='text-muted-foreground'>{SCORE_LABELS[i]}</span>
+								<span className='font-medium text-foreground'>
 									{score} — {label}
 								</span>
 							</div>
-							<div className='h-2 bg-gray-100 rounded-full overflow-hidden'>
+							<div className='h-2 bg-secondary rounded-full overflow-hidden'>
 								<div
 									className={`h-full rounded-full transition-all duration-500 ${barColor}`}
 									style={{ width: `${score}%` }}
@@ -129,17 +129,17 @@ export default function NeighborhoodWidget({ lat, lng }: Props) {
 			{/* Nearby places */}
 			{data.nearbyPlaces?.length > 0 && (
 				<div>
-					<p className='text-sm font-medium text-gray-700 mb-2'>Xung quanh:</p>
+					<p className='text-sm font-medium text-foreground mb-2'>Xung quanh:</p>
 					<div className='space-y-1.5'>
 						{data.nearbyPlaces.slice(0, 5).map((place: any, i: number) => (
 							<div
 								key={i}
 								className='flex items-center justify-between text-sm'>
-								<span className='flex items-center gap-1.5 text-gray-600'>
+								<span className='flex items-center gap-1.5 text-muted-foreground'>
 									<span>{POI_ICONS[place.type] || '📍'}</span>
 									<span className='line-clamp-1'>{place.name}</span>
 								</span>
-								<span className='text-gray-400 shrink-0 ml-2'>
+								<span className='text-muted-foreground shrink-0 ml-2'>
 									{place.distance < 1000 ?
 										`${place.distance}m`
 									:	`${(place.distance / 1000).toFixed(1)}km`}
@@ -151,7 +151,7 @@ export default function NeighborhoodWidget({ lat, lng }: Props) {
 			)}
 
 			{/* Summary */}
-			<p className='text-xs text-gray-500 border-t pt-3'>{data.summary}</p>
+			<p className='text-xs text-muted-foreground border-t border-border pt-3'>{data.summary}</p>
 		</div>
 	);
 }

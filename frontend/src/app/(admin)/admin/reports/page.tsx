@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { formatRelativeTime } from '@/lib/time-format';
 import { useState } from 'react';
 import { EyeOff, Trash2, Check, X } from 'lucide-react';
+import Link from 'next/link';
 
 const STATUS_TABS = [
 	{ key: 'all', label: 'All' },
@@ -73,10 +74,10 @@ export default function AdminReportsPage() {
 
 	return (
 		<div>
-			<h1 className='text-3xl font-bold text-gray-900 mb-8'>Reports Management</h1>
+			<h1 className='text-3xl font-bold text-foreground mb-8'>Reports Management</h1>
 
 			{/* Status Tabs */}
-			<div className='border-b border-gray-200 mb-8'>
+			<div className='border-b border-border mb-8'>
 				<div className='flex gap-0'>
 					{STATUS_TABS.map((tab) => (
 						<button
@@ -85,7 +86,7 @@ export default function AdminReportsPage() {
 							className={`px-6 py-3 text-sm font-semibold transition-colors relative
 								${activeTab === tab.key
 									? 'text-blue-600'
-									: 'text-gray-500 hover:text-gray-700'
+									: 'text-muted-foreground hover:text-foreground'
 								}`}>
 							{tab.label}
 							{activeTab === tab.key && (
@@ -96,7 +97,7 @@ export default function AdminReportsPage() {
 				</div>
 			</div>
 
-			<div className='bg-white rounded-2xl border border-gray-100 overflow-hidden'>
+			<div className='bg-card rounded-2xl border border-border overflow-hidden'>
 				{isLoading ? (
 					<div className='p-6 space-y-4'>
 						{[...Array(3)].map((_, i) => (
@@ -104,45 +105,56 @@ export default function AdminReportsPage() {
 						))}
 					</div>
 				) : filteredReports.length === 0 ? (
-					<div className='py-16 text-center text-gray-400 text-sm'>
+					<div className='py-16 text-center text-muted-foreground text-sm'>
 						Không có báo cáo nào trong danh mục này
 					</div>
 				) : (
 					<div className='overflow-x-auto'>
 						<table className='w-full'>
 							<thead>
-								<tr className='border-b border-gray-100'>
-									<th className='text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider'>Room</th>
-									<th className='text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider'>Reporter</th>
-									<th className='text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider'>Reason</th>
-									<th className='text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider'>Date</th>
-									<th className='text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider'>Status</th>
-									<th className='text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider'>Action</th>
+								<tr className='border-b border-border'>
+									<th className='text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Room</th>
+									<th className='text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Reporter</th>
+									<th className='text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Reason</th>
+									<th className='text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Date</th>
+									<th className='text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Status</th>
+									<th className='text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Action</th>
 								</tr>
 							</thead>
 							<tbody>
 								{filteredReports.map((report: any) => (
-									<tr key={report.id} className='border-b border-gray-50 hover:bg-gray-50/50 transition-colors'>
+									<tr key={report.id} className='border-b border-border hover:bg-secondary/50 transition-colors'>
 										<td className='px-6 py-4'>
-											<span className='text-sm font-medium text-gray-900'>{report.room?.title || 'Phòng đã xóa'}</span>
+											{report.room ? (
+												<Link
+													href={`/rooms/${report.room.id}`}
+													target='_blank'
+													rel='noopener noreferrer'
+													className='text-sm font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 hover:underline transition-colors'
+												>
+													{report.room.title}
+												</Link>
+											) : (
+												<span className='text-sm font-medium text-muted-foreground italic'>Phòng đã bị xóa</span>
+											)}
 										</td>
 										<td className='px-6 py-4'>
 											<div>
-												<span className='text-sm text-gray-900'>{report.reporter?.fullName}</span>
-												<p className='text-xs text-gray-400'>{report.reporter?.email}</p>
+												<span className='text-sm text-foreground'>{report.reporter?.fullName}</span>
+												<p className='text-xs text-muted-foreground'>{report.reporter?.email}</p>
 											</div>
 										</td>
 										<td className='px-6 py-4'>
-											<span className='text-sm text-gray-600'>{report.reason}</span>
+											<span className='text-sm text-muted-foreground'>{report.reason}</span>
 										</td>
 										<td className='px-6 py-4'>
-											<span className='text-sm text-gray-500'>{formatRelativeTime(report.createdAt)}</span>
+											<span className='text-sm text-muted-foreground'>{formatRelativeTime(report.createdAt)}</span>
 										</td>
 										<td className='px-6 py-4'>
 											<span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold
-												${report.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-												report.status === 'resolved' ? 'bg-green-100 text-green-700' :
-												'bg-gray-100 text-gray-600'}`}>
+												${report.status === 'pending' ? 'bg-yellow-500/15 text-yellow-600' :
+												report.status === 'resolved' ? 'bg-green-500/15 text-green-600' :
+												'bg-secondary text-muted-foreground'}`}>
 												{report.status === 'pending' ? 'Pending' :
 												report.status === 'resolved' ? 'Resolved' : 'Dismissed'}
 											</span>
@@ -175,7 +187,7 @@ export default function AdminReportsPage() {
 														<button
 															onClick={() => handleStatusUpdate({ id: report.id, status: 'dismissed' })}
 															title='Bỏ qua báo cáo'
-															className='px-3 py-1.5 bg-white text-gray-600 text-xs font-semibold rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors flex items-center gap-1'>
+															className='px-3 py-1.5 bg-card text-muted-foreground text-xs font-semibold rounded-lg border border-border hover:bg-secondary transition-colors flex items-center gap-1'>
 															<X className='w-3 h-3' />
 															Dismiss
 														</button>
@@ -183,7 +195,7 @@ export default function AdminReportsPage() {
 												) : (
 													<button
 														onClick={() => handleStatusUpdate({ id: report.id, status: 'pending' })}
-														className='px-3 py-1.5 bg-white text-gray-600 text-xs font-semibold rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors'>
+														className='px-3 py-1.5 bg-card text-muted-foreground text-xs font-semibold rounded-lg border border-border hover:bg-secondary transition-colors'>
 														Reopen
 													</button>
 												)}

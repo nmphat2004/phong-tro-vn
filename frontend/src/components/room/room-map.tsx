@@ -42,13 +42,13 @@ export default function RoomMap({ address, lat, lng }: { address?: string; lat?:
 	return (
 		<div className='w-full rounded-xl overflow-hidden border border-border mt-4 relative'>
 			{/* Address header */}
-			<div className='bg-white px-4 py-3 border-b border-border'>
+			<div className='bg-card px-4 py-3 border-b border-border'>
 				<div className='flex items-start gap-2'>
 					<svg className='w-4 h-4 mt-0.5 text-red-500 shrink-0' viewBox='0 0 24 24' fill='currentColor'>
 						<path d='M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z'/>
 					</svg>
 					<div className='flex-1 min-w-0'>
-						<p className='text-sm text-gray-700 leading-snug'>{address}</p>
+						<p className='text-sm text-muted-foreground leading-snug'>{address}</p>
 						<a
 							href={`https://www.google.com/maps?q=${externalQuery}`}
 							target='_blank'
@@ -77,7 +77,7 @@ export default function RoomMap({ address, lat, lng }: { address?: string; lat?:
 				href={`https://www.google.com/maps?q=${externalQuery}`}
 				target='_blank'
 				rel='noopener noreferrer'
-				className='absolute bottom-3 left-3 bg-white px-3 py-1.5 rounded-lg shadow-md text-xs font-medium text-blue-600 hover:bg-blue-50 transition-colors flex items-center gap-1.5 border border-gray-200'>
+				className='absolute bottom-3 left-3 bg-card px-3 py-1.5 rounded-lg shadow-md text-xs font-medium text-blue-600 hover:bg-secondary transition-colors flex items-center gap-1.5 border border-border'>
 				<svg className='w-3.5 h-3.5' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
 					<path d='M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3'/>
 				</svg>

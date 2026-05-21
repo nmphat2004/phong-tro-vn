@@ -136,8 +136,8 @@ const ForgotPasswordPage = () => {
 	};
 
 	return (
-		<div className='min-h-screen flex items-center justify-center bg-primary-foreground p-4'>
-			<Card className='w-full max-w-[440px] bg-white rounded-2xl shadow-lg p-8'>
+		<div className='min-h-screen flex items-center justify-center bg-background p-4'>
+			<Card className='w-full max-w-[440px] bg-card rounded-2xl shadow-lg p-8'>
 				<CardHeader className='text-center mb-5'>
 					<div className='flex items-center justify-center gap-2 font-semibold text-primary text-2xl'>
 						<Home className='w-8 h-8 text-primary text-xl rounded-lg flex items-center justify-center' />{' '}
@@ -167,7 +167,7 @@ const ForgotPasswordPage = () => {
 										value={email}
 										onChange={(e) => setEmail(e.target.value)}
 										onKeyDown={(e) => e.key === 'Enter' && handleSendCode()}
-										className='w-full h-11 pl-10 pr-3 bg-input-foreground border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all'
+										className='w-full h-11 pl-10 pr-3 bg-input-background border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all'
 									/>
 								</div>
 							</div>
@@ -214,7 +214,7 @@ const ForgotPasswordPage = () => {
 										value={digit}
 										onChange={(e) => handleOtpChange(i, e.target.value)}
 										onKeyDown={(e) => handleOtpKeyDown(i, e)}
-										className='w-12 h-14 text-center text-xl font-bold rounded-lg border-2 border-border bg-input-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all'
+										className='w-12 h-14 text-center text-xl font-bold rounded-lg border-2 border-border bg-input-background focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all'
 									/>
 								))}
 							</div>
@@ -266,7 +266,7 @@ const ForgotPasswordPage = () => {
 										placeholder='Ít nhất 6 ký tự'
 										value={newPassword}
 										onChange={(e) => setNewPassword(e.target.value)}
-										className='w-full h-11 pl-10 pr-10 bg-input-foreground border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all'
+										className='w-full h-11 pl-10 pr-10 bg-input-background border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all'
 									/>
 									<button
 										type='button'
@@ -295,7 +295,7 @@ const ForgotPasswordPage = () => {
 										onKeyDown={(e) =>
 											e.key === 'Enter' && handleResetPassword()
 										}
-										className='w-full h-11 pl-10 pr-3 bg-input-foreground border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all'
+										className='w-full h-11 pl-10 pr-3 bg-input-background border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all'
 									/>
 								</div>
 							</div>

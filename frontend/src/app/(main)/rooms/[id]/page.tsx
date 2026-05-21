@@ -567,7 +567,7 @@ const RoomDetailPage = () => {
 											/>
 											{saved ? 'ĐÃ LƯU' : 'LƯU PHÒNG'}
 										</Button>
-										{user && user.id !== room.owner.id && (
+										{user && user.id !== room.owner.id && user.role !== 'ADMIN' && (
 										<Button
 											variant='ghost'
 											className='rounded-xl text-xs font-bold border hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors'

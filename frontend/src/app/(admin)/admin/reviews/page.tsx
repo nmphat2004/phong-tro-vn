@@ -80,10 +80,10 @@ export default function AdminReviewsPage() {
 
 	return (
 		<div>
-			<h1 className='text-3xl font-bold text-gray-900 mb-8'>Reviews Management</h1>
+			<h1 className='text-3xl font-bold text-foreground mb-8'>Reviews Management</h1>
 
 			{/* Tabs */}
-			<div className='border-b border-gray-200 mb-8'>
+			<div className='border-b border-border mb-8'>
 				<div className='flex gap-0'>
 					{TABS.map((tab) => (
 						<button
@@ -92,7 +92,7 @@ export default function AdminReviewsPage() {
 							className={`px-6 py-3 text-sm font-semibold transition-colors relative
 								${activeTab === tab.key
 									? 'text-blue-600'
-									: 'text-gray-500 hover:text-gray-700'
+									: 'text-muted-foreground hover:text-foreground'
 								}`}>
 							{tab.label}
 							{activeTab === tab.key && (
@@ -104,7 +104,7 @@ export default function AdminReviewsPage() {
 			</div>
 
 			{/* Reviews List */}
-			<div className='bg-white rounded-2xl border border-gray-100 overflow-hidden'>
+			<div className='bg-card rounded-2xl border border-border overflow-hidden'>
 				{isLoading ? (
 					<div className='p-6 space-y-4'>
 						{[...Array(3)].map((_, i) => (
@@ -112,11 +112,11 @@ export default function AdminReviewsPage() {
 						))}
 					</div>
 				) : filteredReviews.length === 0 ? (
-					<div className='py-16 text-center text-gray-400 text-sm'>
+					<div className='py-16 text-center text-muted-foreground text-sm'>
 						Không có đánh giá nào trong danh mục này
 					</div>
 				) : (
-					<div className='divide-y divide-gray-100'>
+					<div className='divide-y divide-border'>
 						{filteredReviews.map((review: any) => {
 							const fraud = fraudScores[review.id];
 							const isSuspicious = fraud?.isSuspicious;
@@ -127,7 +127,7 @@ export default function AdminReviewsPage() {
 							const bgColor = bgColors[initial.charCodeAt(0) % bgColors.length];
 
 							return (
-								<div key={review.id} className='p-6 flex items-start gap-4 hover:bg-gray-50/50 transition-colors'>
+								<div key={review.id} className='p-6 flex items-start gap-4 hover:bg-secondary/50 transition-colors'>
 									{/* Avatar */}
 									<div className={`w-10 h-10 rounded-full ${bgColor} flex items-center justify-center text-white font-bold text-sm shrink-0`}>
 										{initial}
@@ -136,13 +136,13 @@ export default function AdminReviewsPage() {
 									{/* Content */}
 									<div className='flex-1 min-w-0'>
 										<div className='flex items-center gap-3 mb-1'>
-											<span className='font-semibold text-gray-900 text-sm'>{review.reviewer?.fullName}</span>
+											<span className='font-semibold text-foreground text-sm'>{review.reviewer?.fullName}</span>
 											{renderStars(review.rating)}
 										</div>
-										<p className='text-sm text-gray-600 mb-2 line-clamp-2'>
+										<p className='text-sm text-muted-foreground mb-2 line-clamp-2'>
 											{review.comment || 'Không có nhận xét'}
 										</p>
-										<p className='text-xs text-gray-400'>
+										<p className='text-xs text-muted-foreground'>
 											on {review.room?.title || 'Phòng đã xóa'} • {new Date(review.createdAt).toLocaleDateString('vi-VN')}
 										</p>
 									</div>

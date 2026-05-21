@@ -35,7 +35,7 @@ const Security = () => {
 		confirm: false,
 	});
 	const router = useRouter();
-	const { logout } = useAuthStore();
+	const { logout, user } = useAuthStore();
 
 	const {
 		register,
@@ -194,26 +194,28 @@ const Security = () => {
 			</div>
 
 			{/* Danger Zone */}
-			<div className='border-2 border-red-500 rounded-xl p-6 mt-8'>
-				<h3 className='text-lg font-medium text-red-600 mb-4'>
-					Vùng nguy hiểm
-				</h3>
-				<div className='space-y-3'>
-					<div className='flex items-start justify-between pt-3 border-t border-red-200'>
-						<div>
-							<p className='font-medium'>Xóa tài khoản</p>
-							<p className='text-sm text-red-600'>
-								Không thể hoàn tác hành động này
-							</p>
+			{user?.role !== 'ADMIN' && (
+				<div className='border-2 border-red-500 rounded-xl p-6 mt-8'>
+					<h3 className='text-lg font-medium text-red-600 mb-4'>
+						Vùng nguy hiểm
+					</h3>
+					<div className='space-y-3'>
+						<div className='flex items-start justify-between pt-3 border-t border-red-200'>
+							<div>
+								<p className='font-medium'>Xóa tài khoản</p>
+								<p className='text-sm text-red-600'>
+									Không thể hoàn tác hành động này
+								</p>
+							</div>
+							<Button
+								onClick={handleDelete}
+								className='px-4 h-9 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm'>
+								Xóa
+							</Button>
 						</div>
-						<Button
-							onClick={handleDelete}
-							className='px-4 h-9 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm'>
-							Xóa
-						</Button>
 					</div>
 				</div>
-			</div>
+			)}
 		</div>
 	);
 };

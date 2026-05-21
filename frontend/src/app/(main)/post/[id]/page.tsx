@@ -63,6 +63,7 @@ const EditRoomPage = () => {
 		setValue,
 		getValues,
 		reset,
+		trigger,
 	} = useForm<RoomFormData>({
 		resolver: zodResolver(roomSchema) as Resolver<RoomFormData>,
 		mode: 'onBlur',
@@ -115,7 +116,7 @@ const EditRoomPage = () => {
 	const roomTypes = [
 		{ value: 'room', label: 'Phòng trọ', icon: '🏠' },
 		{ value: 'house', label: 'Nhà riêng', icon: '🏡' },
-		{ value: 'shared', label: 'Ở ghép', icon: '👥' },
+		{ value: 'shared', label: 'Ký túc xá', icon: '🏫' },
 		{ value: 'shophouse', label: 'Mặt bằng', icon: '🏪' },
 		{ value: 'apartment', label: 'Căn hộ chung cư', icon: '🏢' },
 		{ value: 'mini', label: 'Căn hộ mini', icon: '🏘️' },
@@ -225,9 +226,15 @@ const EditRoomPage = () => {
 
 	const handleNextStep = async () => {
 		if (currentStep === 1) {
+			const valid = await trigger(['title', 'roomType', 'address', 'price', 'area']);
+			if (!valid) {
+				toast.error('Vui lòng điền đầy đủ thông tin bắt buộc');
+				return;
+			}
 			setCurrentStep(currentStep + 1);
 		} else if (currentStep === 2) {
-			if (!getValues('description') || getValues('description').length < 10) {
+			const valid = await trigger(['description']);
+			if (!valid) {
 				toast.error('Mô tả phải từ 10 ký tự trở lên');
 				return;
 			}
@@ -525,13 +532,13 @@ const EditRoomPage = () => {
 														<div className='absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2'>
 															<button
 																type='button'
-																className='p-2 bg-white rounded-full hover:scale-110 transition-transform'>
+																className='p-2 bg-card rounded-full hover:scale-110 transition-transform'>
 																<GripVertical className='w-4 h-4' />
 															</button>
 															<button
 																type='button'
 																onClick={() => removeImage(index)}
-																className='p-2 bg-white rounded-full hover:scale-110 transition-transform'>
+																className='p-2 bg-card rounded-full hover:scale-110 transition-transform'>
 																<X className='w-4 h-4 text-destructive' />
 															</button>
 														</div>
@@ -646,7 +653,7 @@ const EditRoomPage = () => {
 										)}
 									</div>
 
-									<div className='flex items-start gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg'>
+									<div className='flex items-start gap-3 p-4 bg-primary/5 border border-primary/20 rounded-lg'>
 										<div className='text-blue-600 mt-0.5'>ℹ️</div>
 										<div className='flex-1 text-sm'>
 											<p className='mb-1'>

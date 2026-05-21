@@ -4,6 +4,7 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   Param,
   Post,
@@ -33,7 +34,7 @@ export class UserController {
   @ApiOperation({ summary: 'Update profile' })
   updateMe(
     @Req() req: any,
-    @Body() dto: { fullName?: string; phone?: string; avatarUrl?: string },
+    @Body() dto: { fullName?: string; phone?: string; avatarUrl?: string; role?: 'RENTER' | 'LANDLORD' },
   ) {
     return this.userService.update(req.user.id, dto);
   }
@@ -43,6 +44,9 @@ export class UserController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Xóa tài khoản (xóa mềm)' })
   async deleteAccount(@Req() req: any) {
+    if (req.user.role === 'ADMIN') {
+      throw new ForbiddenException('Admin không thể tự xóa tài khoản');
+    }
     return this.userService.delete(req.user.id);
   }
 

@@ -37,7 +37,7 @@ const ProfilePage = () => {
 		<div className='min-h-screen bg-secondary'>
 			<div className='max-w-6xl mx-auto px-6 py-8'>
 				{/* Tabs */}
-				<div className='bg-white rounded-xl shadow-sm mb-6'>
+				<div className='bg-card rounded-xl shadow-sm mb-6'>
 					<div>
 						{tabs.map((tab) => (
 							<Button
@@ -47,7 +47,7 @@ const ProfilePage = () => {
 								className={`px-8 py-5 text-sm font-medium whitespace-nowrap transition-colors ${
 									activeTab === tab.id ?
 										' text-white'
-									:	'border-transparent bg-white text-muted-foreground hover:text-secondary-foreground hover:bg-secondary'
+									:	'border-transparent bg-card text-muted-foreground hover:text-secondary-foreground hover:bg-secondary'
 								}`}>
 								{tab.label}
 							</Button>

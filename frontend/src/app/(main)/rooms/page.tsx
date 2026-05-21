@@ -19,9 +19,9 @@ import {
 	Home,
 	Hotel,
 	List,
+	School,
 	Search,
 	Store,
-	Users,
 	X,
 } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
@@ -32,7 +32,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 const roomTypesList = [
 	{ value: 'room', label: 'Phòng trọ', icon: Home },
 	{ value: 'house', label: 'Nhà riêng', icon: Hotel },
-	{ value: 'shared', label: 'Ở ghép', icon: Users },
+	{ value: 'shared', label: 'Ký túc xá', icon: School },
 	{ value: 'shophouse', label: 'Mặt bằng', icon: Store },
 	{ value: 'apartment', label: 'Căn hộ chung cư', icon: Building2 },
 	{ value: 'mini', label: 'Căn hộ mini', icon: Building },

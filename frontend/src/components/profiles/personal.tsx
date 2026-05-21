@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { uploadImage } from '@/lib/api/upload.api';
 import { getMe, updateMe } from '@/lib/api/user.api';
+import { refreshToken } from '@/lib/api/auth.api';
+import { useAuthStore } from '@/stores/auth.store';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
@@ -60,12 +62,30 @@ const Personal = () => {
 		}
 	}, [data, reset]);
 
+	const { updateTokens, fetchUser } = useAuthStore();
+
 	const onSubmit = async (formData: FormData) => {
 		setIsLoading(true);
 		try {
+			const roleChanged = data?.role !== formData.role;
 			await updateMe(formData);
+
+			// Nếu role thay đổi, refresh JWT tokens để role mới được phản ánh
+			if (roleChanged) {
+				const currentRefreshToken = localStorage.getItem('refreshToken');
+				if (currentRefreshToken) {
+					const tokens = await refreshToken(currentRefreshToken);
+					updateTokens(tokens.accessToken, tokens.refreshToken);
+				}
+				await fetchUser();
+			}
+
 			queryClient.invalidateQueries({ queryKey: ['me'] });
-			toast.success('Cập nhật thành công');
+			toast.success(
+				roleChanged
+					? `Cập nhật thành công! Bạn đã chuyển sang ${formData.role === 'LANDLORD' ? 'Chủ trọ' : 'Người thuê'}`
+					: 'Cập nhật thành công',
+			);
 		} catch (error: any) {
 			toast.error(error.response?.data?.message || 'Cập nhật thất bại');
 		} finally {
@@ -155,7 +175,7 @@ const Personal = () => {
 					<Button
 						onClick={handleAvatarButtonClick}
 						disabled={isUploadingAvatar}
-						className='absolute bottom-0 right-0 w-7 h-7 bg-white rounded-full border-2 border-border flex items-center justify-center hover:bg-secondary disabled:opacity-50'>
+						className='absolute bottom-0 right-0 w-7 h-7 bg-card rounded-full border-2 border-border flex items-center justify-center hover:bg-secondary disabled:opacity-50'>
 						{isUploadingAvatar ?
 							<Loader2
 								size={14}
@@ -207,7 +227,7 @@ const Personal = () => {
 					</Label>
 					<select
 						{...register('role')}
-						className='w-full h-11 px-3 bg-input-background border border-transparent rounded-lg  text-secondary-foreground'>
+						className='w-full h-11 px-3 bg-input-background border border-border rounded-lg text-secondary-foreground appearance-none cursor-pointer'>
 						<option value='RENTER'>Người thuê</option>
 						<option value='LANDLORD'>Chủ trọ</option>
 					</select>

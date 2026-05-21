@@ -99,8 +99,13 @@ export class UserService {
 
   async update(
     id: string,
-    data: { fullName?: string; phone?: string; avatarUrl?: string },
+    data: { fullName?: string; phone?: string; avatarUrl?: string; role?: 'RENTER' | 'LANDLORD' },
   ) {
+    // Chỉ cho phép đổi role sang RENTER hoặc LANDLORD, không cho phép tự nâng lên ADMIN
+    if (data.role && data.role !== 'RENTER' && data.role !== 'LANDLORD') {
+      throw new BadRequestException('Role không hợp lệ');
+    }
+
     return this.prisma.user.update({
       where: { id },
       data,

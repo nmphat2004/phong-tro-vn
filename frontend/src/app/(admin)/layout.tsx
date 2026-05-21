@@ -33,23 +33,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
 	if (isLoading || !user || user.role !== 'ADMIN') {
 		return (
-			<div className='min-h-screen flex items-center justify-center bg-gray-50'>
+			<div className='min-h-screen flex items-center justify-center bg-background'>
 				<Skeleton className='w-48 h-12' />
 			</div>
 		);
 	}
 
 	const navItems = [
-		{ label: 'Overview', href: '/admin/dashboard', icon: LayoutDashboard },
-		{ label: 'Listings', href: '/admin/rooms', icon: Home },
-		{ label: 'Users', href: '/admin/users', icon: Users },
-		{ label: 'Reviews', href: '/admin/reviews', icon: Star },
-		{ label: 'Reports', href: '/admin/reports', icon: AlertTriangle },
-		{ label: 'Settings', href: '/admin/settings', icon: Settings },
+		{ label: 'Tổng quan', href: '/admin/dashboard', icon: LayoutDashboard },
+		{ label: 'Danh sách phòng', href: '/admin/rooms', icon: Home },
+		{ label: 'Người dùng', href: '/admin/users', icon: Users },
+		{ label: 'Đánh giá', href: '/admin/reviews', icon: Star },
+		{ label: 'Báo cáo', href: '/admin/reports', icon: AlertTriangle },
 	];
 
 	return (
-		<div className='min-h-screen flex bg-[#f8f9fb]'>
+		<div className='min-h-screen flex bg-background'>
 			{/* Sidebar - Dark Theme */}
 			<div className='w-64 bg-[#1a1a2e] flex flex-col fixed h-full'>
 				{/* Logo */}
@@ -57,7 +56,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 					<div className='w-9 h-9 bg-blue-500 rounded-xl flex items-center justify-center'>
 						<Home className='w-5 h-5 text-white' />
 					</div>
-					<span className='text-xl font-bold text-white tracking-tight'>RoomRadar</span>
+					<span className='text-xl font-bold text-white tracking-tight'>Room Matching</span>
 				</div>
 
 				{/* Navigation */}
@@ -102,7 +101,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 						}}
 						className='w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-gray-400 hover:bg-red-500/10 hover:text-red-400 transition-colors font-medium'>
 						<LogOut className='w-4 h-4' />
-						Log out
+						Đăng xuất
 					</button>
 				</div>
 			</div>
@@ -111,11 +110,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 			<div className='flex-1 ml-64 p-8 overflow-auto min-h-screen'>
 				{children}
 			</div>
-
-			{/* Help Button */}
-			<button className='fixed bottom-6 right-6 w-12 h-12 bg-[#1a1a2e] text-white rounded-full shadow-xl flex items-center justify-center hover:scale-105 transition-transform'>
-				<HelpCircle className='w-5 h-5' />
-			</button>
 		</div>
 	);
 }

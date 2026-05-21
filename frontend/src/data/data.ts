@@ -13,7 +13,7 @@ export const priceRanges = [
 export const roomTypesList = [
 	{ value: 'Phòng trọ', label: 'Phòng trọ' },
 	{ value: 'Nhà riêng', label: 'Nhà riêng' },
-	{ value: 'Ở ghép', label: 'Ở ghép' },
+	{ value: 'Ký túc xá', label: 'Ký túc xá' },
 	{ value: 'Mặt bằng', label: 'Mặt bằng' },
 	{ value: 'Căn hộ chung cư', label: 'Căn hộ chung cư' },
 	{ value: 'Chung cư mini', label: 'Căn hộ mini' },

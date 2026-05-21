@@ -4,6 +4,7 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   Param,
   Post,
@@ -16,6 +17,7 @@ import { RoomsService } from './rooms.service';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CreateRoomDto, SearchRoomDto, UpdateRoomDto } from './dto/room.dto';
 import { JwtGuard } from 'src/auth/guards/jwt.guard';
+import { LandlordGuard } from 'src/auth/guards/landlord.guard';
 
 @ApiTags('Rooms')
 @Controller('rooms')
@@ -29,9 +31,9 @@ export class RoomsController {
   }
 
   @Get('my-rooms')
-  @ApiOperation({ summary: 'Get my rooms (landlord' })
+  @ApiOperation({ summary: 'Get my rooms (landlord)' })
   @ApiBearerAuth()
-  @UseGuards(JwtGuard)
+  @UseGuards(JwtGuard, LandlordGuard)
   getMyRomms(@Req() req: any) {
     return this.roomsService.findByOwner(req.user.id);
   }
@@ -49,15 +51,15 @@ export class RoomsController {
   }
 
   @Post()
-  @UseGuards(JwtGuard)
-  @ApiOperation({ summary: 'Create new room listing (Landlord only' })
+  @UseGuards(JwtGuard, LandlordGuard)
+  @ApiOperation({ summary: 'Create new room listing (Landlord only)' })
   @ApiBearerAuth()
   create(@Req() req: any, @Body() dto: CreateRoomDto) {
     return this.roomsService.create(req.user.id, dto);
   }
 
   @Put(':id')
-  @UseGuards(JwtGuard)
+  @UseGuards(JwtGuard, LandlordGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update room' })
   update(@Param('id') id: string, @Req() req: any, @Body() dto: UpdateRoomDto) {
@@ -65,7 +67,7 @@ export class RoomsController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtGuard)
+  @UseGuards(JwtGuard, LandlordGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete room' })
   remove(@Param('id') id: string, @Req() req: any) {
@@ -81,6 +83,9 @@ export class RoomsController {
     @Req() req: any,
     @Body() body: { reason: string },
   ) {
+    if (req.user.role === 'ADMIN') {
+      throw new ForbiddenException('Admin không thể báo cáo phòng');
+    }
     return this.roomsService.reportRoom(id, req.user.id, body.reason);
   }
 }

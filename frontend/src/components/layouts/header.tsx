@@ -11,6 +11,7 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuthStore } from '@/stores/auth.store';
+import { useThemeStore } from '@/stores/theme.store';
 import useSocket from '@/hooks/useSocket';
 import { useNotificationStore } from '@/stores/notification.store';
 import {
@@ -20,13 +21,17 @@ import {
 	LayoutDashboard,
 	LogOut,
 	MessageCircle,
+	Moon,
 	PlusCircle,
+	Search,
 	Sparkles,
+	Sun,
 	UploadIcon,
 	User,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import NotificationBell from './notification-bell';
 
 const roleLabel: Record<string, string> = {
@@ -44,17 +49,28 @@ const roleColor: Record<string, string> = {
 
 const Header = () => {
 	const { user, logout, isLoading } = useAuthStore();
+	const { theme, toggleTheme } = useThemeStore();
 	const { chatUnreadCount } = useNotificationStore();
 	useSocket();
 	const router = useRouter();
+	const [searchKeyword, setSearchKeyword] = useState('');
 
 	const handleLogout = () => {
 		logout();
 		router.push('/login');
 	};
 
+	const handleSearch = (e: React.FormEvent) => {
+		e.preventDefault();
+		if (searchKeyword.trim()) {
+			router.push(`/rooms?keyword=${encodeURIComponent(searchKeyword.trim())}`);
+		} else {
+			router.push('/rooms');
+		}
+	};
+
 	return (
-		<header className='sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-border/50 shadow-sm'>
+		<header className='sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50 shadow-sm'>
 			<div className='flex max-w-7xl mx-auto px-4 py-4 items-center justify-between'>
 				{/* Logo */}
 				<Link href='/' className='flex items-center gap-2 group'>
@@ -66,22 +82,35 @@ const Header = () => {
 					</span>
 				</Link>
 
-				{/* Nav */}
-				<nav className='hidden md:flex items-center gap-1'>
-					<Link
-						href='/rooms'
-						className='px-4 py-2 rounded-lg text-foreground hover:text-primary hover:bg-primary/5 transition-all duration-200 font-medium'>
-						Tìm phòng
-					</Link>
-					<Link
-						href='/rooms?sortBy=rating'
-						className='px-4 py-2 rounded-lg text-foreground hover:text-primary hover:bg-primary/5 transition-all duration-200 font-medium'>
-						Đánh giá cao
-					</Link>
-				</nav>
+				{/* Search Bar */}
+				<form onSubmit={handleSearch} className='hidden md:flex items-center flex-1 max-w-md mx-6'>
+					<div className='relative w-full'>
+						<Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground' />
+						<input
+							type='text'
+							value={searchKeyword}
+							onChange={(e) => setSearchKeyword(e.target.value)}
+							placeholder='Tìm kiếm phòng trọ...'
+							className='w-full pl-10 pr-4 py-2.5 rounded-xl border border-border bg-secondary/50 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all'
+						/>
+					</div>
+				</form>
 
 				{/* Auth buttons */}
 				<div className='flex items-center gap-2'>
+					{/* Dark Mode Toggle */}
+					<Button
+						variant='ghost'
+						size='icon'
+						onClick={toggleTheme}
+						className='rounded-xl hover:bg-primary/5'
+						title={theme === 'dark' ? 'Chế độ sáng' : 'Chế độ tối'}>
+						{theme === 'dark' ?
+							<Sun className='w-5 h-5 text-amber-500' />
+						:	<Moon className='w-5 h-5' />
+						}
+					</Button>
+
 					{isLoading ?
 						<div className='flex items-center gap-3'>
 							<Skeleton className='w-10 h-10 rounded-md' />
@@ -115,12 +144,12 @@ const Header = () => {
 								</DropdownMenuTrigger>
 								<DropdownMenuContent
 									align='end'
-									className='w-72 p-0 rounded-2xl overflow-hidden shadow-2xl border border-border/50 bg-white/95 backdrop-blur-xl'>
+									className='w-72 p-0 rounded-2xl overflow-hidden shadow-2xl border border-border/50 bg-popover/95 backdrop-blur-xl'>
 									{/* Profile Header */}
 									<Link href='/profile'>
-										<div className='px-4 py-4 bg-gradient-to-br from-slate-50 to-blue-50/50 hover:from-slate-100 hover:to-blue-100/50 transition-colors duration-300 cursor-pointer'>
+										<div className='px-4 py-4 bg-secondary/50 hover:bg-secondary/80 transition-colors duration-300 cursor-pointer'>
 											<div className='flex items-center gap-3'>
-												<Avatar className='w-12 h-12 ring-2 ring-white shadow-md'>
+												<Avatar className='w-12 h-12 ring-2 ring-background shadow-md'>
 													<AvatarImage src={user.avatarUrl} />
 													<AvatarFallback className='bg-gradient-to-br from-primary to-blue-600 text-white font-bold text-lg'>
 														{user.fullName?.charAt(0).toUpperCase()}
@@ -150,7 +179,7 @@ const Header = () => {
 										<DropdownMenuItem
 											onClick={() => router.push('/profile')}
 											className='rounded-xl px-3 py-2.5 cursor-pointer gap-3 group/item'>
-											<div className='w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center group-focus/item:bg-white/20 transition-colors'>
+											<div className='w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center group-focus/item:bg-white/20 transition-colors'>
 												<User className='w-4 h-4 text-blue-600 group-focus/item:text-white' />
 											</div>
 											<div className='flex-1'>
@@ -162,7 +191,7 @@ const Header = () => {
 										<DropdownMenuItem
 											onClick={() => router.push('/profile?tab=saved')}
 											className='rounded-xl px-3 py-2.5 cursor-pointer gap-3 group/item'>
-											<div className='w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center group-focus/item:bg-white/20 transition-colors'>
+											<div className='w-8 h-8 rounded-lg bg-rose-500/10 flex items-center justify-center group-focus/item:bg-white/20 transition-colors'>
 												<Bookmark className='w-4 h-4 text-rose-500 group-focus/item:text-white' />
 											</div>
 											<div className='flex-1'>
@@ -178,7 +207,7 @@ const Header = () => {
 												<DropdownMenuItem
 													onClick={() => router.push('/dashboard')}
 													className='rounded-xl px-3 py-2.5 cursor-pointer gap-3 group/item'>
-													<div className='w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center group-focus/item:bg-white/20 transition-colors'>
+													<div className='w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center group-focus/item:bg-white/20 transition-colors'>
 														<LayoutDashboard className='w-4 h-4 text-emerald-600 group-focus/item:text-white' />
 													</div>
 													<div className='flex-1'>
@@ -190,7 +219,7 @@ const Header = () => {
 												<DropdownMenuItem
 													onClick={() => router.push('/post')}
 													className='rounded-xl px-3 py-2.5 cursor-pointer gap-3 group/item'>
-													<div className='w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center group-focus/item:bg-white/20 transition-colors'>
+													<div className='w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center group-focus/item:bg-white/20 transition-colors'>
 														<UploadIcon className='w-4 h-4 text-violet-600 group-focus/item:text-white' />
 													</div>
 													<div className='flex-1'>
@@ -209,7 +238,7 @@ const Header = () => {
 										<DropdownMenuItem
 											onClick={handleLogout}
 											className='rounded-xl px-3 py-2.5 cursor-pointer gap-3 text-red-500 group/item'>
-											<div className='w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center group-focus/item:bg-red-500/20 transition-colors'>
+											<div className='w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center group-focus/item:bg-red-500/20 transition-colors'>
 												<LogOut className='w-4 h-4 text-red-500' />
 											</div>
 											<span className='text-sm font-medium'>Đăng xuất</span>

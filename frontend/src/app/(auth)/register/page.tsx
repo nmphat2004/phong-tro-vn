@@ -64,8 +64,8 @@ const RegisterPage = () => {
 	if (isAuthLoading || user) return null;
 
 	return (
-		<div className='min-h-screen flex items-center justify-center bg-primary-foreground p-4'>
-			<Card className='w-full max-w-[440px] bg-white rounded-2xl shadow-lg p-8'>
+		<div className='min-h-screen flex items-center justify-center bg-background p-4'>
+			<Card className='w-full max-w-[440px] bg-card rounded-2xl shadow-lg p-8'>
 				<CardHeader className='text-center mb-5'>
 					<div className='flex items-center justify-center gap-2 font-semibold text-primary text-2xl '>
 						<Home className='w-8 h-8 text-primary text-xl rounded-lg flex items-center justify-center' />{' '}
