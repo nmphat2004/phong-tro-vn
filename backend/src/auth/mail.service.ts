@@ -18,13 +18,13 @@ export class MailService {
 
   async sendResetCode(email: string, code: string): Promise<void> {
     const mailOptions: nodemailer.SendMailOptions = {
-      from: `"Room Matching" <${this.configService.get<string>('MAIL_USER')}>`,
+      from: `"Phòng trọ VN" <${this.configService.get<string>('MAIL_USER')}>`,
       to: email,
-      subject: 'Mã xác nhận đặt lại mật khẩu - Room Matching',
+      subject: 'Mã xác nhận đặt lại mật khẩu - Phòng trọ VN',
       html: `
         <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px; background: #ffffff; border-radius: 16px; border: 1px solid #e5e7eb;">
           <div style="text-align: center; margin-bottom: 24px;">
-            <h1 style="color: #1a1a2e; font-size: 24px; margin: 0;">🏠 Room Matching</h1>
+            <h1 style="color: #1a1a2e; font-size: 24px; margin: 0;">🏠 Phòng trọ VN</h1>
           </div>
           <h2 style="color: #1a1a2e; font-size: 18px; text-align: center; margin-bottom: 8px;">
             Đặt lại mật khẩu

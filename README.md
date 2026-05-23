@@ -1,82 +1,123 @@
-🏠 Room Matching — Transparent Room Rental & Review Platform
+# 🏠 Phòng trọ VN — Transparent Room Rental & Review Platform
 
 A full-stack web platform for searching, listing, and reviewing rental rooms in Vietnam — built with Next.js, NestJS, and AI-powered features for transparent, trustworthy rental experiences.
 
+---
 
-📋 Table of Contents
+## 📋 Table of Contents
 
-Overview
-Features
-Tech Stack
-System Architecture
-Database Schema
-Getting Started
-Environment Variables
-Project Structure
-API Documentation
-Deployment
-Roadmap
+- [Overview](#overview)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [System Architecture](#system-architecture)
+- [Database Schema](#database-schema)
+- [Getting Started](#getting-started)
+- [Environment Variables](#environment-variables)
+- [Project Structure](#project-structure)
+- [API Documentation](#api-documentation)
+- [Deployment](#deployment)
 
+---
 
-Overview
-Room Matching solves a real problem in the Vietnamese rental market: the lack of transparency and honest reviews. Unlike existing platforms (Phongtro123, Chotot) that focus only on listings, Room Matching puts verified reviews at the center — so renters can make informed decisions and landlords are incentivized to maintain quality.
-Target users:
+## Overview
 
-🧑‍🎓 Students and young professionals looking for rental rooms
-🏘️ Landlords wanting to reach verified renters
-👨‍💼 Admins managing platform quality and trust
+Phòng trọ VN solves a real problem in the Vietnamese rental market: the lack of transparency and honest reviews. Unlike existing platforms (Phongtro123, Chotot) that focus only on listings, Phòng trọ VN puts verified reviews at the center — so renters can make informed decisions and landlords are incentivized to maintain quality.
 
+### Target Users:
+- 🧑‍🎓 **Students and young professionals** looking for rental rooms
+- 🏘️ **Landlords** wanting to reach verified renters
+- 👨‍💼 **Admins** managing platform quality and trust
 
-Features
-For Renters
+---
 
-🔍 Advanced search with filters (price, area, district, amenities, rating)
-🗺️ Map-based search powered by Google Maps API
-⭐ Read verified reviews across 5 categories (cleanliness, security, location, landlord, value)
-💬 Real-time chat with landlords via WebSocket
-❤️ Save favorite rooms
-📝 Write reviews (only after verified contact with landlord)
+## Features
 
-For Landlords
+### For Renters
+- 🔍 **Advanced search** with filters (price, area, district, amenities, rating)
+- 🗺️ **Map-based search** powered by Google Maps API
+- ⭐ **Read verified reviews** across 5 categories (cleanliness, security, location, landlord, value)
+- 💬 **Real-time chat** with landlords via WebSocket
+- ❤️ **Save favorite rooms**
+- 📝 **Write reviews** (only after verified contact with landlord)
 
-📢 Create and manage room listings with photo upload
-📊 Dashboard with views, contact stats, and review scores
-💬 Real-time messaging inbox
-🔔 Email notifications for new messages and reviews
+### For Landlords
+- 📢 **Create and manage room listings** with photo upload
+- 📊 **Dashboard** with views, contact stats, and review scores
+- 💬 **Real-time messaging inbox**
+- 🔔 **Email notifications** for new messages and reviews
 
-AI-Powered Features
+### AI-Powered Features
+- 🤖 **Sentiment analysis** on reviews (positive / negative / neutral)
+- 🚨 **Fake listing and spam review detection**
+- 💡 **Similar room recommendations** based on browsing history
+- 📝 **AI-generated review summaries** per room
 
-🤖 Sentiment analysis on reviews (positive / negative / neutral)
-🚨 Fake listing and spam review detection
-💡 Similar room recommendations based on browsing history
-📝 AI-generated review summaries per room
+---
 
+## Tech Stack
 
-Tech Stack
-Frontend
-TechnologyPurposeNext.js 14 (App Router)React framework with SSR/SSGTailwindCSSUtility-first stylingShadcnUIComponent libraryReact Query (TanStack)Server state managementZustandClient state managementSocket.io-clientReal-time chatGoogle Maps JS APIMap and geocoding
-Backend
-TechnologyPurposeNestJSNode.js framework (modular architecture)PostgreSQLPrimary relational databasePrisma ORMType-safe database accessRedisCaching and session storageSocket.ioWebSocket for real-time chatJWT + Refresh TokenAuthenticationPassport.jsAuth strategies
-External Services
-ServicePurposeGoogle Maps APIGeocoding + map displayCloudinaryImage upload and CDNGemini API (free tier)AI sentiment + recommendationsSendGridEmail notificationsVNPay / MoMoPayment gateway (future)
-DevOps
-TechnologyPurposeDocker + Docker ComposeLocal development environmentRailwayCloud deploymentGitHub ActionsCI/CD pipeline
+### Frontend
+| Technology | Purpose |
+| :--- | :--- |
+| **Next.js 14 (App Router)** | React framework with SSR/SSG |
+| **TailwindCSS** | Utility-first styling |
+| **ShadcnUI** | Component library |
+| **React Query (TanStack)** | Server state management |
+| **Zustand** | Client state management |
+| **Socket.io-client** | Real-time chat |
+| **Google Maps JS API** | Map and geocoding |
 
-System Architecture
+### Backend
+| Technology | Purpose |
+| :--- | :--- |
+| **NestJS** | Node.js framework (modular architecture) |
+| **PostgreSQL** | Primary relational database |
+| **Prisma ORM** | Type-safe database access |
+| **Redis** | Caching and session storage |
+| **Socket.io** | WebSocket for real-time chat |
+| **JWT + Refresh Token** | Authentication |
+| **Passport.js** | Auth strategies |
+
+### External Services
+| Service | Purpose |
+| :--- | :--- |
+| **Google Maps API** | Geocoding + map display |
+| **Cloudinary** | Image upload and CDN |
+| **Gemini API (free tier)** | AI sentiment + recommendations |
+| **SendGrid** | Email notifications |
+| **VNPay / MoMo** | Payment gateway (future) |
+
+### DevOps
+| Technology | Purpose |
+| :--- | :--- |
+| **Docker + Docker Compose** | Local development environment |
+| **Railway** | Cloud deployment |
+| **GitHub Actions** | CI/CD pipeline |
+
+---
+
+## System Architecture
+
+```text
 ┌─────────────────────────────────────────────────┐
-│               Next.js Frontend (Vercel)          │
-│   Search │ Room Detail │ Chat │ Dashboard        │
+│               Next.js Frontend (Vercel)         │
+│   Search │ Room Detail │ Chat │ Dashboard       │
 └────────────────────┬────────────────────────────┘
                      │ REST API + WebSocket
 ┌────────────────────▼────────────────────────────┐
-│              NestJS Backend (Railway)            │
-│  Auth │ Room │ Review │ Chat │ AI │ Notification │
+│              NestJS Backend (Railway)           │
+│  Auth │ Room │ Review │ Chat │ AI │ Notification│
 └──┬──────────┬──────────┬──────────┬─────────────┘
    │          │          │          │
 PostgreSQL  Redis    Cloudinary  Gemini API
-(Prisma)  (Cache)   (Images)     (AI)
+(Prisma)   (Cache)    (Images)     (AI)
+```
 
-Database Schema
+---
+
+## Database Schema
+
+```text
 User ──────── Room ──────── RoomImage
   │             │
   ├── Review    ├── RoomAmenity ── Amenity
@@ -86,45 +127,83 @@ User ──────── Room ──────── RoomImage
   ├── SavedRoom ├── Conversation ── Message
   │             │
   └── Message   └── Report
-Key tables:
-TableDescriptionusersAll platform users (Admin / Landlord / Renter)roomsRoom listings with location, price, statusroom_imagesMultiple images per roomamenitiesMaster list of amenities (WiFi, AC, etc.)room_amenitiesMany-to-many: rooms ↔ amenitiesreviewsVerified reviews with 5-category ratingsconversationsChat threads between renter and landlordmessagesIndividual messages in a conversationsaved_roomsUser's saved/favorited roomsreportsUser reports on listings or reviews
+```
 
-Getting Started
-Prerequisites
+### Key Tables
 
-Node.js >= 18
-PostgreSQL >= 15
-Redis >= 7
-Docker (recommended)
+| Table | Description |
+| :--- | :--- |
+| **users** | All platform users (Admin / Landlord / Renter) |
+| **rooms** | Room listings with location, price, status |
+| **room_images** | Multiple images per room |
+| **amenities** | Master list of amenities (WiFi, AC, etc.) |
+| **room_amenities** | Many-to-many: rooms ↔ amenities |
+| **reviews** | Verified reviews with 5-category ratings |
+| **conversations** | Chat threads between renter and landlord |
+| **messages** | Individual messages in a conversation |
+| **saved_rooms** | User's saved/favorited rooms |
+| **reports** | User reports on listings or reviews |
 
-1. Clone the repository
-bashgit clone https://github.com/yourusername/room-matching.git
-cd room-matching
-2. Start with Docker Compose (recommended)
-bashdocker-compose up -d
+---
+
+## Getting Started
+
+### Prerequisites
+- Node.js >= 18
+- PostgreSQL >= 15
+- Redis >= 7
+- Docker (recommended)
+
+### 1. Clone the repository
+```bash
+git clone https://github.com/yourusername/phong-tro-vn.git
+cd phong-tro-vn
+```
+
+### 2. Start with Docker Compose (recommended)
+```bash
+docker compose up -d
+```
 This starts PostgreSQL, Redis, the NestJS backend, and the Next.js frontend automatically.
-3. Manual setup (alternative)
-Backend:
-bashcd backend
+
+### 3. Manual Setup (Alternative)
+
+#### Backend:
+```bash
+cd backend
 npm install
 npx prisma migrate dev
 npx prisma db seed
 npm run start:dev
-Frontend:
-bashcd frontend
+```
+
+#### Frontend:
+```bash
+cd frontend
 npm install
 npm run dev
-4. Access the app
-ServiceURLFrontendhttp://localhost:3000Backend APIhttp://localhost:4000API Docs (Swagger)http://localhost:4000/api/docsPrisma Studiohttp://localhost:5555
+```
 
-Environment Variables
-Backend (/backend/.env)
-env# App
+### 4. Access the App
+| Service | URL |
+| :--- | :--- |
+| **Frontend** | [http://localhost:3000](http://localhost:3000) |
+| **Backend API** | [http://localhost:4000](http://localhost:4000) |
+| **API Docs (Swagger)** | [http://localhost:4000/api/docs](http://localhost:4000/api/docs) |
+| **Prisma Studio** | [http://localhost:5555](http://localhost:5555) |
+
+---
+
+## Environment Variables
+
+### Backend (`/backend/.env`)
+```env
+# App
 NODE_ENV=development
 PORT=4000
 
 # Database
-DATABASE_URL=postgresql://postgres:password@localhost:5432/room-matching
+DATABASE_URL=postgresql://root:2004@localhost:5432/phong_tro_vn
 
 # Redis
 REDIS_URL=redis://localhost:6379
@@ -148,17 +227,25 @@ GEMINI_API_KEY=your_gemini_api_key
 
 # SendGrid
 SENDGRID_API_KEY=your_sendgrid_key
-SENDGRID_FROM_EMAIL=noreply@room-matching.vn
+SENDGRID_FROM_EMAIL=noreply@phongtrovn.vn
 
 # Frontend URL (for CORS)
 FRONTEND_URL=http://localhost:3000
-Frontend (/frontend/.env.local)
-envNEXT_PUBLIC_API_URL=http://localhost:4000
+```
+
+### Frontend (`/frontend/.env.local`)
+```env
+NEXT_PUBLIC_API_URL=http://localhost:4000
 NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_google_maps_key
 NEXT_PUBLIC_SOCKET_URL=http://localhost:4000
+```
 
-Project Structure
-room-matching/
+---
+
+## Project Structure
+
+```text
+phong-tro-vn/
 ├── frontend/                  # Next.js application
 │   ├── app/                   # App Router pages
 │   │   ├── (auth)/            # Login, Register pages
@@ -198,48 +285,72 @@ room-matching/
 │
 ├── docker-compose.yml
 └── README.md
+```
 
-API Documentation
-Full Swagger documentation available at /api/docs when running the backend.
-Key Endpoints
-Auth
-POST   /auth/register          Register new user
-POST   /auth/login             Login + get tokens
-POST   /auth/refresh           Refresh access token
-POST   /auth/logout            Revoke refresh token
-Rooms
-GET    /rooms                  Search rooms (with filters + pagination)
-GET    /rooms/:id              Get room detail
-POST   /rooms                  Create listing (Landlord only)
-PUT    /rooms/:id              Update listing (Owner only)
-DELETE /rooms/:id              Delete listing (Owner only)
-POST   /rooms/:id/save         Save/unsave room
-Reviews
-GET    /rooms/:id/reviews      Get reviews for a room
-POST   /rooms/:id/reviews      Submit a review (verified renters only)
-DELETE /reviews/:id            Delete review (Admin only)
-Chat
-GET    /conversations          Get user's conversations
-GET    /conversations/:id/messages   Get messages in conversation
-WS     /chat                   WebSocket namespace for real-time chat
-AI
-GET    /rooms/:id/ai-summary   Get AI summary of room reviews
-GET    /rooms/:id/similar      Get AI-recommended similar rooms
+---
 
-Deployment
-Deploy to Railway (recommended)
+## API Documentation
 
-Push code to GitHub
-Connect Railway to your GitHub repo
-Add environment variables in Railway dashboard
-Railway auto-detects Dockerfile and deploys
+Full Swagger documentation is available at `/api/docs` when running the backend.
 
-Deploy with Docker
-bash# Build and run production containers
+### Key Endpoints
+
+#### Auth
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/auth/register` | Register new user |
+| `POST` | `/auth/login` | Login + get tokens |
+| `POST` | `/auth/refresh` | Refresh access token |
+| `POST` | `/auth/logout` | Revoke refresh token |
+
+#### Rooms
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/rooms` | Search rooms (with filters + pagination) |
+| `GET` | `/rooms/:id` | Get room detail |
+| `POST` | `/rooms` | Create listing (Landlord only) |
+| `PUT` | `/rooms/:id` | Update listing (Owner only) |
+| `DELETE` | `/rooms/:id` | Delete listing (Owner only) |
+| `POST` | `/rooms/:id/save` | Save/unsave room |
+
+#### Reviews
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/rooms/:id/reviews` | Get reviews for a room |
+| `POST` | `/rooms/:id/reviews` | Submit a review (verified renters only) |
+| `DELETE` | `/reviews/:id` | Delete review (Admin only) |
+
+#### Chat
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/conversations` | Get user's conversations |
+| `GET` | `/conversations/:id/messages` | Get messages in conversation |
+| `WS` | `/chat` | WebSocket namespace for real-time chat |
+
+#### AI
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/rooms/:id/ai-summary` | Get AI summary of room reviews |
+| `GET` | `/rooms/:id/similar` | Get AI-recommended similar rooms |
+
+---
+
+## Deployment
+
+### Deploy to Railway (Recommended)
+1. Push code to GitHub.
+2. Connect Railway to your GitHub repo.
+3. Add environment variables in the Railway dashboard.
+4. Railway auto-detects the Dockerfile and deploys.
+
+### Deploy with Docker
+```bash
+# Build and run production containers
 docker-compose -f docker-compose.prod.yml up -d
-CI/CD Pipeline (GitHub Actions)
-The .github/workflows/deploy.yml file automatically:
+```
 
-Runs tests on every pull request
-Builds Docker images on merge to main
-Deploys to Railway on successful build
+### CI/CD Pipeline (GitHub Actions)
+The `.github/workflows/deploy.yml` file automatically:
+- Runs tests on every pull request.
+- Builds Docker images on merge to `main`.
+- Deploys to Railway on a successful build.

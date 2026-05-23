@@ -69,7 +69,7 @@ const RegisterPage = () => {
 				<CardHeader className='text-center mb-5'>
 					<div className='flex items-center justify-center gap-2 font-semibold text-primary text-2xl '>
 						<Home className='w-8 h-8 text-primary text-xl rounded-lg flex items-center justify-center' />{' '}
-						Room Matching
+						Phòng trọ VN
 					</div>
 					<CardTitle className='text-xl mb-2'>Tạo tài khoản</CardTitle>
 				</CardHeader>

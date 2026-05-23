@@ -8,7 +8,7 @@ const Footer = () => {
 				<div className='grid grid-cols-1 md:grid-cols-4 gap-8'>
 					<div>
 						<div className='flex items-center gap-2 mb-4'>
-							<Home className='w-6 h-6 text-primary' /> Room Matching
+							<Home className='w-6 h-6 text-primary' /> Phòng trọ VN
 						</div>
 						<p className='text-sm text-muted-foreground'>
 							Nền tảng tìm kiếm và đánh giá phòng trọ minh bạch tại Việt Nam
@@ -75,7 +75,7 @@ const Footer = () => {
 							</div>
 							<div className='flex items-center gap-2'>
 								<Mail className='w-4 h-4' />
-								<span>contact@room-matching.vn</span>
+								<span>contact@phongtrovn.vn</span>
 							</div>
 							<div className='flex items-center gap-3 mt-4'>
 								<a href='#' className='text-primary hover:text-primary/80'>
@@ -86,7 +86,7 @@ const Footer = () => {
 					</div>
 				</div>
 				<div className='mt-8 pt-8 border-t border-border text-center text-sm text-muted-foreground'>
-					© 2026 Room Matching. All rights reserved.
+					© 2026 Phòng trọ VN. All rights reserved.
 				</div>
 			</div>
 		</footer>

@@ -11,7 +11,7 @@ const beVietnam = Be_Vietnam_Pro({
 });
 
 export const metadata: Metadata = {
-	title: 'Room Matching - Tìm phòng trọ uy tín',
+	title: 'Phòng trọ VN - Tìm phòng trọ uy tín',
 	description: 'Nền tảng tìm kiếm và đánh giá phòng trọ minh bạch tại Việt Nam',
 };
 

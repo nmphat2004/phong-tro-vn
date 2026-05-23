@@ -49,9 +49,7 @@ const ForgotPasswordPage = () => {
 			toast.success('Mã xác nhận đã được gửi đến email của bạn');
 			setStep('otp');
 		} catch (error: any) {
-			toast.error(
-				error.response?.data?.message || 'Không thể gửi mã xác nhận',
-			);
+			toast.error(error.response?.data?.message || 'Không thể gửi mã xác nhận');
 		} finally {
 			setIsLoading(false);
 		}
@@ -79,7 +77,10 @@ const ForgotPasswordPage = () => {
 
 	const handleOtpPaste = (e: React.ClipboardEvent) => {
 		e.preventDefault();
-		const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+		const pasted = e.clipboardData
+			.getData('text')
+			.replace(/\D/g, '')
+			.slice(0, 6);
 		const newOtp = [...otp];
 		for (let i = 0; i < pasted.length; i++) {
 			newOtp[i] = pasted[i];
@@ -141,7 +142,7 @@ const ForgotPasswordPage = () => {
 				<CardHeader className='text-center mb-5'>
 					<div className='flex items-center justify-center gap-2 font-semibold text-primary text-2xl'>
 						<Home className='w-8 h-8 text-primary text-xl rounded-lg flex items-center justify-center' />{' '}
-						Room Matching
+						Phòng trọ VN
 					</div>
 					<CardTitle className='text-xl mb-2'>
 						{step === 'done' ? 'Thành công!' : 'Quên mật khẩu'}
@@ -224,8 +225,8 @@ const ForgotPasswordPage = () => {
 								className='w-full h-11 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 flex items-center justify-center'>
 								{isLoading ?
 									<>
-										<Loader2 className='mr-2 animate-spin' size={18} /> Đang
-										xác nhận...
+										<Loader2 className='mr-2 animate-spin' size={18} /> Đang xác
+										nhận...
 									</>
 								:	'Xác nhận mã'}
 							</Button>
@@ -305,8 +306,8 @@ const ForgotPasswordPage = () => {
 								className='w-full h-11 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 flex items-center justify-center'>
 								{isLoading ?
 									<>
-										<Loader2 className='mr-2 animate-spin' size={18} /> Đang
-										đặt lại...
+										<Loader2 className='mr-2 animate-spin' size={18} /> Đang đặt
+										lại...
 									</>
 								:	'Đặt lại mật khẩu'}
 							</Button>

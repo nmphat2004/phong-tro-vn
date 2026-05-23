@@ -16,7 +16,7 @@ async function bootstrap() {
   );
 
   const config = new DocumentBuilder()
-    .setTitle('Room Matching API')
+    .setTitle('Phòng trọ VN API')
     .setDescription('Room rental platform API')
     .setVersion('1.0')
     .addBearerAuth()

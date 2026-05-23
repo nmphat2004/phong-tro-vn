@@ -17,7 +17,7 @@ export class UploadService {
       cloudinary.uploader
         .upload_stream(
           {
-            folder: 'room_matching/rooms',
+            folder: 'phong_tro_vn/rooms',
             transformation: [
               { width: 1280, height: 720, crop: 'fill' },
               { quality: 'auto' },

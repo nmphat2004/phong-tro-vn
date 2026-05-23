@@ -41,8 +41,7 @@ const roleLabel: Record<string, string> = {
 };
 
 const roleColor: Record<string, string> = {
-	LANDLORD:
-		'bg-gradient-to-r from-amber-500 to-orange-500 text-white',
+	LANDLORD: 'bg-gradient-to-r from-amber-500 to-orange-500 text-white',
 	RENTER: 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white',
 	ADMIN: 'bg-gradient-to-r from-red-500 to-pink-500 text-white',
 };
@@ -78,12 +77,14 @@ const Header = () => {
 						<Home className='w-4 h-4 text-white' />
 					</div>
 					<span className='text-xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent'>
-						Room Matching
+						Phòng trọ VN
 					</span>
 				</Link>
 
 				{/* Search Bar */}
-				<form onSubmit={handleSearch} className='hidden md:flex items-center flex-1 max-w-md mx-6'>
+				<form
+					onSubmit={handleSearch}
+					className='hidden md:flex items-center flex-1 max-w-md mx-6'>
 					<div className='relative w-full'>
 						<Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground' />
 						<input
@@ -107,8 +108,7 @@ const Header = () => {
 						title={theme === 'dark' ? 'Chế độ sáng' : 'Chế độ tối'}>
 						{theme === 'dark' ?
 							<Sun className='w-5 h-5 text-amber-500' />
-						:	<Moon className='w-5 h-5' />
-						}
+						:	<Moon className='w-5 h-5' />}
 					</Button>
 
 					{isLoading ?
@@ -120,7 +120,10 @@ const Header = () => {
 					: user ?
 						<>
 							<Link href='/chat'>
-								<Button variant='ghost' size='icon' className='relative rounded-xl hover:bg-primary/5'>
+								<Button
+									variant='ghost'
+									size='icon'
+									className='relative rounded-xl hover:bg-primary/5'>
 									<MessageCircle className='w-5 h-5' />
 									{chatUnreadCount > 0 && (
 										<span className='absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white animate-pulse'>
@@ -184,7 +187,9 @@ const Header = () => {
 											</div>
 											<div className='flex-1'>
 												<p className='text-sm font-medium'>Trang cá nhân</p>
-												<p className='text-xs text-muted-foreground group-focus/item:text-white/70'>Xem và chỉnh sửa hồ sơ</p>
+												<p className='text-xs text-muted-foreground group-focus/item:text-white/70'>
+													Xem và chỉnh sửa hồ sơ
+												</p>
 											</div>
 										</DropdownMenuItem>
 
@@ -196,7 +201,9 @@ const Header = () => {
 											</div>
 											<div className='flex-1'>
 												<p className='text-sm font-medium'>Phòng đã lưu</p>
-												<p className='text-xs text-muted-foreground group-focus/item:text-white/70'>Xem lại phòng yêu thích</p>
+												<p className='text-xs text-muted-foreground group-focus/item:text-white/70'>
+													Xem lại phòng yêu thích
+												</p>
 											</div>
 										</DropdownMenuItem>
 
@@ -212,7 +219,9 @@ const Header = () => {
 													</div>
 													<div className='flex-1'>
 														<p className='text-sm font-medium'>Dashboard</p>
-														<p className='text-xs text-muted-foreground group-focus/item:text-white/70'>Quản lý phòng cho thuê</p>
+														<p className='text-xs text-muted-foreground group-focus/item:text-white/70'>
+															Quản lý phòng cho thuê
+														</p>
 													</div>
 												</DropdownMenuItem>
 
@@ -224,7 +233,9 @@ const Header = () => {
 													</div>
 													<div className='flex-1'>
 														<p className='text-sm font-medium'>Đăng tin mới</p>
-														<p className='text-xs text-muted-foreground group-focus/item:text-white/70'>Tạo tin đăng phòng trọ</p>
+														<p className='text-xs text-muted-foreground group-focus/item:text-white/70'>
+															Tạo tin đăng phòng trọ
+														</p>
 													</div>
 												</DropdownMenuItem>
 											</>

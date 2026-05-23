@@ -16,7 +16,11 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function AdminLayout({
+	children,
+}: {
+	children: React.ReactNode;
+}) {
 	const { user, isLoading, logout } = useAuthStore();
 	const router = useRouter();
 	const pathname = usePathname();
@@ -56,7 +60,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 					<div className='w-9 h-9 bg-blue-500 rounded-xl flex items-center justify-center'>
 						<Home className='w-5 h-5 text-white' />
 					</div>
-					<span className='text-xl font-bold text-white tracking-tight'>Room Matching</span>
+					<span className='text-xl font-bold text-white tracking-tight'>
+						Phòng trọ VN
+					</span>
 				</div>
 
 				{/* Navigation */}
@@ -69,9 +75,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 								key={item.href}
 								href={item.href}
 								className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200
-									${isActive
-										? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
-										: 'text-gray-400 hover:bg-white/5 hover:text-white'
+									${
+										isActive ?
+											'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
+										:	'text-gray-400 hover:bg-white/5 hover:text-white'
 									}`}>
 								<Icon className='w-[18px] h-[18px]' />
 								<span>{item.label}</span>
@@ -90,7 +97,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 							</AvatarFallback>
 						</Avatar>
 						<div className='flex-1 min-w-0'>
-							<p className='text-sm font-semibold text-white truncate'>{user.fullName}</p>
+							<p className='text-sm font-semibold text-white truncate'>
+								{user.fullName}
+							</p>
 							<p className='text-xs text-gray-400 truncate'>{user.email}</p>
 						</div>
 					</div>

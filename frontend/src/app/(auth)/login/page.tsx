@@ -67,7 +67,9 @@ const LoginPage = () => {
 				// Hoặc dùng implicit flow: lấy user info từ Google API
 				const userInfoRes = await fetch(
 					'https://www.googleapis.com/oauth2/v3/userinfo',
-					{ headers: { Authorization: `Bearer ${tokenResponse.access_token}` } },
+					{
+						headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+					},
 				);
 				const userInfo = await userInfoRes.json();
 
@@ -113,7 +115,7 @@ const LoginPage = () => {
 				<CardHeader className='text-center mb-5'>
 					<div className='flex items-center justify-center gap-2 font-semibold text-primary text-2xl '>
 						<Home className='w-8 h-8 text-primary text-xl rounded-lg flex items-center justify-center' />{' '}
-						Room Matching
+						Phòng trọ VN
 					</div>
 					<CardTitle className='text-xl mb-2'>Đăng nhập</CardTitle>
 				</CardHeader>
@@ -170,7 +172,9 @@ const LoginPage = () => {
 								</p>
 							)}
 							<div className='text-right mt-2'>
-								<Link href='/forgot-password' className='text-sm text-primary hover:underline'>
+								<Link
+									href='/forgot-password'
+									className='text-sm text-primary hover:underline'>
 									Quên mật khẩu?
 								</Link>
 							</div>
