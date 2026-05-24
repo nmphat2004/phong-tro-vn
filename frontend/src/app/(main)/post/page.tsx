@@ -8,7 +8,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Check, GripVertical, Upload, X } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useLayoutEffect, useId, useState } from 'react';
+import {
+	useCallback,
+	useEffect,
+	useLayoutEffect,
+	useId,
+	useState,
+} from 'react';
 import {
 	DndContext,
 	closestCenter,
@@ -29,10 +35,10 @@ import { CSS } from '@dnd-kit/utilities';
 import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import z from 'zod';
-import { createRoom } from '@/lib/api/room.api';
+import { createRoom, getAmenities } from '@/lib/api/room.api';
 import { uploadImage } from '@/lib/api/upload.api';
 import { toast } from 'sonner';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/auth.store';
 import dynamic from 'next/dynamic';
 import api from '@/lib/axios';
@@ -94,7 +100,7 @@ const SortableImageItem = ({
 		transform: CSS.Transform.toString(transform),
 		transition,
 		opacity: isDragging ? 0.5 : 1,
-		zIndex: isDragging ? 50 : 'auto' as any,
+		zIndex: isDragging ? 50 : ('auto' as any),
 	};
 
 	return (
@@ -123,9 +129,7 @@ const SortableImageItem = ({
 				</button>
 			</div>
 			{index === 0 && (
-				<Badge
-					variant='secondary'
-					className='absolute top-2 left-2 text-xs'>
+				<Badge variant='secondary' className='absolute top-2 left-2 text-xs'>
 					Ảnh bìa
 				</Badge>
 			)}
@@ -142,10 +146,17 @@ const PostRoomPage = () => {
 	const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
 	const dndId = useId();
 
+	const { data: amenitiesData = [] } = useQuery({
+		queryKey: ['amenities'],
+		queryFn: getAmenities,
+	});
+
 	// DnD sensors
 	const sensors = useSensors(
 		useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-		useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+		useSensor(KeyboardSensor, {
+			coordinateGetter: sortableKeyboardCoordinates,
+		}),
 	);
 
 	const handleDragEnd = useCallback((event: DragEndEvent) => {
@@ -187,7 +198,6 @@ const PostRoomPage = () => {
 			setIsGeocoding(false);
 		}
 	};
-
 
 	useLayoutEffect(() => {
 		if (!authLoading && user?.role !== 'LANDLORD') {
@@ -243,8 +253,14 @@ const PostRoomPage = () => {
 	useEffect(() => {
 		const timer = setTimeout(fetchPriceEstimate, 1000);
 		return () => clearTimeout(timer);
-	// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [formData.price, formData.area, formData.address, formData.amenities?.length, formData.floor]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [
+		formData.price,
+		formData.area,
+		formData.address,
+		formData.amenities?.length,
+		formData.floor,
+	]);
 
 	const steps = [
 		{ number: 1, title: 'Thông tin cơ bản' },
@@ -308,8 +324,8 @@ const PostRoomPage = () => {
 		try {
 			setIsLoading(true);
 
-			if (uploadedImages.length < 3) {
-				toast.error('Vui lòng tải lên ít nhất 3 hình ảnh');
+			if (uploadedImages.length < 1) {
+				toast.error('Vui lòng tải lên ít nhất 1 hình ảnh');
 				setCurrentStep(3);
 				return;
 			}
@@ -319,6 +335,11 @@ const PostRoomPage = () => {
 				const url = await uploadImage(image.file);
 				imageUrls.push(url);
 			}
+
+			// Map selection values to IDs
+			const selectedAmenityIds = (data.amenities || [])
+				.map((name) => amenitiesData.find((a: any) => a.name === name)?.id)
+				.filter(Boolean) as string[];
 
 			const roomData = {
 				title: data.title,
@@ -337,7 +358,7 @@ const PostRoomPage = () => {
 				lng: coords?.lng,
 				imageUrls,
 				primaryImageUrl: imageUrls[0],
-				amenityIds: [],
+				amenityIds: selectedAmenityIds,
 			};
 
 			await createRoom(roomData);
@@ -356,7 +377,13 @@ const PostRoomPage = () => {
 
 	const handleNextStep = async () => {
 		if (currentStep === 1) {
-			const valid = await trigger(['title', 'roomType', 'address', 'price', 'area']);
+			const valid = await trigger([
+				'title',
+				'roomType',
+				'address',
+				'price',
+				'area',
+			]);
 			if (!valid) {
 				toast.error('Vui lòng điền đầy đủ thông tin bắt buộc');
 				return;
@@ -370,8 +397,8 @@ const PostRoomPage = () => {
 			}
 			setCurrentStep(currentStep + 1);
 		} else if (currentStep === 3) {
-			if (uploadedImages.length < 3) {
-				toast.error('Vui lòng tải lên ít nhất 3 hình ảnh');
+			if (uploadedImages.length < 1) {
+				toast.error('Vui lòng tải lên ít nhất 1 hình ảnh');
 				return;
 			}
 			setCurrentStep(currentStep + 1);
@@ -451,7 +478,7 @@ const PostRoomPage = () => {
 													size='lg'
 													key={type.value}
 													onClick={() => setValue('roomType', type.value)}
-													className={`p-4 h-20 border rounded-lg text-left transition-all ${formData.roomType === type.value ? 'border-primary bg-primary/5' : 'border-border hover:bg-secondary'}`}>
+													className={`p-4 h-20 border rounded-lg text-left transition-all ${formData.roomType === type.value ? 'border-primary bg-primary/10 text-primary font-semibold' : 'border-border hover:bg-secondary'}`}>
 													<div className='text-2xl mb-2'>{type.icon}</div>
 													<div>{type.label}</div>
 												</Button>
@@ -478,7 +505,7 @@ const PostRoomPage = () => {
 
 										{/* Feature: Paste Google Maps Link */}
 										<div className='p-4 bg-primary/5 border border-primary/20 rounded-xl mb-4'>
-											<Label className='text-xs font-bold text-blue-700 uppercase mb-2 block'>
+											<Label className='text-xs font-bold text-blue-600 dark:text-blue-400 uppercase mb-2 block'>
 												Dán link Google Maps
 											</Label>
 											<div className='flex gap-2'>
@@ -490,7 +517,7 @@ const PostRoomPage = () => {
 												<Button
 													type='button'
 													variant='default'
-													className='bg-blue-600 hover:bg-blue-700'
+													className='bg-primary text-primary-foreground hover:bg-primary/90'
 													onClick={() => {
 														const url = (
 															document.getElementById(
@@ -502,7 +529,7 @@ const PostRoomPage = () => {
 													Áp dụng
 												</Button>
 											</div>
-											<p className='text-[10px] text-blue-500 mt-2 italic'>
+											<p className='text-[10px] text-blue-500 dark:text-blue-400 mt-2 italic'>
 												* Mở Google Maps, chọn vị trí nhà bạn, nhấn Chia sẻ{' '}
 												{`->`} Sao chép liên kết rồi dán vào đây.
 											</p>
@@ -585,12 +612,13 @@ const PostRoomPage = () => {
 															Dựa trên {priceEstimate.similarRoomsCount} phòng
 															tương tự trong khu vực
 															{priceEstimate.method === 'ai' && ' + AI'}
-															{priceEstimate.method === 'hybrid' && ' + AI xác thực'}
+															{priceEstimate.method === 'hybrid' &&
+																' + AI xác thực'}
 														</p>
 													)}
 													{priceEstimate.aiInsight && (
 														<div className='mt-2 pt-2 border-t border-border'>
-															<p className='text-xs font-medium text-purple-700 flex items-center gap-1'>
+															<p className='text-xs font-medium text-purple-600 dark:text-purple-400 flex items-center gap-1'>
 																<span>🤖</span> AI nhận xét:
 															</p>
 															<p className='text-xs text-muted-foreground mt-0.5'>
@@ -698,7 +726,7 @@ const PostRoomPage = () => {
 													size='lg'
 													key={amenity.value}
 													onClick={() => toggleAmenity(amenity.value)}
-													className={`p-3 border rounded-lg transition-all ${formData.amenities?.includes(amenity.value) ? 'border-primary bg-primary/5' : 'border-border hover:bg-secondary'}`}>
+													className={`p-3 border rounded-lg transition-all ${formData.amenities?.includes(amenity.value) ? 'border-primary bg-primary/10 text-primary font-semibold' : 'border-border hover:bg-secondary'}`}>
 													{amenity.value}
 												</Button>
 											))}
@@ -729,7 +757,7 @@ const PostRoomPage = () => {
 												Kéo thả hình ảnh vào đây hoặc nhấn để chọn
 											</p>
 											<p className='text-sm text-muted-foreground'>
-												Tối thiểu 3 ảnh
+												Tối thiểu 1 ảnh
 											</p>
 											<Input
 												id='image-upload'
@@ -847,7 +875,7 @@ const PostRoomPage = () => {
 															<Badge key={amenity} variant='default'>
 																{
 																	amenitiesList.find((a) => a.value === amenity)
-																		?.label
+																		?.value
 																}
 															</Badge>
 														))}
@@ -888,7 +916,7 @@ const PostRoomPage = () => {
 									</div>
 
 									<div className='flex items-start gap-3 p-4 bg-primary/5 border border-primary/20 rounded-lg'>
-										<div className='text-blue-600 mt-0.5'>ℹ️</div>
+										<div className='text-blue-600 dark:text-blue-400 mt-0.5'>ℹ️</div>
 										<div className='flex-1 text-sm'>
 											<p className='mb-1'>
 												Tin đăng của bạn sẽ được kiểm duyệt trong vòng 24 giờ.
@@ -914,12 +942,14 @@ const PostRoomPage = () => {
 
 								{currentStep < 4 ?
 									<Button
+										key='next-btn'
 										type='button'
 										variant='default'
 										onClick={handleNextStep}>
 										Tiếp tục
 									</Button>
 								:	<Button
+										key='submit-btn'
 										type='submit'
 										disabled={isLoading}
 										className='bg-accent hover:bg-accent/90'>

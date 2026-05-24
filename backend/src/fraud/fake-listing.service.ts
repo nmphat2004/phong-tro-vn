@@ -57,11 +57,14 @@ export class FakeListingService {
       reasons.push('Mô tả quá ngắn hoặc không có');
     }
     if (room.images.length === 0) {
-      missingScore += 10;
+      missingScore += 15;
       reasons.push('Không có ảnh đính kèm');
-    } else if (room.images.length < 3) {
-      missingScore += 5;
-      reasons.push('Ít hơn 3 ảnh (khó xác minh thực tế)');
+    } else if (room.images.length === 1) {
+      missingScore += 15;
+      reasons.push('Chỉ có 1 ảnh đính kèm (nghi ngờ tin đăng ảo)');
+    } else if (room.images.length === 2) {
+      missingScore += 8;
+      reasons.push('Chỉ có 2 ảnh đính kèm (ít thông tin xác thực)');
     }
     if (!room.lat || !room.lng) {
       missingScore += 5;

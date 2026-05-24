@@ -19,6 +19,18 @@ import { toast } from 'sonner';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/auth.store';
 import { Amenity } from '@/types';
+import dynamic from 'next/dynamic';
+import api from '@/lib/axios';
+
+const PostMapPreview = dynamic(
+	() => import('@/components/room/post-map-preview'),
+	{
+		ssr: false,
+		loading: () => (
+			<div className='h-[300px] w-full bg-secondary animate-pulse rounded-xl' />
+		),
+	},
+);
 
 const roomSchema = z.object({
 	title: z.string().min(5, 'Tiêu đề phải từ 5 ký tự trở lên'),
@@ -49,6 +61,8 @@ const EditRoomPage = () => {
 	const [uploadedImages, setUploadedImages] = useState<
 		{ file?: File; preview: string; isNew: boolean }[]
 	>([]);
+	const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+	const [isGeocoding, setIsGeocoding] = useState(false);
 
 	const { data: room, isLoading: isLoadingRoom } = useQuery({
 		queryKey: ['room', roomId],
@@ -79,7 +93,7 @@ const EditRoomPage = () => {
 				area: room.area || 0,
 				floor: room.floor || 0,
 				description: room.description || '',
-				amenities: room.amenities?.map((a: any) => a.amenity.value) || [],
+				amenities: room.amenities?.map((a: any) => a.amenity.name) || [],
 				rules: room.rule || '',
 				electricityCost: Number(room.electricityCost) || 0,
 				waterCost: Number(room.waterCost) || 0,
@@ -94,10 +108,36 @@ const EditRoomPage = () => {
 					})),
 				);
 			}
+			if (room.lat !== undefined && room.lng !== undefined) {
+				setCoords({ lat: Number(room.lat), lng: Number(room.lng) });
+			}
 		}
 	}, [room, reset]);
 
 	const formData = watch();
+
+	const handleGeocode = async (address: string) => {
+		if (!address || address.length < 5) return;
+		try {
+			setIsGeocoding(true);
+			const res = await api.get('/analytics/geocode', { params: { address } });
+			if (res.data) {
+				setCoords(res.data);
+				toast.success(
+					'Đã xác định vị trí! Bạn có thể kéo ghim để chỉnh sửa chính xác hơn.',
+				);
+			} else {
+				toast.error(
+					'Không tìm thấy vị trí chính xác. Vui lòng nhập địa chỉ chi tiết hơn.',
+				);
+			}
+		} catch (err) {
+			console.error('Geocoding error:', err);
+			toast.error('Lỗi khi định vị. Vui lòng thử lại.');
+		} finally {
+			setIsGeocoding(false);
+		}
+	};
 
 	useLayoutEffect(() => {
 		if (!authLoading && user?.role !== 'LANDLORD') {
@@ -124,14 +164,17 @@ const EditRoomPage = () => {
 	];
 
 	const amenitiesList = [
-		{ value: 'wifi', label: 'WiFi' },
-		{ value: 'ac', label: 'Điều hòa' },
-		{ value: 'parking', label: 'Bãi đỗ xe' },
-		{ value: 'elevator', label: 'Thang máy' },
-		{ value: 'bathroom', label: 'WC riêng' },
-		{ value: 'kitchen', label: 'Bếp' },
-		{ value: 'security', label: 'An ninh' },
-		{ value: 'washing', label: 'Máy giặt' },
+		{ value: 'Điều hòa', label: 'AirVent' },
+		{ value: 'Giữ xe', label: 'Car' },
+		{ value: 'Thang máy', label: 'Building2' },
+		{ value: 'An ninh', label: 'Shield' },
+		{ value: 'Kệ bếp', label: 'ChefHat' },
+		{ value: 'Máy giặt', label: 'WashingMachine' },
+		{ value: 'Đầy đủ nội thất', label: 'Sofa' },
+		{ value: 'Có gác', label: 'ArrowUp' },
+		{ value: 'Tủ lạnh', label: 'Refrigerator' },
+		{ value: 'Không chung chủ', label: 'UserX' },
+		{ value: 'Giờ giấc tự do', label: 'Clock' },
 	];
 
 	const toggleAmenity = (amenity: string) => {
@@ -171,8 +214,8 @@ const EditRoomPage = () => {
 		try {
 			setIsUpdating(true);
 
-			if (uploadedImages.length < 3) {
-				toast.error('Vui lòng tải lên ít nhất 3 hình ảnh');
+			if (uploadedImages.length < 1) {
+				toast.error('Vui lòng tải lên ít nhất 1 hình ảnh');
 				setCurrentStep(3);
 				return;
 			}
@@ -188,8 +231,8 @@ const EditRoomPage = () => {
 			}
 
 			// Map selection values to IDs
-			const selectedAmenityIds = data.amenities
-				.map((val) => amenitiesData.find((a: Amenity) => a.value === val)?.id)
+			const selectedAmenityIds = (data.amenities || [])
+				.map((name) => amenitiesData.find((a: any) => a.name === name)?.id)
 				.filter(Boolean) as string[];
 
 			const roomData = {
@@ -205,6 +248,8 @@ const EditRoomPage = () => {
 				rule: data.rules,
 				area: data.area,
 				floor: data.floor || 0,
+				lat: coords?.lat,
+				lng: coords?.lng,
 				imageUrls,
 				primaryImageUrl: imageUrls[0],
 				amenityIds: selectedAmenityIds,
@@ -226,7 +271,13 @@ const EditRoomPage = () => {
 
 	const handleNextStep = async () => {
 		if (currentStep === 1) {
-			const valid = await trigger(['title', 'roomType', 'address', 'price', 'area']);
+			const valid = await trigger([
+				'title',
+				'roomType',
+				'address',
+				'price',
+				'area',
+			]);
 			if (!valid) {
 				toast.error('Vui lòng điền đầy đủ thông tin bắt buộc');
 				return;
@@ -240,8 +291,8 @@ const EditRoomPage = () => {
 			}
 			setCurrentStep(currentStep + 1);
 		} else if (currentStep === 3) {
-			if (uploadedImages.length < 3) {
-				toast.error('Vui lòng tải lên ít nhất 3 hình ảnh');
+			if (uploadedImages.length < 1) {
+				toast.error('Vui lòng tải lên ít nhất 1 hình ảnh');
 				return;
 			}
 			setCurrentStep(currentStep + 1);
@@ -261,7 +312,11 @@ const EditRoomPage = () => {
 		);
 	}
 
-	if (!user || user.role !== 'LANDLORD' || (room && room.ownerId !== user?.id)) {
+	if (
+		!user ||
+		user.role !== 'LANDLORD' ||
+		(room && room.ownerId !== user?.id)
+	) {
 		if (room && room.ownerId !== user?.id) {
 			return (
 				<div className='min-h-screen flex items-center justify-center'>
@@ -328,7 +383,7 @@ const EditRoomPage = () => {
 													size='lg'
 													key={type.value}
 													onClick={() => setValue('roomType', type.value)}
-													className={`p-4 h-20 border rounded-lg text-left transition-all ${formData.roomType === type.value ? 'border-primary bg-primary/5' : 'border-border hover:bg-secondary'}`}>
+													className={`p-4 h-20 border rounded-lg text-left transition-all ${formData.roomType === type.value ? 'border-primary bg-primary/10 text-primary font-semibold' : 'border-border hover:bg-secondary'}`}>
 													<div className='text-2xl mb-2'>{type.icon}</div>
 													<div>{type.label}</div>
 												</Button>
@@ -343,15 +398,62 @@ const EditRoomPage = () => {
 
 									<div>
 										<Label className='block mb-2'>Địa chỉ *</Label>
-										<Input
-											placeholder='Nhập địa chỉ chi tiết (số nhà, đường, phường, quận)'
-											{...register('address')}
-											className={errors.address ? 'border-red-500' : ''}
-										/>
+										<div className='flex gap-2 mb-3'>
+											<Input
+												placeholder='Nhập địa chỉ chi tiết (số nhà, đường, phường, quận)'
+												{...register('address')}
+												className={errors.address ? 'border-red-500 flex-1' : 'flex-1'}
+											/>
+										</div>
+
+										{/* Feature: Paste Google Maps Link */}
+										<div className='p-4 bg-primary/5 border border-primary/20 rounded-xl mb-4'>
+											<Label className='text-xs font-bold text-blue-600 dark:text-blue-400 uppercase mb-2 block'>
+												Dán link Google Maps
+											</Label>
+											<div className='flex gap-2'>
+												<Input
+													id='gmaps-url'
+													placeholder='Dán liên kết từ Google Maps vào đây (ví dụ: https://maps.app.goo.gl/...)'
+													className='bg-card border-primary/30 focus:border-primary'
+												/>
+												<Button
+													type='button'
+													variant='default'
+													className='bg-primary text-primary-foreground hover:bg-primary/90'
+													onClick={() => {
+														const url = (
+															document.getElementById(
+																'gmaps-url',
+															) as HTMLInputElement
+														).value;
+														if (url) handleGeocode(url);
+													}}>
+													Áp dụng
+												</Button>
+											</div>
+											<p className='text-[10px] text-blue-500 dark:text-blue-400 mt-2 italic'>
+												* Mở Google Maps, chọn vị trí nhà bạn, nhấn Chia sẻ{' '}
+												{`->`} Sao chép liên kết rồi dán vào đây.
+											</p>
+										</div>
+
 										{errors.address && (
 											<p className='text-sm text-red-500 mt-1'>
 												{errors.address.message}
 											</p>
+										)}
+										{coords && (
+											<div className='mt-4 animate-in fade-in slide-in-from-top-2 duration-300'>
+												<Label className='text-xs text-muted-foreground mb-2 block font-medium uppercase'>
+													Xem trước vị trí:
+												</Label>
+												<PostMapPreview
+													lat={coords.lat}
+													lng={coords.lng}
+													onChange={(lat, lng) => setCoords({ lat, lng })}
+												/>
+											</div>
 										)}
 									</div>
 
@@ -467,8 +569,8 @@ const EditRoomPage = () => {
 													size='lg'
 													key={amenity.value}
 													onClick={() => toggleAmenity(amenity.value)}
-													className={`p-3 border rounded-lg transition-all ${formData.amenities?.includes(amenity.value) ? 'border-primary bg-primary/5' : 'border-border hover:bg-secondary'}`}>
-													{amenity.label}
+													className={`p-3 border rounded-lg transition-all ${formData.amenities?.includes(amenity.value) ? 'border-primary bg-primary/10 text-primary font-semibold' : 'border-border hover:bg-secondary'}`}>
+													{amenity.value}
 												</Button>
 											))}
 										</div>
@@ -498,7 +600,7 @@ const EditRoomPage = () => {
 												Kéo thả hình ảnh vào đây hoặc nhấn để chọn
 											</p>
 											<p className='text-sm text-muted-foreground'>
-												Tối thiểu 3 ảnh
+												Tối thiểu 1 ảnh
 											</p>
 											<Input
 												id='image-upload'
@@ -629,7 +731,7 @@ const EditRoomPage = () => {
 															<Badge key={amenity} variant='default'>
 																{
 																	amenitiesList.find((a) => a.value === amenity)
-																		?.label
+																		?.value
 																}
 															</Badge>
 														))}
@@ -651,10 +753,26 @@ const EditRoomPage = () => {
 												</div>
 											</>
 										)}
+
+										{coords && (
+											<>
+												<Separator />
+												<div>
+													<span className='text-sm text-muted-foreground block mb-3 font-semibold'>
+														Bản đồ vị trí
+													</span>
+													<PostMapPreview
+														lat={coords.lat}
+														lng={coords.lng}
+														onChange={(lat, lng) => setCoords({ lat, lng })}
+													/>
+												</div>
+											</>
+										)}
 									</div>
 
 									<div className='flex items-start gap-3 p-4 bg-primary/5 border border-primary/20 rounded-lg'>
-										<div className='text-blue-600 mt-0.5'>ℹ️</div>
+										<div className='text-blue-600 dark:text-blue-400 mt-0.5'>ℹ️</div>
 										<div className='flex-1 text-sm'>
 											<p className='mb-1'>
 												Các thay đổi sẽ được cập nhật ngay lập tức.
@@ -680,12 +798,14 @@ const EditRoomPage = () => {
 
 								{currentStep < 4 ?
 									<Button
+										key='next-btn'
 										type='button'
 										variant='default'
 										onClick={handleNextStep}>
 										Tiếp tục
 									</Button>
 								:	<Button
+										key='submit-btn'
 										type='submit'
 										disabled={isUpdating}
 										className='bg-accent hover:bg-accent/90'>

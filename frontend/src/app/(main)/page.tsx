@@ -251,9 +251,6 @@ const HomePage = () => {
 				</div>
 			</section>
 
-			{/* AI Recommendations */}
-			<RoomRecommendations />
-
 			{/* Quick categories */}
 			<section className='bg-secondary/30 py-12'>
 				<div className='max-w-7xl mx-auto px-4'>
@@ -279,6 +276,9 @@ const HomePage = () => {
 					</div>
 				</div>
 			</section>
+
+			{/* AI Recommendations */}
+			<RoomRecommendations />
 
 			{/* Latest Listings */}
 			<section className='max-w-7xl mx-auto px-4 py-16 w-full'>

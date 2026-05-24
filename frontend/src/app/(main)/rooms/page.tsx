@@ -261,7 +261,7 @@ const RoomsPage = () => {
 				maxPrice: maxPrice ? Number(maxPrice) : undefined,
 				minRating: minRating ? Number(minRating) : undefined,
 				selectedDistrict:
-					selectedWard ? selectedWard :
+					selectedWard ? `${selectedWard}, ${selectedDistrict}` :
 					selectedDistrict !== 'all' ? selectedDistrict : undefined,
 				amenities:
 					selectedAmenities.length > 0 ?

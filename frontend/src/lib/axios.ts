@@ -39,7 +39,8 @@ api.interceptors.response.use(
 		const originalRequest = error.config;
 		const isAuthPath =
 			originalRequest.url?.includes('/auth/login') ||
-			originalRequest.url?.includes('/auth/register');
+			originalRequest.url?.includes('/auth/register') ||
+			originalRequest.url?.includes('/auth/refresh');
 
 		if (
 			error.response?.status === 401 &&
@@ -83,7 +84,9 @@ api.interceptors.response.use(
 				localStorage.removeItem('accessToken');
 				localStorage.removeItem('refreshToken');
 				// Redirect to login if needed or let the app handle auth state
-				window.location.href = '/login';
+				if (typeof window !== 'undefined' && window.location.pathname !== '/login' && window.location.pathname !== '/register') {
+					window.location.href = '/login';
+				}
 				return Promise.reject(err);
 			} finally {
 				isRefreshing = false;
