@@ -35,9 +35,10 @@ export class PriceEstimatorService {
     floor: number,
     address: string,
     currentPrice?: number,
+    type?: string,
   ): Promise<PriceEstimate> {
     // Lấy dữ liệu phòng cùng khu vực để train
-    const rawData = await this.getTrainingData(address);
+    const rawData = await this.getTrainingData(address, type);
 
     // Lọc outlier trước khi train
     const trainingData = this.removeOutliers(rawData);
@@ -51,13 +52,47 @@ export class PriceEstimatorService {
       coefficients = this.trainOLS(trainingData);
       estimated = this.predict(coefficients, area, amenityCount, floor);
     } else {
-      // Không đủ data → dùng hệ số mặc định thị trường VN
-      coefficients = {
-        intercept: 500_000,
-        area: 80_000,
-        amenity: 150_000,
-        floor: 30_000,
+      // Hệ số mặc định theo loại phòng ở Việt Nam khi thiếu dữ liệu mẫu
+      const defaultCoefficients: Record<string, Coefficients> = {
+        room: {
+          intercept: 500_000,
+          area: 80_000,
+          amenity: 150_000,
+          floor: 30_000,
+        },
+        shared: {
+          intercept: 300_000,
+          area: 40_000,
+          amenity: 100_000,
+          floor: 15_000,
+        },
+        house: {
+          intercept: 3_000_000,
+          area: 120_000,
+          amenity: 300_000,
+          floor: 100_000,
+        },
+        apartment: {
+          intercept: 2_500_000,
+          area: 110_000,
+          amenity: 250_000,
+          floor: 50_000,
+        },
+        mini: {
+          intercept: 1_500_000,
+          area: 100_000,
+          amenity: 200_000,
+          floor: 40_000,
+        },
+        service: {
+          intercept: 2_000_000,
+          area: 120_000,
+          amenity: 250_000,
+          floor: 40_000,
+        },
       };
+
+      coefficients = type ? (defaultCoefficients[type] || defaultCoefficients.room) : defaultCoefficients.room;
       estimated = this.predict(coefficients, area, amenityCount, floor);
       method = 'ai'; // sẽ dùng AI để điều chỉnh
     }
@@ -76,6 +111,7 @@ export class PriceEstimatorService {
         estimated,
         trainingData.length,
         currentPrice,
+        type,
       );
 
       if (aiResult) {
@@ -157,12 +193,24 @@ export class PriceEstimatorService {
     olsEstimate: number,
     sampleSize: number,
     currentPrice?: number,
+    type?: string,
   ): Promise<{ adjustedPrice: number | null; insight: string } | null> {
     const district = this.extractDistrict(address);
 
-    const prompt = `Bạn là chuyên gia định giá phòng trọ tại Việt Nam. Phân tích và đưa ra giá thuê hợp lý cho phòng trọ sau:
+    const typeNames: Record<string, string> = {
+      room: 'Phòng trọ',
+      house: 'Nhà nguyên căn',
+      shared: 'Ký túc xá / Ở ghép',
+      apartment: 'Căn hộ chung cư',
+      mini: 'Căn hộ mini',
+      service: 'Căn hộ dịch vụ',
+    };
+    const typeLabel = type ? (typeNames[type] || type) : 'Phòng trọ';
 
-THÔNG TIN PHÒNG:
+    const prompt = `Bạn là chuyên gia định giá bất động sản và phòng trọ tại Việt Nam. Phân tích và đưa ra giá thuê hợp lý cho loại bất động sản sau:
+
+THÔNG TIN CHI TIẾT:
+- Loại hình: ${typeLabel}
 - Diện tích: ${area}m²
 - Số tiện nghi: ${amenityCount} (VD: điều hòa, máy giặt, tủ lạnh, v.v.)
 - Tầng: ${floor}
@@ -171,11 +219,11 @@ ${district ? `- Quận/Huyện: ${district}` : ''}
 ${currentPrice ? `- Giá chủ nhà đang đặt: ${currentPrice.toLocaleString('vi-VN')}đ/tháng` : ''}
 
 THAM KHẢO THUẬT TOÁN:
-- Giá ước tính bằng hồi quy tuyến tính: ${olsEstimate.toLocaleString('vi-VN')}đ/tháng
-- Dựa trên ${sampleSize} phòng tương tự trong khu vực
+- Giá ước tính bằng hồi quy tuyến tính (cho các phòng cùng khu vực): ${olsEstimate.toLocaleString('vi-VN')}đ/tháng
+- Dựa trên ${sampleSize} mẫu trong khu vực
 
 YÊU CẦU: Trả về JSON duy nhất (không markdown, không giải thích thêm) với format:
-{"adjustedPrice": <số nguyên giá đề xuất VND/tháng hoặc null nếu đồng ý với thuật toán>, "insight": "<1-2 câu nhận xét ngắn gọn bằng tiếng Việt về mức giá, phù hợp hiển thị cho chủ nhà>"}`;
+{"adjustedPrice": <số nguyên giá đề xuất VND/tháng hoặc null nếu đồng ý với thuật toán>, "insight": "<1-2 câu nhận xét ngắn gọn bằng tiếng Việt về mức giá và loại hình, ví dụ lý do tại sao giá của loại hình này cao/thấp hơn phòng thông thường, phù hợp hiển thị cho chủ nhà>"}`;
 
     const result = await this.aiService.generateText(prompt);
     if (!result) return null;
@@ -349,7 +397,7 @@ YÊU CẦU: Trả về JSON duy nhất (không markdown, không giải thích th
     );
   }
 
-  private async getTrainingData(address: string) {
+  private async getTrainingData(address: string, type?: string) {
     const district = this.extractDistrict(address);
 
     const rooms = await this.prisma.room.findMany({
@@ -358,6 +406,9 @@ YÊU CẦU: Trả về JSON duy nhất (không markdown, không giải thích th
         area: { not: null, gt: 0 },
         ...(district && {
           address: { contains: district, mode: 'insensitive' },
+        }),
+        ...(type && {
+          type,
         }),
       },
       include: { amenities: true },

@@ -38,6 +38,7 @@ export class AnalyticsController {
     @Query('floor') floor: string,
     @Query('address') address: string,
     @Query('currentPrice') currentPrice?: string,
+    @Query('type') type?: string,
   ) {
     return this.priceEstimatorService.estimate(
       parseFloat(area),
@@ -45,6 +46,7 @@ export class AnalyticsController {
       parseInt(floor),
       address,
       currentPrice ? parseFloat(currentPrice) : undefined,
+      type,
     );
   }
 

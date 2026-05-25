@@ -166,6 +166,48 @@ export class RoomsService {
       sortBy = 'newest',
     } = dto;
 
+    const buildSearchCondition = (term: string) => {
+      const lower = term.toLowerCase();
+      if (lower === 'phú thọ') {
+        return {
+          AND: [
+            { address: { contains: 'Phú Thọ', mode: 'insensitive' } },
+            { NOT: { address: { contains: 'Phú Thọ Hòa', mode: 'insensitive' } } },
+            { NOT: { address: { contains: 'Phú Thọ Hoà', mode: 'insensitive' } } },
+          ],
+        };
+      }
+      if (lower === 'an phú' || lower === 'an phu') {
+        return {
+          AND: [
+            { address: { contains: 'An Phú', mode: 'insensitive' } },
+            { NOT: { address: { contains: 'An Phú Đông', mode: 'insensitive' } } },
+            { NOT: { address: { contains: 'An Phú Tây', mode: 'insensitive' } } },
+          ],
+        };
+      }
+      if (lower === 'bình hưng' || lower === 'binh hung') {
+        return {
+          AND: [
+            { address: { contains: 'Bình Hưng', mode: 'insensitive' } },
+            { NOT: { address: { contains: 'Bình Hưng Hòa', mode: 'insensitive' } } },
+            { NOT: { address: { contains: 'Bình Hưng Hoà', mode: 'insensitive' } } },
+          ],
+        };
+      }
+      if (lower === 'phú mỹ' || lower === 'phu my') {
+        return {
+          AND: [
+            { address: { contains: 'Phú Mỹ', mode: 'insensitive' } },
+            { NOT: { address: { contains: 'Phú Mỹ Hưng', mode: 'insensitive' } } },
+          ],
+        };
+      }
+      return {
+        address: { contains: term, mode: 'insensitive' },
+      };
+    };
+
     const where: any = {
       status: 'AVAILABLE',
       ...(roomType && {
@@ -173,17 +215,13 @@ export class RoomsService {
       }),
       ...(selectedDistrict &&
         selectedDistrict !== 'all' && {
-          OR: this.getDistrictSearchTerms(selectedDistrict).map((term) => ({
-            address: { contains: term, mode: 'insensitive' },
-          })),
+          OR: this.getDistrictSearchTerms(selectedDistrict).map((term) => buildSearchCondition(term)),
         }),
       ...(keyword && {
         OR: [
           { title: { contains: keyword, mode: 'insensitive' } },
           { description: { contains: keyword, mode: 'insensitive' } },
-          ...this.getDistrictSearchTerms(keyword).map((term) => ({
-            address: { contains: term, mode: 'insensitive' },
-          })),
+          ...this.getDistrictSearchTerms(keyword).map((term) => buildSearchCondition(term)),
         ],
       }),
       ...(minPrice || maxPrice
@@ -310,16 +348,19 @@ export class RoomsService {
       .replace(/q\.?\s*phú nhuận/g, 'quận phú nhuận')
       .replace(/q\.?\s*tân bình/g, 'quận tân bình')
       .replace(/q\.?\s*tân phú/g, 'quận tân phú')
+      .replace(/q\.?\s*bình tân/g, 'quận bình tân')
       .replace(/(?<!phường\s+|phuong\s+|xã\s+|xa\s+|thị\s+trấn\s+|thi\s+tran\s+)quận\s+bình\s+thạnh/g, 'bình thạnh')
       .replace(/(?<!phường\s+|phuong\s+|xã\s+|xa\s+|thị\s+trấn\s+|thi\s+tran\s+)quận\s+gò\s+vấp/g, 'gò vấp')
       .replace(/(?<!phường\s+|phuong\s+|xã\s+|xa\s+|thị\s+trấn\s+|thi\s+tran\s+)quận\s+phú\s+nhuận/g, 'phú nhuận')
       .replace(/(?<!phường\s+|phuong\s+|xã\s+|xa\s+|thị\s+trấn\s+|thi\s+tran\s+)quận\s+tân\s+bình/g, 'tân bình')
       .replace(/(?<!phường\s+|phuong\s+|xã\s+|xa\s+|thị\s+trấn\s+|thi\s+tran\s+)quận\s+tân\s+phú/g, 'tân phú')
+      .replace(/(?<!phường\s+|phuong\s+|xã\s+|xa\s+|thị\s+trấn\s+|thi\s+tran\s+)quận\s+bình\s+tân/g, 'bình tân')
       .replace(/(?<!phường\s+|phuong\s+|xã\s+|xa\s+|thị\s+trấn\s+|thi\s+tran\s+)bình\s+thạnh/g, 'quận bình thạnh')
       .replace(/(?<!phường\s+|phuong\s+|xã\s+|xa\s+|thị\s+trấn\s+|thi\s+tran\s+)gò\s+vấp/g, 'quận gò vấp')
       .replace(/(?<!phường\s+|phuong\s+|xã\s+|xa\s+|thị\s+trấn\s+|thi\s+tran\s+)phú\s+nhuận/g, 'quận phú nhuận')
       .replace(/(?<!phường\s+|phuong\s+|xã\s+|xa\s+|thị\s+trấn\s+|thi\s+tran\s+)tân\s+bình/g, 'quận tân bình')
       .replace(/(?<!phường\s+|phuong\s+|xã\s+|xa\s+|thị\s+trấn\s+|thi\s+tran\s+)tân\s+phú/g, 'quận tân phú')
+      .replace(/(?<!phường\s+|phuong\s+|xã\s+|xa\s+|thị\s+trấn\s+|thi\s+tran\s+)bình\s+tân/g, 'quận bình tân')
       .replace(/,/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
@@ -392,7 +433,7 @@ export class RoomsService {
 
       // Quận Bình Tân
       'an lạc': ['Phường An Lạc', 'An Lạc', 'Bình Trị Đông B', 'An Lạc A'],
-      'bình tân': ['Phường Bình Tân', 'Bình Tân', 'Bình Hưng Hòa B', 'Bình Trị Đông A', 'Tân Tạo'],
+      'phường bình tân': ['Phường Bình Tân', 'Bình Tân', 'Bình Hưng Hòa B', 'Bình Trị Đông A', 'Tân Tạo'],
       'tân tạo': ['Phường Tân Tạo', 'Tân Tạo', 'Tân Kiên', 'Xã Tân Kiên', 'Tân Tạo A', 'Phường Tân Tạo A'],
       'bình trị đông': ['Phường Bình Trị Đông', 'Bình Trị Đông', 'Bình Hưng Hòa A', 'Bình Trị Đông A'],
       'bình hưng hòa': ['Phường Bình Hưng Hòa', 'Bình Hưng Hòa', 'Sơn Kỳ', 'Bình Hưng Hòa A'],
@@ -441,7 +482,7 @@ export class RoomsService {
       'phường thủ đức': ['Phường Thủ Đức', 'Thủ Đức', 'Bình Thọ', 'Linh Chiểu', 'Trường Thọ', 'Linh Tây', 'Linh Đông'],
       'tam bình': ['Phường Tam Bình', 'Tam Bình', 'Bình Chiểu', 'Tam Phú'],
       'linh xuân': ['Phường Linh Xuân', 'Linh Xuân', 'Linh Trung', 'Linh Tây'],
-      'tăng nhơn phú': ['Phường Tăng Nhơn Phú', 'Tăng Nhơn Phú', 'Tân Phú', 'Hiệp Phú', 'Tăng Nhơn Phú A', 'Tăng Nhơn Phú B', 'Long Thạnh Mỹ'],
+      'tăng nhơn phú': ['Phường Tăng Nhơn Phú', 'Tăng Nhơn Phú', 'Phường Tân Phú', 'Hiệp Phú', 'Tăng Nhơn Phú A', 'Tăng Nhơn Phú B', 'Long Thạnh Mỹ'],
       'long bình': ['Phường Long Bình', 'Long Bình', 'Long Thạnh Mỹ'],
       'long phước': ['Phường Long Phước', 'Long Phước', 'Trường Thạnh'],
       'long trường': ['Phường Long Trường', 'Long Trường', 'Phú Hữu'],
@@ -510,7 +551,7 @@ export class RoomsService {
         'quận 4': ['Quận 4', 'Q4', 'Q.4', 'Xóm Chiếu', 'Khánh Hội', 'Vĩnh Hội', 'Phường 1', 'Phường 2', 'Phường 3', 'Phường 4', 'Phường 6', 'Phường 8', 'Phường 9', 'Phường 10', 'Phường 13', 'Phường 14', 'Phường 15', 'Phường 16', 'Phường 18'],
         'quận 5': ['Quận 5', 'Q5', 'Q.5', 'Chợ Quán', 'An Đông', 'Chợ Lớn', 'Phường 3', 'Phường 6', 'Phường 8', 'Phường 10', 'Phường 15', 'Phường 1', 'Phường 2', 'Phường 4', 'Phường 5', 'Phường 7', 'Phường 9', 'Phường 11', 'Phường 12', 'Phường 13', 'Phường 14'],
         'quận 6': ['Quận 6', 'Q6', 'Q.6', 'Bình Tây', 'Bình Tiên', 'Bình Phú', 'Phú Lâm', 'Phường 1', 'Phường 2', 'Phường 3', 'Phường 4', 'Phường 5', 'Phường 6', 'Phường 7', 'Phường 8', 'Phường 9', 'Phường 10', 'Phường 11', 'Phường 12', 'Phường 13', 'Phường 14'],
-        'quận 7': ['Quận 7', 'Q7', 'Q.7', 'Tân Thuận', 'Phú Thuận', 'Tân Mỹ', 'Tân Hưng', 'Bình Thuận', 'Tân Thuận Đông', 'Tân Thuận Tây', 'Tân Phú', 'Phú Mỹ', 'Tân Phong', 'Tân Quy', 'Tân Kiểng'],
+        'quận 7': ['Quận 7', 'Q7', 'Q.7', 'Tân Thuận', 'Phú Thuận', 'Tân Mỹ', 'Tân Hưng', 'Bình Thuận', 'Tân Thuận Đông', 'Tân Thuận Tây', 'Phường Tân Phú', 'Phú Mỹ', 'Tân Phong', 'Tân Quy', 'Tân Kiểng'],
         'quận 8': ['Quận 8', 'Q8', 'Q.8', 'Chánh Hưng', 'Phú Định', 'Bình Đông', 'Phường 1', 'Phường 2', 'Phường 3', 'Phường 4', 'Phường 5', 'Phường 6', 'Phường 7', 'Phường 8', 'Phường 9', 'Phường 10', 'Phường 11', 'Phường 12', 'Phường 13', 'Phường 14', 'Phường 15', 'Phường 16', 'Rạch Ông', 'Hưng Phú', 'Xóm Củi'],
         'quận 10': ['Quận 10', 'Q10', 'Q.10', 'Diên Hồng', 'Vườn Lài', 'Hòa Hưng', 'Hoà Hưng', 'Phường 1', 'Phường 2', 'Phường 3', 'Phường 4', 'Phường 5', 'Phường 6', 'Phường 7', 'Phường 8', 'Phường 9', 'Phường 10', 'Phường 11', 'Phường 12', 'Phường 13', 'Phường 14', 'Phường 15'],
         'quận 11': ['Quận 11', 'Q11', 'Q.11', 'Minh Phụng', 'Bình Thới', 'Hòa Bình', 'Hoà Bình', 'Phú Thọ', 'Phường 1', 'Phường 2', 'Phường 3', 'Phường 4', 'Phường 5', 'Phường 6', 'Phường 7', 'Phường 8', 'Phường 9', 'Phường 10', 'Phường 11', 'Phường 12', 'Phường 13', 'Phường 14', 'Phường 15', 'Phường 16'],
@@ -521,7 +562,7 @@ export class RoomsService {
         'quận phú nhuận': ['Phú Nhuận', 'Quận Phú Nhuận', 'Đức Nhuận', 'Cầu Kiệu', 'Phú Nhuận', 'Phường 1', 'Phường 2', 'Phường 3', 'Phường 4', 'Phường 5', 'Phường 7', 'Phường 8', 'Phường 9', 'Phường 10', 'Phường 11', 'Phường 12', 'Phường 13', 'Phường 14', 'Phường 15', 'Phường 17'],
         'quận tân bình': ['Tân Bình', 'Quận Tân Bình', 'Tân Sơn Hòa', 'Tân Sơn Hoà', 'Tân Sơn Nhất', 'Tân Hòa', 'Tân Hoà', 'Bảy Hiền', 'Tân Bình', 'Tân Sơn', 'Phường 1', 'Phường 2', 'Phường 3', 'Phường 4', 'Phường 5', 'Phường 6', 'Phường 7', 'Phường 8', 'Phường 9', 'Phường 10', 'Phường 11', 'Phường 12', 'Phường 13', 'Phường 14', 'Phường 15'],
         'quận tân phú': ['Tân Phú', 'Quận Tân Phú', 'Tây Thạnh', 'Tân Sơn Nhì', 'Phú Thọ Hòa', 'Phú Thọ Hoà', 'Tân Phú', 'Phú Thạnh', 'Sơn Kỳ', 'Tân Quý', 'Tân Thành', 'Phú Trung', 'Hòa Thạnh', 'Tân Thới Hòa', 'Hiệp Tân'],
-        'thủ đức': ['Thủ Đức', 'TP. Thủ Đức', 'TP Thủ Đức', 'Thành phố Thủ Đức', 'Hiệp Bình', 'Thủ Đức', 'Tam Bình', 'Linh Xuân', 'Tăng Nhơn Phú', 'Long Bình', 'Long Phước', 'Long Trường', 'Cát Lái', 'Bình Trưng', 'Phước Long', 'An Khánh', 'Hiệp Bình Chánh', 'Hiệp Bình Phước', 'Linh Đông', 'Bình Thọ', 'Linh Chiểu', 'Trường Thọ', 'Linh Tây', 'Bình Chiểu', 'Tam Phú', 'Linh Trung', 'Tân Phú', 'Hiệp Phú', 'Tăng Nhơn Phú A', 'Tăng Nhơn Phú B', 'Long Thạnh Mỹ', 'Trường Thạnh', 'Phú Hữu', 'Thạnh Mỹ Lợi', 'Bình Trưng Đông', 'Bình Trưng Tây', 'An Phú', 'Phước Bình', 'Phước Long A', 'Phước Long B', 'Thủ Thiêm', 'An Lợi Đông', 'Thảo Điền', 'Quận 2', 'Q2', 'Q.2', 'Quận 9', 'Q9', 'Q.9'],
+        'thủ đức': ['Thủ Đức', 'TP. Thủ Đức', 'TP Thủ Đức', 'Thành phố Thủ Đức', 'Hiệp Bình', 'Thủ Đức', 'Tam Bình', 'Linh Xuân', 'Tăng Nhơn Phú', 'Long Bình', 'Long Phước', 'Long Trường', 'Cát Lái', 'Bình Trưng', 'Phước Long', 'An Khánh', 'Hiệp Bình Chánh', 'Hiệp Bình Phước', 'Linh Đông', 'Bình Thọ', 'Linh Chiểu', 'Trường Thọ', 'Linh Tây', 'Bình Chiểu', 'Tam Phú', 'Linh Trung', 'Phường Tân Phú', 'Hiệp Phú', 'Tăng Nhơn Phú A', 'Tăng Nhơn Phú B', 'Long Thạnh Mỹ', 'Trường Thạnh', 'Phú Hữu', 'Thạnh Mỹ Lợi', 'Bình Trưng Đông', 'Bình Trưng Tây', 'An Phú', 'Phước Bình', 'Phước Long A', 'Phước Long B', 'Thủ Thiêm', 'An Lợi Đông', 'Thảo Điền', 'Quận 2', 'Q2', 'Q.2', 'Quận 9', 'Q9', 'Q.9'],
         'bình chánh': ['Bình Chánh', 'Huyện Bình Chánh', 'Vĩnh Lộc', 'Tân Vĩnh Lộc', 'Bình Lợi', 'Tân Nhựt', 'Bình Chánh', 'Hưng Long', 'Bình Hưng', 'Vĩnh Lộc A', 'Phạm Văn Hai', 'Vĩnh Lộc B', 'Lê Minh Xuân', 'Tân Túc', 'Tân Nhựt', 'Tân Kiên', 'Tân Quý Tây', 'An Phú Tây', 'Đa Phước', 'Qui Đức', 'Phong Phú', 'Bình Hưng'],
         'cần giờ': ['Cần Giờ', 'Huyện Cần Giờ', 'Bình Khánh', 'An Thới Đông', 'Cần Giờ', 'Thạnh An', 'Tam Thôn Hiệp', 'Lý Nhơn', 'Long Hòa', 'Cần Thạnh'],
         'củ chi': ['Củ Chi', 'Huyện Củ Chi', 'Củ Chi', 'Tân An Hội', 'Thái Mỹ', 'An Nhơn Tây', 'Nhuận Đức', 'Phú Hòa Đông', 'Bình Mỹ', 'Tân Phú Trung', 'Tân Thông Hội', 'Phước Vĩnh An', 'Phước Hiệp', 'Trung Lập Thượng', 'Phước Thạnh', 'Phú Mỹ Hưng', 'An Phú', 'Phạm Văn Cội', 'Trung Lập Hạ', 'Tân Thạnh Tây', 'Tân Thạnh Đông', 'Hòa Phú', 'Trung An'],

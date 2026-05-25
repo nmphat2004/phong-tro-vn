@@ -33,7 +33,6 @@ const roomTypesList = [
 	{ value: 'room', label: 'Phòng trọ', icon: Home },
 	{ value: 'house', label: 'Nhà riêng', icon: Hotel },
 	{ value: 'shared', label: 'Ký túc xá', icon: School },
-	{ value: 'shophouse', label: 'Mặt bằng', icon: Store },
 	{ value: 'apartment', label: 'Căn hộ chung cư', icon: Building2 },
 	{ value: 'mini', label: 'Căn hộ mini', icon: Building },
 	{ value: 'service', label: 'Căn hộ dịch vụ', icon: Building2 },
@@ -103,7 +102,9 @@ const RoomsPage = () => {
 		searchParams.get('ward') || '',
 	);
 	const [districtModalOpen, setDistrictModalOpen] = useState(false);
-	const [districtModalView, setDistrictModalView] = useState<'districts' | 'wards'>('districts');
+	const [districtModalView, setDistrictModalView] = useState<
+		'districts' | 'wards'
+	>('districts');
 	const [browsingDistrict, setBrowsingDistrict] = useState('');
 	const [openFilter, setOpenFilter] = useState<OpenFilter>(null);
 
@@ -261,8 +262,9 @@ const RoomsPage = () => {
 				maxPrice: maxPrice ? Number(maxPrice) : undefined,
 				minRating: minRating ? Number(minRating) : undefined,
 				selectedDistrict:
-					selectedWard ? `${selectedWard}, ${selectedDistrict}` :
-					selectedDistrict !== 'all' ? selectedDistrict : undefined,
+					selectedWard ? `${selectedWard}, ${selectedDistrict}`
+					: selectedDistrict !== 'all' ? selectedDistrict
+					: undefined,
 				amenities:
 					selectedAmenities.length > 0 ?
 						selectedAmenities.join(',')
@@ -342,12 +344,16 @@ const RoomsPage = () => {
 
 						{/* District */}
 						<button
-							onClick={() => { setDistrictModalOpen(true); setDistrictModalView('districts'); }}
-							className={filterBtnClass(
-								selectedDistrict !== 'all',
-								false,
-							)}>
-							{selectedWard ? selectedWard : selectedDistrict !== 'all' ? selectedDistrict : 'Quận/Huyện'}
+							onClick={() => {
+								setDistrictModalOpen(true);
+								setDistrictModalView('districts');
+							}}
+							className={filterBtnClass(selectedDistrict !== 'all', false)}>
+							{selectedWard ?
+								selectedWard
+							: selectedDistrict !== 'all' ?
+								selectedDistrict
+							:	'Quận/Huyện'}
 							<ChevronDown className='w-4 h-4' />
 						</button>
 
@@ -484,7 +490,6 @@ const RoomsPage = () => {
 								</div>
 							)}
 
-
 							{/* Amenities */}
 							{openFilter === 'amenities' && (
 								<div>
@@ -547,14 +552,21 @@ const RoomsPage = () => {
 								<FilterChip
 									label={selectedDistrict}
 									active
-									onRemove={() => { handleDistrictSelect('all'); setSelectedWard(''); updateUrl({ ward: '' }); }}
+									onRemove={() => {
+										handleDistrictSelect('all');
+										setSelectedWard('');
+										updateUrl({ ward: '' });
+									}}
 								/>
 							)}
 							{selectedWard && (
 								<FilterChip
 									label={selectedWard}
 									active
-									onRemove={() => { setSelectedWard(''); updateUrl({ ward: '' }); }}
+									onRemove={() => {
+										setSelectedWard('');
+										updateUrl({ ward: '' });
+									}}
 								/>
 							)}
 							{selectedAmenities.map((amenity) => (
@@ -640,88 +652,121 @@ const RoomsPage = () => {
 					</div>
 				)}
 
-			{/* ── District/Ward Modal ────────────────────── */}
-			{districtModalOpen && (
-				<div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40'>
-					<div className='bg-card rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] flex flex-col'>
-						{/* Modal header */}
-						<div className='flex items-center gap-3 px-5 py-4 border-b border-border'>
-							{districtModalView === 'wards' ? (
-								<button onClick={() => setDistrictModalView('districts')} className='p-1 hover:bg-secondary rounded-lg transition-colors cursor-pointer'>
-									<ArrowLeft className='w-5 h-5' />
-								</button>
-							) : null}
-							<h3 className='text-lg font-semibold flex-1'>
-								{districtModalView === 'districts' ? 'Hồ Chí Minh' : browsingDistrict}
-							</h3>
-							<button onClick={() => setDistrictModalOpen(false)} className='p-1 hover:bg-secondary rounded-lg transition-colors cursor-pointer'>
-								<X className='w-5 h-5' />
-							</button>
-						</div>
-
-						{/* Modal body */}
-						<div className='overflow-y-auto flex-1'>
-							{districtModalView === 'districts' ? (
-								<>
-									{/* Tất cả */}
+				{/* ── District/Ward Modal ────────────────────── */}
+				{districtModalOpen && (
+					<div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40'>
+						<div className='bg-card rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] flex flex-col'>
+							{/* Modal header */}
+							<div className='flex items-center gap-3 px-5 py-4 border-b border-border'>
+								{districtModalView === 'wards' ?
 									<button
-										onClick={() => { handleDistrictSelect('all'); setDistrictModalOpen(false); }}
-										className='w-full flex items-center gap-3 px-5 py-3.5 hover:bg-secondary transition-colors text-left cursor-pointer'>
-										<span className={`w-5 h-5 rounded border-2 flex items-center justify-center ${selectedDistrict === 'all' ? 'border-primary bg-primary' : 'border-border'}`}>
-											{selectedDistrict === 'all' && <span className='text-white text-xs'>✓</span>}
-										</span>
-										<span className='flex-1 font-medium'>Tất cả</span>
+										onClick={() => setDistrictModalView('districts')}
+										className='p-1 hover:bg-secondary rounded-lg transition-colors cursor-pointer'>
+										<ArrowLeft className='w-5 h-5' />
 									</button>
+								:	null}
+								<h3 className='text-lg font-semibold flex-1'>
+									{districtModalView === 'districts' ?
+										'Hồ Chí Minh'
+									:	browsingDistrict}
+								</h3>
+								<button
+									onClick={() => setDistrictModalOpen(false)}
+									className='p-1 hover:bg-secondary rounded-lg transition-colors cursor-pointer'>
+									<X className='w-5 h-5' />
+								</button>
+							</div>
 
-									{hcmDistricts.map((d) => (
+							{/* Modal body */}
+							<div className='overflow-y-auto flex-1'>
+								{districtModalView === 'districts' ?
+									<>
+										{/* Tất cả */}
 										<button
-											key={d.name}
 											onClick={() => {
-												handleDistrictSelect(d.name);
-												setBrowsingDistrict(d.name);
-												setDistrictModalView('wards');
+												handleDistrictSelect('all');
+												setDistrictModalOpen(false);
 											}}
 											className='w-full flex items-center gap-3 px-5 py-3.5 hover:bg-secondary transition-colors text-left cursor-pointer'>
-											<span className={`w-5 h-5 rounded border-2 flex items-center justify-center ${selectedDistrict === d.name ? 'border-primary bg-primary' : 'border-border'}`}>
-												{selectedDistrict === d.name && <span className='text-white text-xs'>✓</span>}
+											<span
+												className={`w-5 h-5 rounded border-2 flex items-center justify-center ${selectedDistrict === 'all' ? 'border-primary bg-primary' : 'border-border'}`}>
+												{selectedDistrict === 'all' && (
+													<span className='text-white text-xs'>✓</span>
+												)}
 											</span>
-											<span className='flex-1'>{d.name}</span>
-											<ChevronRight className='w-4 h-4 text-muted-foreground' />
+											<span className='flex-1 font-medium'>Tất cả</span>
 										</button>
-									))}
-								</>
-							) : (
-								<>
-									{/* Tất cả phường */}
-									<button
-										onClick={() => { setSelectedWard(''); updateUrl({ ward: '' }); setDistrictModalOpen(false); }}
-										className='w-full flex items-center gap-3 px-5 py-3.5 hover:bg-secondary transition-colors text-left cursor-pointer'>
-										<span className={`w-5 h-5 rounded border-2 flex items-center justify-center ${!selectedWard ? 'border-primary bg-primary' : 'border-border'}`}>
-											{!selectedWard && <span className='text-white text-xs'>✓</span>}
-										</span>
-										<span className='flex-1 font-medium'>Tất cả</span>
-									</button>
 
-									{hcmDistricts.find((d) => d.name === browsingDistrict)?.wards.map((w) => (
+										{hcmDistricts.map((d) => (
+											<button
+												key={d.name}
+												onClick={() => {
+													handleDistrictSelect(d.name);
+													setBrowsingDistrict(d.name);
+													setDistrictModalView('wards');
+												}}
+												className='w-full flex items-center gap-3 px-5 py-3.5 hover:bg-secondary transition-colors text-left cursor-pointer'>
+												<span
+													className={`w-5 h-5 rounded border-2 flex items-center justify-center ${selectedDistrict === d.name ? 'border-primary bg-primary' : 'border-border'}`}>
+													{selectedDistrict === d.name && (
+														<span className='text-white text-xs'>✓</span>
+													)}
+												</span>
+												<span className='flex-1'>{d.name}</span>
+												<ChevronRight className='w-4 h-4 text-muted-foreground' />
+											</button>
+										))}
+									</>
+								:	<>
+										{/* Tất cả phường */}
 										<button
-											key={w.name}
-											onClick={() => { handleWardSelect(w.name); setDistrictModalOpen(false); }}
+											onClick={() => {
+												setSelectedWard('');
+												updateUrl({ ward: '' });
+												setDistrictModalOpen(false);
+											}}
 											className='w-full flex items-center gap-3 px-5 py-3.5 hover:bg-secondary transition-colors text-left cursor-pointer'>
-											<span className={`w-5 h-5 rounded border-2 flex items-center justify-center ${selectedWard === w.name ? 'border-primary bg-primary' : 'border-border'}`}>
-												{selectedWard === w.name && <span className='text-white text-xs'>✓</span>}
+											<span
+												className={`w-5 h-5 rounded border-2 flex items-center justify-center ${!selectedWard ? 'border-primary bg-primary' : 'border-border'}`}>
+												{!selectedWard && (
+													<span className='text-white text-xs'>✓</span>
+												)}
 											</span>
-											<div className='flex-1'>
-												<span className='block font-medium'>{w.name}</span>
-												{w.streets && <span className='block text-xs text-muted-foreground mt-0.5'>{w.streets[0]}</span>}
-											</div>
+											<span className='flex-1 font-medium'>Tất cả</span>
 										</button>
-									))}
-								</>
-							)}
+
+										{hcmDistricts
+											.find((d) => d.name === browsingDistrict)
+											?.wards.map((w) => (
+												<button
+													key={w.name}
+													onClick={() => {
+														handleWardSelect(w.name);
+														setDistrictModalOpen(false);
+													}}
+													className='w-full flex items-center gap-3 px-5 py-3.5 hover:bg-secondary transition-colors text-left cursor-pointer'>
+													<span
+														className={`w-5 h-5 rounded border-2 flex items-center justify-center ${selectedWard === w.name ? 'border-primary bg-primary' : 'border-border'}`}>
+														{selectedWard === w.name && (
+															<span className='text-white text-xs'>✓</span>
+														)}
+													</span>
+													<div className='flex-1'>
+														<span className='block font-medium'>{w.name}</span>
+														{w.streets && (
+															<span className='block text-xs text-muted-foreground mt-0.5'>
+																{w.streets[0]}
+															</span>
+														)}
+													</div>
+												</button>
+											))}
+									</>
+								}
+							</div>
 						</div>
 					</div>
-				</div>
-			)}
+				)}
 			</div>
 		</div>
 	);

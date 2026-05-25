@@ -218,12 +218,16 @@ export class NeighborhoodService {
               el.lon ?? el.center?.lon,
             ),
           ),
+          lat: el.lat ?? el.center?.lat,
+          lng: el.lon ?? el.center?.lon,
         }))
         .filter(
           (p: any) =>
             p.type !== 'other' &&
             Number.isFinite(p.distance) &&
-            p.distance >= 0,
+            p.distance >= 0 &&
+            Number.isFinite(p.lat) &&
+            Number.isFinite(p.lng),
         )
         .sort((a: any, b: any) => a.distance - b.distance);
 
@@ -284,6 +288,8 @@ export class NeighborhoodService {
             distance: Math.round(
               this.haversine(lat, lng, Number(item.lat), Number(item.lon)),
             ),
+            lat: Number(item.lat),
+            lng: Number(item.lon),
           }));
         }),
       );

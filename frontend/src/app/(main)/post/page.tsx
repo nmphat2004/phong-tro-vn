@@ -239,6 +239,7 @@ const PostRoomPage = () => {
 					floor: formData.floor || 1,
 					address,
 					currentPrice: price,
+					type: formData.roomType,
 				},
 			});
 			setPriceEstimate(res.data);
@@ -260,6 +261,7 @@ const PostRoomPage = () => {
 		formData.address,
 		formData.amenities?.length,
 		formData.floor,
+		formData.roomType,
 	]);
 
 	const steps = [
@@ -478,7 +480,7 @@ const PostRoomPage = () => {
 													size='lg'
 													key={type.value}
 													onClick={() => setValue('roomType', type.value)}
-													className={`p-4 h-20 border rounded-lg text-left transition-all ${formData.roomType === type.value ? 'border-primary bg-primary/10 text-primary font-semibold' : 'border-border hover:bg-secondary'}`}>
+													className={`p-4 h-20 border rounded-lg text-left transition-all ${formData.roomType === type.value ? 'border-primary bg-primary/10 text-primary font-semibold dark:border-primary' : 'border-border hover:bg-secondary'}`}>
 													<div className='text-2xl mb-2'>{type.icon}</div>
 													<div>{type.label}</div>
 												</Button>
@@ -726,7 +728,7 @@ const PostRoomPage = () => {
 													size='lg'
 													key={amenity.value}
 													onClick={() => toggleAmenity(amenity.value)}
-													className={`p-3 border rounded-lg transition-all ${formData.amenities?.includes(amenity.value) ? 'border-primary bg-primary/10 text-primary font-semibold' : 'border-border hover:bg-secondary'}`}>
+													className={`p-3 border rounded-lg transition-all ${formData.amenities?.includes(amenity.value) ? 'border-primary bg-primary/10 text-primary font-semibold dark:border-primary hover:bg-primary/20 hover:text-primary' : 'border-border hover:bg-secondary'}`}>
 													{amenity.value}
 												</Button>
 											))}
@@ -916,7 +918,9 @@ const PostRoomPage = () => {
 									</div>
 
 									<div className='flex items-start gap-3 p-4 bg-primary/5 border border-primary/20 rounded-lg'>
-										<div className='text-blue-600 dark:text-blue-400 mt-0.5'>ℹ️</div>
+										<div className='text-blue-600 dark:text-blue-400 mt-0.5'>
+											ℹ️
+										</div>
 										<div className='flex-1 text-sm'>
 											<p className='mb-1'>
 												Tin đăng của bạn sẽ được kiểm duyệt trong vòng 24 giờ.
@@ -935,6 +939,7 @@ const PostRoomPage = () => {
 									<Button
 										type='button'
 										variant='secondary'
+										className='border-border dark:border-primary'
 										onClick={() => setCurrentStep(currentStep - 1)}>
 										Quay lại
 									</Button>
