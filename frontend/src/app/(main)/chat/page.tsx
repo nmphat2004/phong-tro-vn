@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, Suspense } from 'react';
 import { Search, Send, MoreVertical, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -23,7 +23,7 @@ import { useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { useNotificationStore } from '@/stores/notification.store';
 
-const MessagingPage = () => {
+const ChatContent = () => {
 	const { user } = useAuthStore();
 	const searchParams = useSearchParams();
 	const roomId = searchParams.get('roomId');
@@ -461,4 +461,14 @@ const MessagingPage = () => {
 	);
 };
 
-export default MessagingPage;
+export default function MessagingPage() {
+	return (
+		<Suspense fallback={
+			<div className='h-[calc(100vh-73px)] flex items-center justify-center bg-background'>
+				<Loader2 className='h-8 w-8 animate-spin text-primary' />
+			</div>
+		}>
+			<ChatContent />
+		</Suspense>
+	);
+}

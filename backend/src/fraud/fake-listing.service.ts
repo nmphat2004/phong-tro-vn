@@ -114,10 +114,11 @@ export class FakeListingService {
     score = Math.min(100, score);
 
     // Cập nhật DB nếu cần flag
-    if (score >= 60) {
+    const expectedStatus = score >= 80 ? 'HIDDEN' : 'AVAILABLE';
+    if (score >= 60 && room.status !== expectedStatus) {
       await this.prisma.room.update({
         where: { id: roomId },
-        data: { status: score >= 80 ? 'HIDDEN' : 'AVAILABLE' },
+        data: { status: expectedStatus },
       });
     }
 

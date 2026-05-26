@@ -846,12 +846,52 @@ const PostRoomPage = () => {
 												</span>
 												<p className='text-lg'>{formData.area}m²</p>
 											</div>
-											<div>
-												<span className='text-sm text-muted-foreground block mb-1'>
-													Thời gian ở tối thiểu
-												</span>
-												<p className='text-lg'>{formData.minStay}</p>
-											</div>
+											{formData.floor && formData.floor > 0 ? (
+												<div>
+													<span className='text-sm text-muted-foreground block mb-1'>
+														Tầng
+													</span>
+													<p className='text-lg'>{formData.floor}</p>
+												</div>
+											) : null}
+											{formData.minStay && formData.minStay !== '0' && formData.minStay !== '--' ? (
+												<div>
+													<span className='text-sm text-muted-foreground block mb-1'>
+														Thời gian ở tối thiểu
+													</span>
+													<p className='text-lg'>{formData.minStay}</p>
+												</div>
+											) : null}
+											{formData.electricityCost && formData.electricityCost > 0 ? (
+												<div>
+													<span className='text-sm text-muted-foreground block mb-1'>
+														Tiền điện
+													</span>
+													<p className='text-lg'>
+														{Number(formData.electricityCost).toLocaleString('vi-VN')}đ/kWh
+													</p>
+												</div>
+											) : null}
+											{formData.waterCost && formData.waterCost > 0 ? (
+												<div>
+													<span className='text-sm text-muted-foreground block mb-1'>
+														Tiền nước
+													</span>
+													<p className='text-lg'>
+														{Number(formData.waterCost).toLocaleString('vi-VN')}đ/tháng
+													</p>
+												</div>
+											) : null}
+											{formData.deposit && formData.deposit > 0 ? (
+												<div>
+													<span className='text-sm text-muted-foreground block mb-1'>
+														Tiền đặt cọc
+													</span>
+													<p className='text-lg'>
+														{Number(formData.deposit).toLocaleString('vi-VN')}đ
+													</p>
+												</div>
+											) : null}
 										</div>
 
 										<Separator />

@@ -4,6 +4,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Body,
   Param,
   Query,
@@ -12,7 +13,7 @@ import {
   Req,
 } from '@nestjs/common';
 import { ReviewsService } from './reviews.service';
-import { CreateReviewDto } from './dto/review.dto';
+import { CreateReviewDto, UpdateReviewDto } from './dto/review.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtGuard } from 'src/auth/guards/jwt.guard';
 
@@ -49,6 +50,18 @@ export class ReviewsController {
     @Body() dto: CreateReviewDto,
   ) {
     return this.reviewsService.create(roomId, req.user.id, dto);
+  }
+
+  @Put(':id')
+  @ApiOperation({ summary: 'Update a review' })
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
+  update(
+    @Param('id') id: string,
+    @Req() req: any,
+    @Body() dto: UpdateReviewDto,
+  ) {
+    return this.reviewsService.update(id, req.user.id, dto);
   }
 
   @Delete(':id')

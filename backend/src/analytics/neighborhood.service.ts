@@ -16,7 +16,10 @@ const POI_CONFIG: Record<string, { weight: number; radius: number }> = {
 export class NeighborhoodService {
   async analyze(lat: number, lng: number) {
     // Lấy POI từ Overpass API (OpenStreetMap — miễn phí)
-    const pois = await this.fetchPOIs(lat, lng, 1000);
+    let pois = await this.fetchPOIs(lat, lng, 1000);
+
+    // Chuẩn hóa và loại bỏ trùng lặp tiện ích xung quanh
+    pois = this.deduplicateAndFormatPois(pois);
 
     // Tính điểm từng tiêu chí
     const convenienceScore = this.calcScore(pois, [
@@ -351,5 +354,36 @@ export class NeighborhoodService {
     if (scores.noiseScore >= 65) pros.push('yên tĩnh');
     else cons.push('khu vực khá ồn ào');
     return `Khu vực ${level}.${pros.length ? ' Ưu điểm: ' + pros.join(', ') + '.' : ''}${cons.length ? ' Hạn chế: ' + cons.join(', ') + '.' : ''}`;
+  }
+
+  private deduplicateAndFormatPois(pois: any[]): any[] {
+    const seen = new Set<string>();
+    const result: any[] = [];
+
+    for (const poi of pois) {
+      // 1. Định dạng tên trạm xe buýt nếu chưa chứa từ khóa chỉ trạm dừng/bến xe
+      if (poi.type === 'bus_station') {
+        const nameLower = poi.name.toLowerCase();
+        if (
+          !nameLower.includes('trạm') &&
+          !nameLower.includes('tram') &&
+          !nameLower.includes('bến') &&
+          !nameLower.includes('ben') &&
+          !nameLower.includes('bus')
+        ) {
+          poi.name = `Trạm xe buýt gần ${poi.name}`;
+        }
+      }
+
+      // 2. Loại bỏ trùng lặp dựa trên loại + tên chuẩn hóa
+      const normName = poi.name.trim().toLowerCase().replace(/\s+/g, ' ');
+      const key = `${poi.type}_${normName}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        result.push(poi);
+      }
+    }
+
+    return result;
   }
 }

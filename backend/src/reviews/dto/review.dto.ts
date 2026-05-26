@@ -43,3 +43,50 @@ export class CreateReviewDto {
   @IsOptional()
   comment?: string;
 }
+
+export class UpdateReviewDto {
+  @ApiProperty({ example: 4, required: false })
+  @IsNumber()
+  @Type(() => Number)
+  @Min(1)
+  @Max(5)
+  @IsOptional()
+  rating?: number;
+
+  @ApiProperty({ example: 4, required: false })
+  @IsNumber()
+  @Type(() => Number)
+  @Min(1)
+  @Max(5)
+  @IsOptional()
+  cleanRating?: number;
+
+  @ApiProperty({ example: 4, required: false })
+  @IsNumber()
+  @Type(() => Number)
+  @Min(1)
+  @Max(5)
+  @IsOptional()
+  securityRating?: number;
+
+  @ApiProperty({ example: 4, required: false })
+  @IsNumber()
+  @Type(() => Number)
+  @Min(1)
+  @Max(5)
+  @IsOptional()
+  locationRating?: number;
+
+  @ApiProperty({ example: 4, required: false })
+  @IsNumber()
+  @Type(() => Number)
+  @Min(1)
+  @Max(5)
+  @IsOptional()
+  landlordRating?: number;
+
+  @ApiProperty({ example: 'Phòng sạch sẽ, chủ trọ thân thiện', required: false })
+  @IsString()
+  @IsOptional()
+  comment?: string;
+}

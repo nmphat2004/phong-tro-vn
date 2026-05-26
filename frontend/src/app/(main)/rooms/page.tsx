@@ -25,7 +25,7 @@ import {
 	X,
 } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, Suspense } from 'react';
 
 // ─── Constants ───────────────────────────────────────────────
 
@@ -37,6 +37,27 @@ const roomTypesList = [
 	{ value: 'mini', label: 'Căn hộ mini', icon: Building },
 	{ value: 'service', label: 'Căn hộ dịch vụ', icon: Building2 },
 ];
+
+const labelToValueMap: Record<string, string> = {
+	'phòng trọ': 'room',
+	'nhà riêng': 'house',
+	'nhà nguyên căn': 'house',
+	'ký túc xá': 'shared',
+	'căn hộ chung cư': 'apartment',
+	'căn hộ mini': 'mini',
+	'chung cư mini': 'mini',
+	'căn hộ dịch vụ': 'service',
+};
+
+const normalizeRoomType = (val: string | null): string => {
+	if (!val) return '';
+	const cleaned = val.replace(/\+/g, ' ').trim().toLowerCase();
+	return labelToValueMap[cleaned] || val;
+};
+
+const getRoomTypeLabel = (value: string) => {
+	return roomTypesList.find((t) => t.value === value)?.label || value;
+};
 
 const amenitiesList = [
 	{ value: 'furnished', name: 'Đầy đủ nội thất' },
@@ -69,7 +90,7 @@ type OpenFilter =
 
 // ─── Component ───────────────────────────────────────────────
 
-const RoomsPage = () => {
+const RoomsContent = () => {
 	const searchParams = useSearchParams();
 	const router = useRouter();
 	const pathname = usePathname();
@@ -93,7 +114,7 @@ const RoomsPage = () => {
 		searchParams.get('amenities')?.split(',').filter(Boolean) || [],
 	);
 	const [selectedRoomType, setSelectedRoomType] = useState(
-		searchParams.get('roomType') || '',
+		normalizeRoomType(searchParams.get('roomType')),
 	);
 	const [minRating, setMinRating] = useState(searchParams.get('rating') || '');
 	const [layout, setLayout] = useState<'grid' | 'list'>('list');
@@ -310,7 +331,7 @@ const RoomsPage = () => {
 								!!selectedRoomType,
 								openFilter === 'roomType',
 							)}>
-							{selectedRoomType || 'Danh mục'}
+							{getRoomTypeLabel(selectedRoomType) || 'Danh mục'}
 							<ChevronDown
 								className={`w-4 h-4 transition-transform duration-200 ${openFilter === 'roomType' ? 'rotate-180' : ''}`}
 							/>
@@ -521,7 +542,7 @@ const RoomsPage = () => {
 							</span>
 							{selectedRoomType && (
 								<FilterChip
-									label={selectedRoomType}
+									label={getRoomTypeLabel(selectedRoomType)}
 									active
 									onRemove={() => handleRoomTypeSelect(selectedRoomType)}
 								/>
@@ -772,4 +793,14 @@ const RoomsPage = () => {
 	);
 };
 
-export default RoomsPage;
+export default function RoomsPage() {
+	return (
+		<Suspense fallback={
+			<div className='bg-background min-h-screen flex items-center justify-center'>
+				<div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary'></div>
+			</div>
+		}>
+			<RoomsContent />
+		</Suspense>
+	);
+}

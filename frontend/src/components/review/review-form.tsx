@@ -45,7 +45,7 @@ const ReviewForm = ({ roomId }: Props) => {
 			queryClient.invalidateQueries({ queryKey: ['reviews', roomId] });
 			queryClient.invalidateQueries({ queryKey: ['room', roomId] });
 			setRatings({
-				ratings: 0,
+				rating: 0,
 				cleanRating: 0,
 				securityRating: 0,
 				locationRating: 0,

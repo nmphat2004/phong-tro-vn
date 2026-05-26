@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 interface PriceTagProps {
 	amount: number;
 	period?: string;
@@ -12,7 +11,8 @@ export function PriceTag({
 }: PriceTagProps) {
 	const formatPrice = (price: any) => {
 		const val = Number(price) / 1000000;
-		return isNaN(val) ? '0,0' : val.toFixed(1).replace('.', ',');
+		if (isNaN(val)) return '0';
+		return Number(val.toFixed(2)).toString();
 	};
 
 	const textSizes = {
@@ -29,7 +29,7 @@ export function PriceTag({
 
 	return (
 		<div className='inline-flex items-baseline gap-1'>
-			<span className={`${textSizes[size]} text-accent`}>
+			<span className={`${textSizes[size]} text-accent font-bold`}>
 				{formatPrice(amount)}tr
 			</span>
 			<span className={`${periodSizes[size]} text-muted-foreground`}>

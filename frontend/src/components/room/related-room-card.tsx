@@ -11,7 +11,8 @@ interface RelatedRoomCardProps {
 }
 
 const RelatedRoomCard = ({ room, compact = false }: RelatedRoomCardProps) => {
-	const primaryImage = room.images?.find((img) => img.isPrimary) || room.images?.[0];
+	const primaryImage =
+		room.images?.find((img) => img.isPrimary) || room.images?.[0];
 	const photoCount = room.images?.length || 0;
 
 	if (compact) {
@@ -19,7 +20,12 @@ const RelatedRoomCard = ({ room, compact = false }: RelatedRoomCardProps) => {
 			<Link href={`/rooms/${room.id}`} className='flex gap-3 group'>
 				<div className='relative h-16 w-24 rounded-md overflow-hidden border shrink-0 bg-secondary/20'>
 					{primaryImage && (
-						<Image src={primaryImage.url} alt={room.title} fill className='object-cover' />
+						<Image
+							src={primaryImage.url}
+							alt={room.title}
+							fill
+							className='object-cover'
+						/>
 					)}
 				</div>
 				<div className='min-w-0 space-y-1'>
@@ -43,7 +49,12 @@ const RelatedRoomCard = ({ room, compact = false }: RelatedRoomCardProps) => {
 			className='group rounded-xl border border-border bg-card overflow-hidden hover:shadow-md transition-shadow'>
 			<div className='relative h-40 bg-secondary/20'>
 				{primaryImage && (
-					<Image src={primaryImage.url} alt={room.title} fill className='object-cover' />
+					<Image
+						src={primaryImage.url}
+						alt={room.title}
+						fill
+						className='object-cover'
+					/>
 				)}
 				<div className='absolute left-2 bottom-2 rounded bg-black/55 text-white text-xs px-2 py-1 inline-flex items-center gap-1'>
 					<Camera className='w-3 h-3' />
@@ -62,7 +73,9 @@ const RelatedRoomCard = ({ room, compact = false }: RelatedRoomCardProps) => {
 					<MapPin className='w-3.5 h-3.5 shrink-0' />
 					{room.address}
 				</p>
-				<p className='text-xs text-muted-foreground'>{formatRelativeTime(room.createdAt)}</p>
+				<p className='text-xs text-muted-foreground'>
+					{formatRelativeTime(room.createdAt)}
+				</p>
 			</div>
 		</Link>
 	);

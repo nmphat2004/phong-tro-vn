@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import Personal from '@/components/profiles/personal';
 import Security from '@/components/profiles/security';
@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation';
 
 type Tab = 'personal' | 'security' | 'notifications' | 'saved';
 
-const ProfilePage = () => {
+const ProfileContent = () => {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const defaultTab = (searchParams.get('tab') as Tab) || 'personal';
@@ -73,4 +73,14 @@ const ProfilePage = () => {
 	);
 };
 
-export default ProfilePage;
+export default function ProfilePage() {
+	return (
+		<Suspense fallback={
+			<div className='min-h-screen bg-secondary flex items-center justify-center'>
+				<div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary'></div>
+			</div>
+		}>
+			<ProfileContent />
+		</Suspense>
+	);
+}

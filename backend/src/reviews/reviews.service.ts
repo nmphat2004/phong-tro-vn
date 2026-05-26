@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateReviewDto } from './dto/review.dto';
+import { CreateReviewDto, UpdateReviewDto } from './dto/review.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { FakeReviewService } from 'src/fraud/fake-review.service';
 import { AiService } from '../analytics/ai.service';
@@ -178,6 +178,47 @@ export class ReviewsService {
       fraudScore: fraudResult.score,
       isFlagged: fraudResult.action === 'flag',
     };
+  }
+
+  async update(id: string, userId: string, dto: UpdateReviewDto) {
+    const review = await this.prisma.review.findUnique({ where: { id } });
+    if (!review) throw new NotFoundException('Review not found');
+
+    if (review.reviewerId !== userId) {
+      throw new ForbiddenException('Bạn không có quyền chỉnh sửa đánh giá này');
+    }
+
+    const fraudResult = await this.fakeReviewService.analyze(
+      userId,
+      review.roomId,
+      dto.rating ?? review.rating,
+      dto.comment ?? review.comment ?? '',
+    );
+
+    if (fraudResult.action === 'reject') {
+      throw new BadRequestException(
+        'Chỉnh sửa bị từ chối vì có dấu hiệu không hợp lệ',
+      );
+    }
+
+    const updated = await this.prisma.review.update({
+      where: { id },
+      data: {
+        ...dto,
+        isVerified: fraudResult.action === 'approve',
+      },
+      include: {
+        reviewer: { select: { id: true, fullName: true, avatarUrl: true } },
+      },
+    });
+
+    await this.updateRoomRating(review.roomId);
+
+    if (dto.comment) {
+      this.analyzeSentiment(review.id, dto.comment).catch(console.error);
+    }
+
+    return updated;
   }
 
   async remove(id: string, userId: string, role: string) {

@@ -95,11 +95,6 @@ const Notification = () => {
 			<div className='space-y-4'>
 				{[
 					{
-						key: 'newMessage',
-						label: 'Khi có tin nhắn mới',
-						desc: 'Nhận thông báo khi có ai đó gửi tin nhắn cho bạn',
-					},
-					{
 						key: 'savedListing',
 						label: 'Khi có người lưu phòng của bạn',
 						desc: 'Nhận thông báo khi có người lưu phòng của bạn',
@@ -162,33 +157,33 @@ const Notification = () => {
 				:	notifications
 						.filter((item) => item.type !== 'NEW_MESSAGE')
 						.map((item) => (
-						<button
-							type='button'
-							key={item.id}
-							onClick={() => {
-								if (!item.isRead) {
-									markReadMutation.mutate(item.id);
-								}
-								// Always navigate to link if available
-								if (item.link) {
-									router.push(item.link);
-								}
-							}}
-							className={`w-full text-left p-3 rounded-lg border transition-colors ${item.isRead ? 'bg-card' : 'bg-primary/5 border-primary/30'}`}>
-							<div className='flex items-start gap-3'>
-								<Bell className='w-4 h-4 mt-1 text-primary' />
-								<div className='flex-1'>
-									<p className='font-medium text-sm'>{item.title}</p>
-									<p className='text-sm text-muted-foreground'>
-										{item.content}
-									</p>
-									<p className='text-xs text-muted-foreground mt-1'>
-										{new Date(item.createdAt).toLocaleString('vi-VN')}
-									</p>
+							<button
+								type='button'
+								key={item.id}
+								onClick={() => {
+									if (!item.isRead) {
+										markReadMutation.mutate(item.id);
+									}
+									// Always navigate to link if available
+									if (item.link) {
+										router.push(item.link);
+									}
+								}}
+								className={`w-full text-left p-3 rounded-lg border transition-colors ${item.isRead ? 'bg-card' : 'bg-primary/5 border-primary/30'}`}>
+								<div className='flex items-start gap-3'>
+									<Bell className='w-4 h-4 mt-1 text-primary' />
+									<div className='flex-1'>
+										<p className='font-medium text-sm'>{item.title}</p>
+										<p className='text-sm text-muted-foreground'>
+											{item.content}
+										</p>
+										<p className='text-xs text-muted-foreground mt-1'>
+											{new Date(item.createdAt).toLocaleString('vi-VN')}
+										</p>
+									</div>
 								</div>
-							</div>
-						</button>
-					))
+							</button>
+						))
 				}
 			</div>
 		</div>

@@ -124,7 +124,7 @@ const RoomCard = ({ room, layout = 'grid' }: Props) => {
 
 				{/* Thông tin */}
 				<div className='p-4'>
-					<h3 className='mb-2 line-clamp-1'>{room.title}</h3>
+					<h3 className='mb-2 line-clamp-2'>{room.title}</h3>
 
 					<div className='inline-flex items-baseline gap-1'>
 						<PriceTag size='md' amount={room.price} />

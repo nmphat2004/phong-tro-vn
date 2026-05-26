@@ -12,14 +12,12 @@ import {
 	Building2,
 	ChevronRight,
 	Home,
-	MapPin,
 	School,
 	Search,
 	ShieldCheck,
 	Star,
 	Users,
 } from 'lucide-react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -29,7 +27,6 @@ const HomePage = () => {
 	const [searchDistrict, setSearchDistrict] = useState('');
 	const [priceRange, setPriceRange] = useState('');
 	const [roomType, setRoomType] = useState('');
-	const [areaRange, setAreaRange] = useState('');
 	const { user } = useAuthStore();
 	const router = useRouter();
 
@@ -50,45 +47,26 @@ const HomePage = () => {
 		{
 			icon: Home,
 			title: 'Phòng trọ',
-			description: '10,000+ phòng',
+			value: 'room',
 			color: 'bg-blue-500/10 text-blue-600',
 		},
 		{
 			icon: Building,
 			title: 'Nhà nguyên căn',
-			description: '2,500+ nhà',
+			value: 'house',
 			color: 'bg-green-500/10 text-green-600',
 		},
 		{
 			icon: Building2,
 			title: 'Chung cư mini',
-			description: '1,200+ căn',
+			value: 'mini',
 			color: 'bg-purple-500/10 text-purple-600',
 		},
 		{
 			icon: School,
 			title: 'Ký túc xá',
-			description: 'Dành cho sinh viên',
+			value: 'shared',
 			color: 'bg-orange-500/10 text-orange-600',
-		},
-	];
-
-	const hotLocations = [
-		{
-			name: 'Quận 1',
-			img: 'https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=500&h=300&fit=crop',
-		},
-		{
-			name: 'Quận 10',
-			img: 'https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?w=500&h=300&fit=crop',
-		},
-		{
-			name: 'Tân Bình',
-			img: 'https://images.unsplash.com/photo-1502003148287-a82ef80a6abc?w=500&h=300&fit=crop',
-		},
-		{
-			name: 'Bình Thạnh',
-			img: 'https://images.unsplash.com/photo-1629813350106-cf9b66d48259?w=500&h=300&fit=crop',
 		},
 	];
 
@@ -114,7 +92,7 @@ const HomePage = () => {
 				<div className='absolute inset-0 bg-linear-to-r from-blue-900/80 to-slate-900/80'></div>
 				<div className='relative z-10 w-full max-w-5xl mx-auto px-4 text-center'>
 					<h1 className='text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight drop-shadow-md'>
-						Kênh thông tin Phòng Trọ số 1 Việt Nam
+						Nơi tìm kiếm Phòng Trọ uy tín
 					</h1>
 					<p className='text-xl text-blue-100 mb-10 font-medium drop-shadow'>
 						Hơn 100.000 tin đăng phòng trọ, nhà nguyên căn, chung cư mini
@@ -125,7 +103,7 @@ const HomePage = () => {
 						<div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
 							<div className='space-y-1'>
 								<label className='text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1'>
-									<MapPin className='w-3 h-3' /> Khu vực
+									Khu vực
 								</label>
 								<select
 									value={searchDistrict}
@@ -142,7 +120,7 @@ const HomePage = () => {
 
 							<div className='space-y-1'>
 								<label className='text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1'>
-									<Home className='w-3 h-3' /> Loại phòng
+									Loại phòng
 								</label>
 								<select
 									value={roomType}
@@ -159,7 +137,7 @@ const HomePage = () => {
 
 							<div className='space-y-1'>
 								<label className='text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1'>
-									💲 Mức giá
+									Mức giá
 								</label>
 								<select
 									value={priceRange}
@@ -199,7 +177,7 @@ const HomePage = () => {
 						<div>
 							<h4 className='text-xl font-bold'>100% Tin duyệt kỹ</h4>
 							<p className='text-sm text-primary-foreground/80'>
-								Hệ thống lọc tự động thông minh
+								Hệ thống lọc tin đăng thông minh
 							</p>
 						</div>
 					</div>
@@ -215,39 +193,12 @@ const HomePage = () => {
 					<div className='flex flex-col items-center justify-center gap-2'>
 						<Users className='w-8 h-8 opacity-80' />
 						<div>
-							<h4 className='text-xl font-bold'>10.000+ Lượt truy cập</h4>
+							<h4 className='text-xl font-bold'>Dễ dàng truy cập</h4>
 							<p className='text-sm text-primary-foreground/80'>
 								Tìm kiếm dễ dàng, nhanh chóng
 							</p>
 						</div>
 					</div>
-				</div>
-			</section>
-
-			{/* Hot Locations */}
-			<section className='max-w-7xl mx-auto px-4 py-16 w-full'>
-				<h2 className='text-2xl font-bold mb-6'>Khu vực nổi bật</h2>
-				<div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
-					{hotLocations.map((loc) => (
-						<Link
-							href={`/rooms?district=${loc.name}`}
-							key={loc.name}
-							className='relative h-40 rounded-xl overflow-hidden group cursor-pointer shadow-sm hover:shadow-md transition-all'>
-							<Image
-								src={loc.img}
-								alt={loc.name}
-								width={200}
-								height={200}
-								className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out'
-							/>
-							<div className='absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent' />
-							<div className='absolute bottom-4 left-4'>
-								<h3 className='text-lg font-bold text-white mb-1 shadow-black'>
-									{loc.name}
-								</h3>
-							</div>
-						</Link>
-					))}
 				</div>
 			</section>
 
@@ -258,7 +209,7 @@ const HomePage = () => {
 					<div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
 						{categories.map((category) => (
 							<Link
-								href={`/rooms?roomType=${category.title.replace(/\s+/g, '+')}`}
+								href={`/rooms?roomType=${category.value}`}
 								key={category.title}
 								className='bg-card border border-border rounded-xl p-6 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 text-center'>
 								<div
@@ -268,9 +219,6 @@ const HomePage = () => {
 								<h3 className='mb-1 font-bold text-foreground'>
 									{category.title}
 								</h3>
-								<p className='text-sm text-muted-foreground'>
-									{category.description}
-								</p>
 							</Link>
 						))}
 					</div>

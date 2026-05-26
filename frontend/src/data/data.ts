@@ -11,13 +11,12 @@ export const priceRanges = [
 ];
 
 export const roomTypesList = [
-	{ value: 'Phòng trọ', label: 'Phòng trọ' },
-	{ value: 'Nhà riêng', label: 'Nhà riêng' },
-	{ value: 'Ký túc xá', label: 'Ký túc xá' },
-	{ value: 'Mặt bằng', label: 'Mặt bằng' },
-	{ value: 'Căn hộ chung cư', label: 'Căn hộ chung cư' },
-	{ value: 'Chung cư mini', label: 'Căn hộ mini' },
-	{ value: 'Căn hộ dịch vụ', label: 'Căn hộ dịch vụ' },
+	{ value: 'room', label: 'Phòng trọ' },
+	{ value: 'house', label: 'Nhà riêng' },
+	{ value: 'shared', label: 'Ký túc xá' },
+	{ value: 'apartment', label: 'Căn hộ chung cư' },
+	{ value: 'mini', label: 'Căn hộ mini' },
+	{ value: 'service', label: 'Căn hộ dịch vụ' },
 ];
 
 // ── Danh sách Quận/Huyện TP.HCM (trước sáp nhập) + Phường/Xã ──

@@ -89,8 +89,20 @@ export class AdminService {
       this.prisma.room.count(),
     ]);
 
+    // Auto-analyze fraud for each room
+    const roomsWithFraud = await Promise.all(
+      rooms.map(async (room) => {
+        try {
+          const fraudResult = await this.fakeListingService.analyzeRoom(room.id);
+          return { ...room, fraudResult };
+        } catch {
+          return { ...room, fraudResult: null };
+        }
+      }),
+    );
+
     return {
-      data: rooms,
+      data: roomsWithFraud,
       meta: {
         total,
         page,

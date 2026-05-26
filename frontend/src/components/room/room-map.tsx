@@ -164,6 +164,7 @@ export default function RoomMap({
 			{/* Leaflet Map with Google Tiles */}
 			<div className='h-[350px] w-full relative z-0'>
 				<MapContainer
+					key={`${finalLat}-${finalLng}`}
 					center={position}
 					zoom={16}
 					scrollWheelZoom={false}

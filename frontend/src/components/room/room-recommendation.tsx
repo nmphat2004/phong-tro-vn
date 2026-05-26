@@ -24,13 +24,16 @@ const RoomRecommendations = () => {
 		queryFn: () => api.get('/recommendations/popular').then((r) => r.data),
 		staleTime: 1000 * 60 * 10,
 		// Only fetch if: not logged in, OR logged in but personalized returned empty
-		enabled: !user || (!!user && !personalizedLoading && (!personalizedData?.rooms?.length)),
+		enabled:
+			!user ||
+			(!!user && !personalizedLoading && !personalizedData?.rooms?.length),
 	});
 
 	const isLoading = user ? personalizedLoading : popularLoading;
 
 	// Use personalized if available, otherwise fallback to popular
-	const data = (user && personalizedData?.rooms?.length) ? personalizedData : popularData;
+	const data =
+		user && personalizedData?.rooms?.length ? personalizedData : popularData;
 
 	if (isLoading) {
 		return (
@@ -67,7 +70,7 @@ const RoomRecommendations = () => {
 	return (
 		<section className='py-16 relative overflow-hidden'>
 			{/* Decorative background */}
-			<div className='absolute inset-0 bg-gradient-to-br from-primary/[0.03] via-transparent to-violet-500/[0.03]' />
+			<div className='absolute inset-0 bg-linear-to-br from-primary/3 via-transparent to-violet-500/3' />
 			<div className='absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2' />
 			<div className='absolute bottom-0 left-0 w-80 h-80 bg-violet-500/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2' />
 
@@ -77,14 +80,13 @@ const RoomRecommendations = () => {
 					<div className='flex items-center gap-3'>
 						<div
 							className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-md ${
-								isPersonalized
-									? 'bg-gradient-to-br from-primary to-blue-600'
-									: 'bg-gradient-to-br from-amber-500 to-orange-500'
+								isPersonalized ?
+									'bg-linear-to-br from-primary to-blue-600'
+								:	'bg-linear-to-br from-amber-500 to-orange-500'
 							}`}>
 							{isPersonalized ?
 								<Sparkles className='w-5 h-5 text-white' />
-							:	<TrendingUp className='w-5 h-5 text-white' />
-							}
+							:	<TrendingUp className='w-5 h-5 text-white' />}
 						</div>
 						<div>
 							<h2 className='text-2xl font-bold text-foreground'>
@@ -104,14 +106,12 @@ const RoomRecommendations = () => {
 
 				{/* Room Grid */}
 				<div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6'>
-					{data.rooms.map((room: any) => (
-						<div
-							key={room.id}
-							className='relative group'>
+					{data.rooms.slice(0, 4).map((room: any) => (
+						<div key={room.id} className='relative group'>
 							{/* Match score badge */}
 							{room.matchScore && (
 								<div className='absolute top-3 left-3 z-10'>
-									<span className='inline-flex items-center gap-1 bg-gradient-to-r from-primary to-blue-600 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-lg shadow-primary/25'>
+									<span className='inline-flex items-center gap-1 bg-linear-to-r from-primary to-blue-600 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-lg shadow-primary/25'>
 										<Sparkles className='w-3 h-3' />
 										{room.matchScore}% phù hợp
 									</span>

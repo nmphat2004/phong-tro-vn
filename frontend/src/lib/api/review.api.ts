@@ -20,3 +20,13 @@ export const checkReviewEligibility = async (roomId: string) => {
 	);
 	return res.data;
 };
+
+export const updateReview = async (roomId: string, reviewId: string, data: any) => {
+	const res = await api.put(`/rooms/${roomId}/reviews/${reviewId}`, data);
+	return res.data;
+};
+
+export const deleteReview = async (roomId: string, reviewId: string) => {
+	const res = await api.delete(`/rooms/${roomId}/reviews/${reviewId}`);
+	return res.data;
+};
