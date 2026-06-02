@@ -126,7 +126,7 @@ const Personal = () => {
 			reader.readAsDataURL(file);
 
 			// Upload to server
-			const imageUrl = await uploadImage(file);
+			const { url: imageUrl } = await uploadImage(file);
 
 			// Update user with new avatar URL
 			await updateMe({ avatarUrl: imageUrl });

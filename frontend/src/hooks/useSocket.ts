@@ -6,13 +6,19 @@ import useChatStore from '@/stores/chat.store';
 import { useNotificationStore } from '@/stores/notification.store';
 import { useCallback, useEffect } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { getUnreadSummary } from '@/lib/api/chat.api';
+import { getUnreadSummary, sendMessageViaApi } from '@/lib/api/chat.api';
 
 let socketInstance: Socket | null = null;
 
 const useSocket = () => {
 	const { accessToken, user } = useAuthStore();
-	const { addMessage, setTyping } = useChatStore();
+	const {
+		addMessage,
+		setTyping,
+		setOnlineUsers,
+		addUserOnline,
+		removeUserOffline,
+	} = useChatStore();
 	const { setUnreadSummary } = useNotificationStore();
 
 	useEffect(() => {
@@ -25,6 +31,19 @@ const useSocket = () => {
 		});
 
 		socketInstance.on('connect', () => console.log('Socket Connected!'));
+
+		socketInstance.on('online_users', (users: string[]) => {
+			setOnlineUsers(users);
+		});
+
+		socketInstance.on('user_online', (userId: string) => {
+			addUserOnline(userId);
+		});
+
+		socketInstance.on('user_offline', (userId: string) => {
+			removeUserOffline(userId);
+		});
+
 		getUnreadSummary()
 			.then((summary) => {
 				setUnreadSummary({
@@ -56,17 +75,36 @@ const useSocket = () => {
 			socketInstance?.disconnect();
 			socketInstance = null;
 		};
-	}, [accessToken, user?.id, addMessage, setTyping, setUnreadSummary]);
+	}, [
+		accessToken,
+		user?.id,
+		addMessage,
+		setTyping,
+		setUnreadSummary,
+		setOnlineUsers,
+		addUserOnline,
+		removeUserOffline,
+	]);
 
 	const joinConversation = useCallback((id: string) => {
 		socketInstance?.emit('join_conversation', id);
 	}, []);
 
 	const sendMessage = useCallback(
-		(conversationId: string, content: string) => {
-			socketInstance?.emit('send_message', { conversationId, content });
+		async (conversationId: string, content: string) => {
+			if (socketInstance?.connected) {
+				socketInstance.emit('send_message', { conversationId, content });
+			} else {
+				// Fallback: gửi qua REST API khi socket không kết nối
+				try {
+					const msg = await sendMessageViaApi(conversationId, content);
+					addMessage(msg);
+				} catch (error) {
+					console.error('Failed to send message via API:', error);
+				}
+			}
 		},
-		[],
+		[addMessage],
 	);
 
 	const sendTyping = useCallback((conversationId: string) => {

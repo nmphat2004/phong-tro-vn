@@ -18,14 +18,32 @@ export class FakeReviewService {
     roomId: string,
     rating: number,
     comment: string,
+    createdAt?: Date,
+    ipAddress?: string,
   ): Promise<FakeReviewResult> {
-    const [reviewer, room, reviewHistory] = await Promise.all([
+    const referenceTime = createdAt
+      ? new Date(createdAt).getTime()
+      : Date.now();
+
+    const [reviewer, room, reviewHistory, sameIpReviews] = await Promise.all([
       this.prisma.user.findUnique({ where: { id: reviewerId } }),
       this.prisma.room.findUnique({ where: { id: roomId } }),
       this.prisma.review.findMany({
         where: { reviewerId },
         orderBy: { createdAt: 'desc' },
       }),
+      ipAddress
+        ? this.prisma.review.findMany({
+            where: {
+              ipAddress,
+              createdAt: {
+                gte: new Date(referenceTime - 86400000), // 24 giờ qua
+                lte: new Date(referenceTime),
+              },
+            },
+            select: { reviewerId: true },
+          })
+        : Promise.resolve([]),
     ]);
 
     if (!reviewer || !room) return this.cleanResult();
@@ -36,7 +54,7 @@ export class FakeReviewService {
 
     // ── Rule 1: Tài khoản quá mới (0–30đ) ──────────────────────
     const ageDays =
-      (Date.now() - new Date(reviewer.createdAt).getTime()) / 86400000;
+      (referenceTime - new Date(reviewer.createdAt).getTime()) / 86400000;
     if (ageDays < 1) {
       details.accountAge = 30;
       reasons.push('Tài khoản tạo trong 24 giờ');
@@ -50,7 +68,7 @@ export class FakeReviewService {
 
     // ── Rule 2: Review ngay sau khi đăng ký (0–25đ) ─────────────
     const hoursSinceReg =
-      (Date.now() - new Date(reviewer.createdAt).getTime()) / 3600000;
+      (referenceTime - new Date(reviewer.createdAt).getTime()) / 3600000;
     if (hoursSinceReg < 1) {
       details.reviewTooSoon = 25;
       reasons.push('Review ngay sau khi tạo tài khoản (< 1 giờ)');
@@ -63,9 +81,10 @@ export class FakeReviewService {
     score += details.reviewTooSoon;
 
     // ── Rule 3: Tốc độ review bất thường (0–20đ) ─────────────────
-    const last24h = reviewHistory.filter(
-      (r) => Date.now() - new Date(r.createdAt).getTime() < 86400000,
-    ).length;
+    const last24h = reviewHistory.filter((r) => {
+      const diff = referenceTime - new Date(r.createdAt).getTime();
+      return diff >= 0 && diff < 86400000;
+    }).length;
     if (last24h >= 5) {
       details.reviewSpeed = 20;
       reasons.push(`${last24h} review trong 24 giờ (bất thường)`);
@@ -130,6 +149,30 @@ export class FakeReviewService {
       details.selfReview = 0;
     }
     score += details.selfReview;
+
+    // ── Rule 8: Nhiều tài khoản đánh giá từ cùng 1 IP (0-35đ) ─────────────────
+    if (ipAddress && sameIpReviews.length > 0) {
+      const uniqueReviewers = new Set(
+        sameIpReviews
+          .map((r) => r.reviewerId)
+          .filter((id) => id !== reviewerId),
+      );
+
+      if (uniqueReviewers.size >= 3) {
+        details.ipSharing = 35;
+        reasons.push(
+          `Phát hiện ${uniqueReviewers.size} tài khoản khác đánh giá từ cùng địa chỉ IP trong 24 giờ`,
+        );
+      } else if (uniqueReviewers.size >= 2) {
+        details.ipSharing = 15;
+        reasons.push(
+          `Phát hiện ${uniqueReviewers.size} tài khoản khác đánh giá từ cùng địa chỉ IP trong 24 giờ`,
+        );
+      } else {
+        details.ipSharing = 0;
+      }
+      score += details.ipSharing;
+    }
 
     score = Math.min(100, score);
 

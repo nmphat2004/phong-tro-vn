@@ -25,7 +25,7 @@ export class ReviewsService {
 
     const [reviews, total] = await Promise.all([
       this.prisma.review.findMany({
-        where: { roomId },
+        where: { roomId, isVerified: true },
         include: {
           reviewer: {
             select: { id: true, fullName: true, avatarUrl: true },
@@ -35,11 +35,11 @@ export class ReviewsService {
         skip,
         take: limit,
       }),
-      this.prisma.review.count({ where: { roomId } }),
+      this.prisma.review.count({ where: { roomId, isVerified: true } }),
     ]);
 
     const avgScores = await this.prisma.review.aggregate({
-      where: { roomId },
+      where: { roomId, isVerified: true },
       _avg: {
         rating: true,
         cleanRating: true,
@@ -108,7 +108,7 @@ export class ReviewsService {
     return { eligible: true };
   }
 
-  async create(roomId: string, reviewerId: string, dto: CreateReviewDto) {
+  async create(roomId: string, reviewerId: string, dto: CreateReviewDto, ipAddress?: string) {
     const room = await this.prisma.room.findUnique({ where: { id: roomId } });
     if (!room) throw new NotFoundException('Room not found');
 
@@ -142,9 +142,42 @@ export class ReviewsService {
       roomId,
       dto.rating,
       dto.comment || '',
+      undefined,
+      ipAddress,
     );
 
     if (fraudResult.action === 'reject') {
+      if (ipAddress) {
+        // Tìm các review hoạt động cùng IP trong 24 giờ qua
+        const reviewsToInvalidate = await this.prisma.review.findMany({
+          where: {
+            ipAddress,
+            isVerified: true,
+            createdAt: {
+              gte: new Date(Date.now() - 86400000),
+            },
+          },
+          select: { roomId: true },
+        });
+
+        if (reviewsToInvalidate.length > 0) {
+          // Reset isVerified thành false
+          await this.prisma.review.updateMany({
+            where: {
+              ipAddress,
+              createdAt: {
+                gte: new Date(Date.now() - 86400000),
+              },
+            },
+            data: { isVerified: false },
+          });
+
+          // Cập nhật lại điểm đánh giá cho các phòng bị ảnh hưởng
+          const uniqueRoomIds = Array.from(new Set(reviewsToInvalidate.map((r) => r.roomId)));
+          await Promise.all(uniqueRoomIds.map((rId) => this.updateRoomRating(rId)));
+        }
+      }
+
       throw new BadRequestException(
         'Đánh giá bị từ chối vì có dấu hiệu không hợp lệ',
       );
@@ -162,6 +195,7 @@ export class ReviewsService {
         comment: dto.comment,
         isVerified: fraudResult.action === 'approve',
         rentalVerified: true, // Đã qua kiểm tra conversation
+        ipAddress,
       },
       include: {
         reviewer: { select: { id: true, fullName: true, avatarUrl: true } },
@@ -180,7 +214,7 @@ export class ReviewsService {
     };
   }
 
-  async update(id: string, userId: string, dto: UpdateReviewDto) {
+  async update(id: string, userId: string, dto: UpdateReviewDto, ipAddress?: string) {
     const review = await this.prisma.review.findUnique({ where: { id } });
     if (!review) throw new NotFoundException('Review not found');
 
@@ -193,9 +227,40 @@ export class ReviewsService {
       review.roomId,
       dto.rating ?? review.rating,
       dto.comment ?? review.comment ?? '',
+      review.createdAt,
+      ipAddress || review.ipAddress || undefined,
     );
 
     if (fraudResult.action === 'reject') {
+      const targetIp = ipAddress || review.ipAddress;
+      if (targetIp) {
+        const reviewsToInvalidate = await this.prisma.review.findMany({
+          where: {
+            ipAddress: targetIp,
+            isVerified: true,
+            createdAt: {
+              gte: new Date(Date.now() - 86400000),
+            },
+          },
+          select: { roomId: true },
+        });
+
+        if (reviewsToInvalidate.length > 0) {
+          await this.prisma.review.updateMany({
+            where: {
+              ipAddress: targetIp,
+              createdAt: {
+                gte: new Date(Date.now() - 86400000),
+              },
+            },
+            data: { isVerified: false },
+          });
+
+          const uniqueRoomIds = Array.from(new Set(reviewsToInvalidate.map((r) => r.roomId)));
+          await Promise.all(uniqueRoomIds.map((rId) => this.updateRoomRating(rId)));
+        }
+      }
+
       throw new BadRequestException(
         'Chỉnh sửa bị từ chối vì có dấu hiệu không hợp lệ',
       );
@@ -206,6 +271,7 @@ export class ReviewsService {
       data: {
         ...dto,
         isVerified: fraudResult.action === 'approve',
+        ...(ipAddress && { ipAddress }),
       },
       include: {
         reviewer: { select: { id: true, fullName: true, avatarUrl: true } },
@@ -237,7 +303,7 @@ export class ReviewsService {
 
   private async updateRoomRating(roomId: string) {
     const result = await this.prisma.review.aggregate({
-      where: { roomId },
+      where: { roomId, isVerified: true },
       _avg: { rating: true },
       _count: { id: true },
     });

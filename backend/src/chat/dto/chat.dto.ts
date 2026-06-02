@@ -19,3 +19,10 @@ export class SendMessageDto {
   @IsNotEmpty()
   content: string;
 }
+
+export class SendMessageHttpDto {
+  @ApiProperty({ example: 'Phòng còn trống không ạ?' })
+  @IsString()
+  @IsNotEmpty()
+  content: string;
+}

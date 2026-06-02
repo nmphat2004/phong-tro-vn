@@ -7,12 +7,12 @@ import { toast } from 'sonner';
 import { Flag, X } from 'lucide-react';
 
 const REPORT_REASONS = [
-	'Fake photos',
-	'Scam listing',
-	'Incorrect price',
-	'Wrong address',
-	'Spam / Duplicate',
-	'Other',
+	'Ảnh không đúng thực tế',
+	'Tin đăng lừa đảo',
+	'Sai giá phòng',
+	'Sai địa chỉ',
+	'Tin trùng lặp / Spam',
+	'Khác',
 ];
 
 interface ReportDialogProps {
@@ -26,7 +26,7 @@ export default function ReportDialog({ roomId, onClose }: ReportDialogProps) {
 
 	const { mutate: handleSubmit, isPending } = useMutation({
 		mutationFn: () => {
-			const reason = selectedReason === 'Other' ? customReason : selectedReason;
+			const reason = selectedReason === 'Khác' ? customReason : selectedReason;
 			return reportRoom(roomId, reason);
 		},
 		onSuccess: () => {
@@ -82,7 +82,7 @@ export default function ReportDialog({ roomId, onClose }: ReportDialogProps) {
 					))}
 				</div>
 
-				{selectedReason === 'Other' && (
+				{selectedReason === 'Khác' && (
 					<textarea
 						value={customReason}
 						onChange={(e) => setCustomReason(e.target.value)}
@@ -100,7 +100,7 @@ export default function ReportDialog({ roomId, onClose }: ReportDialogProps) {
 					</Button>
 					<Button
 						onClick={() => handleSubmit()}
-						disabled={!selectedReason || (selectedReason === 'Other' && !customReason.trim()) || isPending}
+						disabled={!selectedReason || (selectedReason === 'Khác' && !customReason.trim()) || isPending}
 						className='flex-1 bg-red-600 hover:bg-red-700 text-white'>
 						{isPending ? 'Đang gửi...' : 'Gửi báo cáo'}
 					</Button>

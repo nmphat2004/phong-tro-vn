@@ -22,6 +22,7 @@ import api from '@/lib/axios';
 import { formatRelativeTime } from '@/lib/time-format';
 import { getSavedRoomStatus, saveRoom, unsaveRoom } from '@/lib/api/user.api';
 import { useAuthStore } from '@/stores/auth.store';
+import useChatStore from '@/stores/chat.store';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
 	Eye,
@@ -61,6 +62,7 @@ const inferDistrict = (address?: string) => {
 const RoomDetailPage = () => {
 	const { id } = useParams();
 	const { user } = useAuthStore();
+	const { onlineUsers } = useChatStore();
 	const router = useRouter();
 	const queryClient = useQueryClient();
 	const [phoneRevealed, setPhoneRevealed] = useState(false);
@@ -598,7 +600,11 @@ const RoomDetailPage = () => {
 												{room.owner.fullName?.charAt(0)}
 											</AvatarFallback>
 										</Avatar>
-										<div className='absolute bottom-1 right-1 w-6 h-6 bg-green-500 border-4 border-white rounded-full' />
+										{onlineUsers.includes(room.owner.id) ? (
+											<div className='absolute bottom-1 right-1 w-6 h-6 bg-green-500 border-4 border-white rounded-full animate-pulse' title='Đang hoạt động' />
+										) : (
+											<div className='absolute bottom-1 right-1 w-6 h-6 bg-slate-300 border-4 border-white rounded-full' title='Ngoại tuyến' />
+										)}
 									</div>
 									<div>
 										<h3 className='text-xl font-bold'>{room.owner.fullName}</h3>
@@ -617,62 +623,81 @@ const RoomDetailPage = () => {
 									</div>
 								</div>
 
-								<div className='space-y-2'>
-									<div className='group relative overflow-hidden p-px rounded-lg border border-primary'>
-										<div className='bg-white rounded-lg p-3 text-center '>
-											{phoneRevealed ?
-												<p className='text-xl font-bold text-primary tracking-tighter'>
-													{room.owner.phone}
-												</p>
-											:	<button
-													onClick={() => setPhoneRevealed(true)}
-													className='w-full text-sm font-bold text-primary'>
-													HIỆN SỐ ĐIỆN THOẠI
-												</button>
-											}
+								{user && user.id === room.owner.id ? (
+									<div className='space-y-3'>
+										<Link href='/dashboard' className='block'>
+											<Button
+												variant='default'
+												className='w-full h-12 rounded-lg text-sm font-bold hover:bg-primary/90 transition-all'>
+												QUẢN LÝ TIN ĐĂNG
+											</Button>
+										</Link>
+										<Link href={`/post/${room.id}`} className='block'>
+											<Button
+												variant='outline'
+												className='w-full h-12 rounded-lg text-sm font-bold border border-primary text-primary hover:bg-primary/5 transition-all'>
+												CHỈNH SỬA PHÒNG
+											</Button>
+										</Link>
+									</div>
+								) : (
+									<div className='space-y-2'>
+										<div className='group relative overflow-hidden p-px rounded-lg border border-primary'>
+											<div className='bg-white rounded-lg p-3 text-center '>
+												{phoneRevealed ?
+													<p className='text-xl font-bold text-primary tracking-tighter'>
+														{room.owner.phone}
+													</p>
+												:	<button
+														onClick={() => setPhoneRevealed(true)}
+														className='w-full text-sm font-bold text-primary'>
+														HIỆN SỐ ĐIỆN THOẠI
+													</button>
+												}
+											</div>
+										</div>
+
+										<Link href={`/chat?roomId=${room.id}`} className='block'>
+											<Button
+												variant='default'
+												className='w-full h-12 rounded-lg text-sm font-bold hover:bg-primary/90 transition-all'>
+												<MessageCircle className='w-4 h-4 mr-2' />
+												NHẮN TIN NGAY
+											</Button>
+										</Link>
+
+										<div className='pt-4 items-center justify-center flex gap-3'>
+											<Button
+												variant='ghost'
+												className={`rounded-xl text-xs font-bold border transition-colors ${saved ? 'border-red-200 bg-red-50 text-red-600' : 'hover:bg-secondary'}`}
+												disabled={isSaving}
+												onClick={() => {
+													if (!user) {
+														toast.error('Vui lòng đăng nhập để lưu phòng');
+														router.push('/login');
+														return;
+													}
+													toggleSavedRoom(saved);
+												}}>
+												<Heart
+													className={`w-4 h-4 mr-2 ${saved ? 'fill-red-500 text-red-500 animate-pulse' : ''}`}
+												/>
+												{saved ? 'ĐÃ LƯU' : 'LƯU PHÒNG'}
+											</Button>
+											{user &&
+												user.id !== room.owner.id &&
+												user.role !== 'ADMIN' && (
+													<Button
+														variant='ghost'
+														className='rounded-xl text-xs font-bold border hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors'
+														onClick={() => setShowReportDialog(true)}>
+														<Flag className='w-4 h-4 mr-2' />
+														BÁO XẤU
+													</Button>
+												)}
 										</div>
 									</div>
-
-									<Link href={`/chat?roomId=${room.id}`} className='block'>
-										<Button
-											variant='default'
-											className='w-full h-12 rounded-lg text-sm font-bold hover:bg-primary/90 transition-all'>
-											<MessageCircle className='w-4 h-4 mr-2' />
-											NHẮN TIN NGAY
-										</Button>
-									</Link>
-
-									<div className='pt-4 items-center justify-center flex gap-3'>
-										<Button
-											variant='ghost'
-											className={`rounded-xl text-xs font-bold border transition-colors ${saved ? 'border-red-200 bg-red-50 text-red-600' : 'hover:bg-secondary'}`}
-											disabled={isSaving}
-											onClick={() => {
-												if (!user) {
-													toast.error('Vui lòng đăng nhập để lưu phòng');
-													router.push('/login');
-													return;
-												}
-												toggleSavedRoom(saved);
-											}}>
-											<Heart
-												className={`w-4 h-4 mr-2 ${saved ? 'fill-red-500 text-red-500 animate-pulse' : ''}`}
-											/>
-											{saved ? 'ĐÃ LƯU' : 'LƯU PHÒNG'}
-										</Button>
-										{user &&
-											user.id !== room.owner.id &&
-											user.role !== 'ADMIN' && (
-												<Button
-													variant='ghost'
-													className='rounded-xl text-xs font-bold border hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors'
-													onClick={() => setShowReportDialog(true)}>
-													<Flag className='w-4 h-4 mr-2' />
-													BÁO XẤU
-												</Button>
-											)}
-									</div>
-								</div>
+								)}
 							</div>
 							<FeaturedSidebarList rooms={featuredRooms} />
 						</aside>

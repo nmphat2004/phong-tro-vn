@@ -39,7 +39,7 @@ export class RecommendationService {
       },
       orderBy: [{ avgRating: 'desc' }, { createdAt: 'desc' }],
       include: {
-        images: { where: { isPrimary: true }, take: 1 },
+        images: true,
         amenities: { include: { amenity: true } },
         owner: { select: { id: true, fullName: true, avatarUrl: true } },
       },
@@ -79,7 +79,7 @@ export class RecommendationService {
         take: 30,
       }),
       this.prisma.review.findMany({
-        where: { reviewerId: userId, rating: { gte: 4 } },
+        where: { reviewerId: userId, rating: { gte: 4 }, isVerified: true },
         include: {
           room: { include: { amenities: { include: { amenity: true } } } },
         },
@@ -201,7 +201,7 @@ export class RecommendationService {
       orderBy: [{ avgRating: 'desc' }, { viewCount: 'desc' }],
       take: limit,
       include: {
-        images: { where: { isPrimary: true }, take: 1 },
+        images: true,
         amenities: { include: { amenity: true } },
         owner: { select: { id: true, fullName: true, avatarUrl: true } },
       },

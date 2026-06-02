@@ -34,6 +34,7 @@ export class RoomsService {
           ? {
               create: dto.imageUrls.map((url, index) => ({
                 url,
+                hash: dto.imageHashes?.[index] || null,
                 isPrimary: url === dto.primaryImageUrl || index === 0,
               })),
             }
@@ -88,6 +89,7 @@ export class RoomsService {
               deleteMany: {},
               create: imageUrls.map((url, index) => ({
                 url,
+                hash: dto.imageHashes?.[index] || null,
                 isPrimary: index === 0,
               })),
             }
@@ -302,7 +304,7 @@ export class RoomsService {
         skip,
         take: limit,
         include: {
-          images: { where: { isPrimary: true }, take: 1 },
+          images: true,
           amenities: { include: { amenity: true } },
           owner: {
             select: { id: true, fullName: true, avatarUrl: true },
@@ -327,7 +329,7 @@ export class RoomsService {
     return this.prisma.room.findMany({
       where: { ownerId },
       include: {
-        images: { where: { isPrimary: true }, take: 4 },
+        images: true,
         _count: { select: { reviews: true } },
       },
       orderBy: { createdAt: 'desc' },

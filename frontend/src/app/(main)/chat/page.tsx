@@ -40,6 +40,7 @@ const ChatContent = () => {
 		messages,
 		setMessage,
 		addMessage,
+		onlineUsers,
 	} = useChatStore();
 
 	const [messageInput, setMessageInput] = useState('');
@@ -52,14 +53,25 @@ const ChatContent = () => {
 			queryFn: getConversations,
 		});
 
+	const processedRoomIdRef = useRef<string | null>(null);
+
 	const { mutate: createConversation, isPending: isCreatingConversation } =
 		useMutation({
 			mutationFn: (id: string) => getOrCreateConversation(id),
 			onSuccess: (conversation) => {
-				setConversations((current) => [conversation, ...current]);
+				setConversations((current) => {
+					// Tránh thêm trùng
+					if (current.some((c) => c.id === conversation.id)) {
+						return current;
+					}
+					return [conversation, ...current];
+				});
 				setActiveConversation(conversation.id);
+				// Refetch để đảm bảo dữ liệu đầy đủ
+				queryClient.invalidateQueries({ queryKey: ['chat-conversations'] });
 			},
 			onError: () => {
+				processedRoomIdRef.current = null;
 				toast.error('Không thể mở cuộc trò chuyện');
 			},
 		});
@@ -76,13 +88,14 @@ const ChatContent = () => {
 	});
 
 	useEffect(() => {
-		if (!conversations.length) return;
+		if (isLoadingConversations) return;
 		setConversations(conversations);
 		if (!activeConversationId && conversations[0]) {
 			setActiveConversation(conversations[0].id);
 		}
 	}, [
 		conversations,
+		isLoadingConversations,
 		activeConversationId,
 		setActiveConversation,
 		setConversations,
@@ -94,7 +107,11 @@ const ChatContent = () => {
 	}, [conversationMessages, activeConversationId, setMessage]);
 
 	useEffect(() => {
-		if (!roomId || !user) return;
+		if (!roomId || !user || isLoadingConversations) return;
+		// Tránh xử lý lặp cho cùng roomId
+		if (processedRoomIdRef.current === roomId) return;
+		processedRoomIdRef.current = roomId;
+
 		const existed = storeConversations.find((item) => item.roomId === roomId);
 		if (existed) {
 			setActiveConversation(existed.id);
@@ -104,6 +121,7 @@ const ChatContent = () => {
 	}, [
 		roomId,
 		user,
+		isLoadingConversations,
 		createConversation,
 		setActiveConversation,
 		storeConversations,
@@ -135,29 +153,32 @@ const ChatContent = () => {
 						conversation.renter
 					:	conversation.owner;
 				const lastMessage = conversation.messages?.[0];
-					const unread =
-						(
-							lastMessage &&
-							lastMessage.senderId !== user?.id &&
-							(conversation.unreadCount === undefined ||
-								conversation.unreadCount > 0)
-						) ?
-							1
-						:	0;
-					return {
-						id: conversation.id,
-						roomId: conversation.roomId,
-						roomName: conversation.room?.title || 'Phòng',
-						roomPrice: conversation.room?.price || 0,
-						roomImage: conversation.room?.images?.[0]?.url,
-						avatar: partner?.avatarUrl || '',
-						name: partner?.fullName || 'Người dùng',
-						lastMessage: lastMessage?.content || 'Bắt đầu cuộc trò chuyện',
-						timestamp: lastMessage?.sentAt || '',
-						unread:
-							conversation.id === activeConversationId ? 0
-							: conversation.unreadCount ?? unread,
-					};
+				const unread =
+					(
+						lastMessage &&
+						lastMessage.senderId !== user?.id &&
+						(conversation.unreadCount === undefined ||
+							conversation.unreadCount > 0)
+					) ?
+						1
+					:	0;
+				return {
+					id: conversation.id,
+					roomId: conversation.roomId,
+					roomName: conversation.room?.title || 'Phòng',
+					roomPrice: conversation.room?.price || 0,
+					roomImage: conversation.room?.images?.[0]?.url,
+					partnerId: partner?.id || '',
+					avatar: partner?.avatarUrl || undefined,
+					name: partner?.fullName || 'Người dùng',
+					lastMessage: lastMessage?.content || 'Bắt đầu cuộc trò chuyện',
+					timestamp: lastMessage?.sentAt || '',
+					unread:
+						conversation.id === activeConversationId ?
+							0
+						:	(conversation.unreadCount ?? unread),
+					isOwner: conversation.ownerId === user?.id,
+				};
 			});
 
 		const byFilter = normalized.filter((item) =>
@@ -171,7 +192,13 @@ const ChatContent = () => {
 				item.name.toLowerCase().includes(keyword) ||
 				item.roomName.toLowerCase().includes(keyword),
 		);
-	}, [storeConversations, user?.id, filterTab, searchText, activeConversationId]);
+	}, [
+		storeConversations,
+		user?.id,
+		filterTab,
+		searchText,
+		activeConversationId,
+	]);
 
 	const currentConversation = conversationList.find(
 		(item) => item.id === activeConversationId,
@@ -184,11 +211,16 @@ const ChatContent = () => {
 		messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
 	}, [currentMessages]);
 
-	const handleSendMessage = () => {
+	const handleSendMessage = async () => {
 		if (!activeConversationId || !messageInput.trim()) return;
-		sendMessage(activeConversationId, messageInput.trim());
-		// Don't add temp message - let server response handle it to avoid duplicates
+		const content = messageInput.trim();
 		setMessageInput('');
+		try {
+			await sendMessage(activeConversationId, content);
+		} catch {
+			toast.error('Không thể gửi tin nhắn. Vui lòng thử lại.');
+			setMessageInput(content);
+		}
 	};
 
 	return (
@@ -275,16 +307,32 @@ const ChatContent = () => {
 											:	''
 										}`}>
 										<div className='flex items-start gap-3'>
-											<Avatar>
-												<AvatarImage src={conversation.avatar} />
-												<AvatarFallback>
-													{conversation.name?.charAt(0).toUpperCase()}
-												</AvatarFallback>
-											</Avatar>
+											<div className='relative'>
+												<Avatar>
+													<AvatarImage src={conversation.avatar} />
+													<AvatarFallback>
+														{conversation.name?.charAt(0).toUpperCase()}
+													</AvatarFallback>
+												</Avatar>
+												{onlineUsers.includes(conversation.partnerId) && (
+													<span className='absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-card rounded-full' />
+												)}
+											</div>
 											<div className='flex-1 min-w-0'>
-												<div className='flex items-center justify-between mb-1'>
-													<p className='truncate'>{conversation.name}</p>
-													<span className='text-xs text-muted-foreground shrink-0 ml-2'>
+												<div className='flex items-center justify-between mb-1 min-w-0 gap-2'>
+													<div className='flex items-center gap-1.5 min-w-0 flex-1'>
+														<p className='truncate font-semibold text-sm text-foreground'>{conversation.name}</p>
+														{conversation.isOwner ? (
+															<span className='px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-blue-500/15 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 shrink-0 uppercase tracking-wider'>
+																Chủ nhà
+															</span>
+														) : (
+															<span className='px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-amber-500/15 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 shrink-0 uppercase tracking-wider'>
+																Khách
+															</span>
+														)}
+													</div>
+													<span className='text-xs text-muted-foreground shrink-0 ml-auto'>
 														{conversation.timestamp ?
 															new Date(
 																conversation.timestamp,
@@ -295,8 +343,12 @@ const ChatContent = () => {
 														:	'--:--'}
 													</span>
 												</div>
-												<Badge variant='default' className='text-xs mb-2'>
-													{conversation.roomName}
+												<Badge
+													variant='default'
+													className='text-xs mb-2 w-full'>
+													<span className='block truncate w-full text-center'>
+														{conversation.roomName}
+													</span>
 												</Badge>
 												<div className='flex items-center justify-between'>
 													<p className='text-sm text-muted-foreground truncate'>
@@ -322,16 +374,34 @@ const ChatContent = () => {
 							{/* Chat Header */}
 							<div className='p-4 border-b border-border bg-card flex items-center justify-between'>
 								<div className='flex items-center gap-3'>
-									<Avatar>
-										<AvatarImage src={currentConversation.avatar} />
-										<AvatarFallback>
-											{currentConversation.name?.charAt(0).toUpperCase()}
-										</AvatarFallback>
-									</Avatar>
+									<div className='relative'>
+										<Avatar>
+											<AvatarImage src={currentConversation.avatar} />
+											<AvatarFallback>
+												{currentConversation.name?.charAt(0).toUpperCase()}
+											</AvatarFallback>
+										</Avatar>
+										{onlineUsers.includes(currentConversation.partnerId) && (
+											<span className='absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-card rounded-full' />
+										)}
+									</div>
 									<div>
-										<p>{currentConversation.name}</p>
+										<div className='flex items-center gap-2'>
+											<p className='font-semibold text-foreground'>{currentConversation.name}</p>
+											{currentConversation.isOwner ? (
+												<span className='px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/15 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 uppercase tracking-wider'>
+													Bạn là Chủ nhà
+												</span>
+											) : (
+												<span className='px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 uppercase tracking-wider'>
+													Bạn là Khách thuê
+												</span>
+											)}
+										</div>
 										<p className='text-sm text-muted-foreground'>
-											Đang trò chuyện về phòng
+											{onlineUsers.includes(currentConversation.partnerId) ?
+												'Đang hoạt động'
+											:	'Ngoại tuyến'}
 										</p>
 									</div>
 								</div>
@@ -355,8 +425,21 @@ const ChatContent = () => {
 										height={200}
 										className='w-20 h-20 rounded-lg object-cover'
 									/>
-									<div className='flex-1'>
-										<p className='mb-1'>{currentConversation.roomName}</p>
+									<div className='flex-1 min-w-0'>
+										<div className='flex flex-wrap items-center gap-2 mb-1'>
+											<p className='font-medium text-foreground truncate max-w-[250px] sm:max-w-[400px]'>
+												{currentConversation.roomName}
+											</p>
+											{currentConversation.isOwner ? (
+												<span className='px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 uppercase tracking-wider shrink-0'>
+													Phòng của bạn
+												</span>
+											) : (
+												<span className='px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 uppercase tracking-wider shrink-0'>
+													Phòng của {currentConversation.name}
+												</span>
+											)}
+										</div>
 										<PriceTag
 											amount={currentConversation.roomPrice}
 											size='sm'
@@ -463,11 +546,12 @@ const ChatContent = () => {
 
 export default function MessagingPage() {
 	return (
-		<Suspense fallback={
-			<div className='h-[calc(100vh-73px)] flex items-center justify-center bg-background'>
-				<Loader2 className='h-8 w-8 animate-spin text-primary' />
-			</div>
-		}>
+		<Suspense
+			fallback={
+				<div className='h-[calc(100vh-73px)] flex items-center justify-center bg-background'>
+					<Loader2 className='h-8 w-8 animate-spin text-primary' />
+				</div>
+			}>
 			<ChatContent />
 		</Suspense>
 	);

@@ -62,26 +62,36 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
-    const user = await this.userService.findByEmail(dto.email);
-    if (!user)
+    // Tìm user kể cả đã bị khóa để phân biệt "không tồn tại" vs "bị khóa"
+    const userRaw = await this.prisma.user.findFirst({
+      where: { email: dto.email },
+    });
+
+    if (!userRaw) {
+      throw new UnauthorizedException('Email không tồn tại');
+    }
+
+    // Kiểm tra tài khoản bị khóa
+    if (userRaw.isDeleted) {
       throw new UnauthorizedException(
-        'Email không tồn tại hoặc tài khoản đã bị xóa',
+        'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên để được hỗ trợ.',
       );
+    }
 
     // Google-only account → không có password
-    if (!user.passwordHash) {
+    if (!userRaw.passwordHash) {
       throw new UnauthorizedException(
         'Tài khoản này sử dụng Google để đăng nhập. Vui lòng dùng nút "Tiếp tục với Google".',
       );
     }
 
-    const isMatch = await bcrypt.compare(dto.password, user.passwordHash);
+    const isMatch = await bcrypt.compare(dto.password, userRaw.passwordHash);
     if (!isMatch)
       throw new UnauthorizedException('Sai tài khoản hoặc mật khẩu');
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { passwordHash, ...safeUser } = user;
-    const tokens = this.generateTokens(user.id, user.email, user.role);
+    const { passwordHash, ...safeUser } = userRaw;
+    const tokens = this.generateTokens(userRaw.id, userRaw.email, userRaw.role);
     return { user: safeUser, ...tokens };
   }
 
@@ -135,14 +145,24 @@ export class AuthService {
     const name = payload.name;
     const picture = payload.picture;
 
-    // 1. Tìm theo googleId
-    let user = await this.userService.findByGoogleId(googleId);
+    // 1. Tìm theo googleId (kể cả đã bị khóa)
+    let user = await this.prisma.user.findFirst({
+      where: { googleId },
+    });
 
     if (!user) {
-      // 2. Tìm theo email (user đã đăng ký bằng email trước đó)
-      user = await this.userService.findByEmail(email);
+      // 2. Tìm theo email (kể cả đã bị khóa)
+      user = await this.prisma.user.findFirst({
+        where: { email },
+      });
 
       if (user) {
+        // Kiểm tra tài khoản bị khóa trước khi link
+        if (user.isDeleted) {
+          throw new UnauthorizedException(
+            'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên để được hỗ trợ.',
+          );
+        }
         // Link Google account vào user hiện tại
         await this.prisma.user.update({
           where: { id: user.id },
@@ -159,6 +179,13 @@ export class AuthService {
         const tokens = this.generateTokens(newUser.id, newUser.email, newUser.role);
         return { user: newUser, ...tokens };
       }
+    }
+
+    // Kiểm tra tài khoản bị khóa
+    if (user.isDeleted) {
+      throw new UnauthorizedException(
+        'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên để được hỗ trợ.',
+      );
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

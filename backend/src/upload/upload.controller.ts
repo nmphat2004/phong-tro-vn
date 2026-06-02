@@ -43,7 +43,10 @@ export class UploadController {
     }),
   )
   async uploadImage(@UploadedFiles() files: Express.Multer.File[]) {
-    const urls = await this.uploadService.uploadMultipleImages(files);
-    return { urls };
+    const results = await this.uploadService.uploadMultipleImages(files);
+    return {
+      urls: results.map((r) => r.url),
+      hashes: results.map((r) => r.hash),
+    };
   }
 }

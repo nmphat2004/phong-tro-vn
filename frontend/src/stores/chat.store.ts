@@ -11,6 +11,7 @@ interface ChatState {
 	messages: Record<string, ChatMessage[]>;
 	unreadCount: number;
 	isTyping: Record<string, boolean>;
+	onlineUsers: string[];
 	setConversations: (
 		c: Conversation[] | ((prev: Conversation[]) => Conversation[]),
 	) => void;
@@ -20,6 +21,9 @@ interface ChatState {
 	setTyping: (convId: string, val: boolean) => void;
 	incrementUnread: () => void;
 	resetUnread: () => void;
+	setOnlineUsers: (users: string[]) => void;
+	addUserOnline: (userId: string) => void;
+	removeUserOffline: (userId: string) => void;
 }
 
 const useChatStore = create<ChatState>((set) => ({
@@ -28,6 +32,7 @@ const useChatStore = create<ChatState>((set) => ({
 	messages: {},
 	unreadCount: 0,
 	isTyping: {},
+	onlineUsers: [],
 
 	setConversations: (conversations) =>
 		set((state) => ({
@@ -72,6 +77,18 @@ const useChatStore = create<ChatState>((set) => ({
 	},
 
 	resetUnread: () => set({ unreadCount: 0 }),
+
+	setOnlineUsers: (users) => set({ onlineUsers: users }),
+	addUserOnline: (userId) =>
+		set((state) => ({
+			onlineUsers: state.onlineUsers.includes(userId) ?
+				state.onlineUsers
+			:	[...state.onlineUsers, userId],
+		})),
+	removeUserOffline: (userId) =>
+		set((state) => ({
+			onlineUsers: state.onlineUsers.filter((id) => id !== userId),
+		})),
 }));
 
 export default useChatStore;

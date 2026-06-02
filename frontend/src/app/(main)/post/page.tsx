@@ -221,7 +221,7 @@ const PostRoomPage = () => {
 
 	const formData = watch();
 
-	// Dự báo giá phòng dựa trên thông tin đã nhập
+	// Dự báo giá phòng dựa trên toàn bộ thông tin đã nhập
 	const fetchPriceEstimate = async () => {
 		const price = formData.price;
 		const area = formData.area;
@@ -240,6 +240,11 @@ const PostRoomPage = () => {
 					address,
 					currentPrice: price,
 					type: formData.roomType,
+					amenities: formData.amenities?.join(', ') || '',
+					description: formData.description || '',
+					electricityCost: formData.electricityCost || 0,
+					waterCost: formData.waterCost || 0,
+					deposit: formData.deposit || 0,
 				},
 			});
 			setPriceEstimate(res.data);
@@ -250,19 +255,13 @@ const PostRoomPage = () => {
 		}
 	};
 
-	// Gọi khi price/area/address thay đổi (debounce 1000ms)
+	// Gọi khi chuyển sang Step 4 (Xem trước) – lúc này đã có đủ thông tin
 	useEffect(() => {
-		const timer = setTimeout(fetchPriceEstimate, 1000);
-		return () => clearTimeout(timer);
+		if (currentStep === 4) {
+			fetchPriceEstimate();
+		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [
-		formData.price,
-		formData.area,
-		formData.address,
-		formData.amenities?.length,
-		formData.floor,
-		formData.roomType,
-	]);
+	}, [currentStep]);
 
 	const steps = [
 		{ number: 1, title: 'Thông tin cơ bản' },
@@ -333,9 +332,11 @@ const PostRoomPage = () => {
 			}
 
 			const imageUrls: string[] = [];
+			const imageHashes: string[] = [];
 			for (const image of uploadedImages) {
-				const url = await uploadImage(image.file);
-				imageUrls.push(url);
+				const result = await uploadImage(image.file);
+				imageUrls.push(result.url);
+				imageHashes.push(result.hash);
 			}
 
 			// Map selection values to IDs
@@ -359,6 +360,7 @@ const PostRoomPage = () => {
 				lat: coords?.lat,
 				lng: coords?.lng,
 				imageUrls,
+				imageHashes,
 				primaryImageUrl: imageUrls[0],
 				amenityIds: selectedAmenityIds,
 			};
@@ -570,66 +572,7 @@ const PostRoomPage = () => {
 													{errors.price.message}
 												</p>
 											)}
-											{isPriceLoading && (
-												<div className='rounded-lg p-4 text-sm border bg-secondary border-border animate-pulse mt-3'>
-													<div className='h-4 bg-muted rounded w-3/4 mb-2'></div>
-													<div className='h-3 bg-muted rounded w-1/2'></div>
-												</div>
-											)}
-											{priceEstimate && !isPriceLoading && (
-												<div
-													className={`rounded-lg p-4 text-sm border mt-3 animate-in fade-in slide-in-from-top-2 duration-300 ${
-														priceEstimate.currentPriceStatus === 'fair' ?
-															'bg-green-500/10 border-green-500/20'
-														: priceEstimate.currentPriceStatus === 'high' ?
-															'bg-orange-500/10 border-orange-500/20'
-														: priceEstimate.currentPriceStatus === 'very_high' ?
-															'bg-red-500/10 border-red-500/20'
-														:	'bg-primary/5 border-primary/20'
-													}`}>
-													<p className='font-medium mb-1'>💡 Gợi ý định giá</p>
-													<p className='text-muted-foreground'>
-														Giá thị trường khu vực:{' '}
-														<strong>
-															{new Intl.NumberFormat('vi-VN').format(
-																priceEstimate.estimatedPrice,
-															)}
-															đ
-														</strong>{' '}
-														(
-														{new Intl.NumberFormat('vi-VN').format(
-															priceEstimate.minPrice,
-														)}
-														đ –{' '}
-														{new Intl.NumberFormat('vi-VN').format(
-															priceEstimate.maxPrice,
-														)}
-														đ)
-													</p>
-													<p className='mt-1 font-medium'>
-														{priceEstimate.suggestion}
-													</p>
-													{priceEstimate.similarRoomsCount > 0 && (
-														<p className='text-xs text-muted-foreground mt-1'>
-															Dựa trên {priceEstimate.similarRoomsCount} phòng
-															tương tự trong khu vực
-															{priceEstimate.method === 'ai' && ' + AI'}
-															{priceEstimate.method === 'hybrid' &&
-																' + AI xác thực'}
-														</p>
-													)}
-													{priceEstimate.aiInsight && (
-														<div className='mt-2 pt-2 border-t border-border'>
-															<p className='text-xs font-medium text-purple-600 dark:text-purple-400 flex items-center gap-1'>
-																<span>🤖</span> AI nhận xét:
-															</p>
-															<p className='text-xs text-muted-foreground mt-0.5'>
-																{priceEstimate.aiInsight}
-															</p>
-														</div>
-													)}
-												</div>
-											)}
+
 										</div>
 										<div>
 											<Label className='block mb-2'>Diện tích (m²) *</Label>
@@ -846,43 +789,53 @@ const PostRoomPage = () => {
 												</span>
 												<p className='text-lg'>{formData.area}m²</p>
 											</div>
-											{formData.floor && formData.floor > 0 ? (
+											{formData.floor && formData.floor > 0 ?
 												<div>
 													<span className='text-sm text-muted-foreground block mb-1'>
 														Tầng
 													</span>
 													<p className='text-lg'>{formData.floor}</p>
 												</div>
-											) : null}
-											{formData.minStay && formData.minStay !== '0' && formData.minStay !== '--' ? (
+											:	null}
+											{(
+												formData.minStay &&
+												formData.minStay !== '0' &&
+												formData.minStay !== '--'
+											) ?
 												<div>
 													<span className='text-sm text-muted-foreground block mb-1'>
 														Thời gian ở tối thiểu
 													</span>
 													<p className='text-lg'>{formData.minStay}</p>
 												</div>
-											) : null}
-											{formData.electricityCost && formData.electricityCost > 0 ? (
+											:	null}
+											{(
+												formData.electricityCost && formData.electricityCost > 0
+											) ?
 												<div>
 													<span className='text-sm text-muted-foreground block mb-1'>
 														Tiền điện
 													</span>
 													<p className='text-lg'>
-														{Number(formData.electricityCost).toLocaleString('vi-VN')}đ/kWh
+														{Number(formData.electricityCost).toLocaleString(
+															'vi-VN',
+														)}
+														đ/kWh
 													</p>
 												</div>
-											) : null}
-											{formData.waterCost && formData.waterCost > 0 ? (
+											:	null}
+											{formData.waterCost && formData.waterCost > 0 ?
 												<div>
 													<span className='text-sm text-muted-foreground block mb-1'>
 														Tiền nước
 													</span>
 													<p className='text-lg'>
-														{Number(formData.waterCost).toLocaleString('vi-VN')}đ/tháng
+														{Number(formData.waterCost).toLocaleString('vi-VN')}
+														đ/tháng
 													</p>
 												</div>
-											) : null}
-											{formData.deposit && formData.deposit > 0 ? (
+											:	null}
+											{formData.deposit && formData.deposit > 0 ?
 												<div>
 													<span className='text-sm text-muted-foreground block mb-1'>
 														Tiền đặt cọc
@@ -891,7 +844,7 @@ const PostRoomPage = () => {
 														{Number(formData.deposit).toLocaleString('vi-VN')}đ
 													</p>
 												</div>
-											) : null}
+											:	null}
 										</div>
 
 										<Separator />
@@ -956,6 +909,79 @@ const PostRoomPage = () => {
 											</>
 										)}
 									</div>
+
+									{/* AI Price Suggestion - hiển thị ở Step 4 sau khi đã có đầy đủ thông tin */}
+									{isPriceLoading && (
+										<div className='rounded-xl p-5 text-sm border bg-secondary border-border animate-pulse'>
+											<div className='flex items-center gap-2 mb-3'>
+												<div className='h-5 w-5 bg-muted rounded-full'></div>
+												<div className='h-5 bg-muted rounded w-1/3'></div>
+											</div>
+											<div className='h-4 bg-muted rounded w-3/4 mb-2'></div>
+											<div className='h-3 bg-muted rounded w-1/2'></div>
+										</div>
+									)}
+									{priceEstimate && !isPriceLoading && (
+										<div
+											className={`rounded-xl p-5 text-sm border animate-in fade-in slide-in-from-top-2 duration-300 ${
+												priceEstimate.currentPriceStatus === 'fair' ?
+													'bg-green-500/10 border-green-500/30'
+												: priceEstimate.currentPriceStatus === 'high' ?
+													'bg-orange-500/10 border-orange-500/30'
+												: priceEstimate.currentPriceStatus === 'very_high' ?
+													'bg-red-500/10 border-red-500/30'
+												:	'bg-primary/5 border-primary/20'
+											}`}>
+											<p className='font-semibold mb-2 flex items-center gap-2 text-base'>
+												<span>💡</span> Gợi ý định giá AI
+											</p>
+											<p className='text-muted-foreground'>
+												Giá thị trường khu vực:{' '}
+												<strong className='text-foreground'>
+													{new Intl.NumberFormat('vi-VN').format(
+														priceEstimate.estimatedPrice,
+													)}
+													đ
+												</strong>{' '}
+												(
+												{new Intl.NumberFormat('vi-VN').format(
+													priceEstimate.minPrice,
+												)}
+												đ –{' '}
+												{new Intl.NumberFormat('vi-VN').format(
+													priceEstimate.maxPrice,
+												)}
+												đ)
+											</p>
+											<p className='mt-2 font-medium'>
+												{priceEstimate.suggestion}
+											</p>
+											{priceEstimate.similarRoomsCount > 0 && (
+												<p className='text-xs text-muted-foreground mt-1'>
+													Dựa trên {priceEstimate.similarRoomsCount} phòng
+													tương tự trong khu vực
+													{priceEstimate.method === 'hybrid' &&
+														' + AI xác thực'}
+												</p>
+											)}
+											{priceEstimate.aiInsight && (
+												<div className='mt-2 pt-2 border-t border-border'>
+													<p className='text-xs font-medium text-purple-600 dark:text-purple-400 flex items-center gap-1'>
+														<span>🤖</span> AI nhận xét:
+													</p>
+													<p className='text-xs text-muted-foreground mt-0.5'>
+														{priceEstimate.aiInsight}
+													</p>
+												</div>
+											)}
+											<button
+												type='button'
+												onClick={fetchPriceEstimate}
+												className='mt-3 text-xs text-primary hover:text-primary/80 underline underline-offset-2 transition-colors'>
+												🔄 Phân tích lại
+											</button>
+										</div>
+									)}
 
 									<div className='flex items-start gap-3 p-4 bg-primary/5 border border-primary/20 rounded-lg'>
 										<div className='text-blue-600 dark:text-blue-400 mt-0.5'>

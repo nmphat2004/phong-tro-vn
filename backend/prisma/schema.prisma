@@ -86,6 +86,7 @@ model RoomImage {
   id        String  @id @default(uuid())
   roomId    String
   url       String
+  hash      String?
   isPrimary Boolean @default(false)
 
   room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
@@ -128,6 +129,7 @@ model Review {
   sentiment      String?
   isVerified     Boolean  @default(false)
   rentalVerified Boolean  @default(false)
+  ipAddress      String?
   createdAt      DateTime @default(now())
 
   room     Room @relation(fields: [roomId], references: [id], onDelete: Cascade)

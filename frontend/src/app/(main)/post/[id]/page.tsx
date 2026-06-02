@@ -59,7 +59,7 @@ const EditRoomPage = () => {
 	const [currentStep, setCurrentStep] = useState(1);
 	const [isUpdating, setIsUpdating] = useState(false);
 	const [uploadedImages, setUploadedImages] = useState<
-		{ file?: File; preview: string; isNew: boolean }[]
+		{ file?: File; preview: string; hash?: string; isNew: boolean }[]
 	>([]);
 	const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
 	const [isGeocoding, setIsGeocoding] = useState(false);
@@ -104,6 +104,7 @@ const EditRoomPage = () => {
 				setUploadedImages(
 					room.images.map((img: any) => ({
 						preview: img.url,
+						hash: img.hash,
 						isNew: false,
 					})),
 				);
@@ -221,12 +222,15 @@ const EditRoomPage = () => {
 			}
 
 			const imageUrls: string[] = [];
+			const imageHashes: string[] = [];
 			for (const image of uploadedImages) {
 				if (image.isNew && image.file) {
-					const url = await uploadImage(image.file);
-					imageUrls.push(url);
+					const result = await uploadImage(image.file);
+					imageUrls.push(result.url);
+					imageHashes.push(result.hash);
 				} else {
 					imageUrls.push(image.preview);
+					imageHashes.push(image.hash || '');
 				}
 			}
 
@@ -251,6 +255,7 @@ const EditRoomPage = () => {
 				lat: coords?.lat,
 				lng: coords?.lng,
 				imageUrls,
+				imageHashes,
 				primaryImageUrl: imageUrls[0],
 				amenityIds: selectedAmenityIds,
 			};

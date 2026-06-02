@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { FakeListingService } from '../fraud/fake-listing.service';
 import { FakeReviewService } from '../fraud/fake-review.service';
@@ -93,7 +97,9 @@ export class AdminService {
     const roomsWithFraud = await Promise.all(
       rooms.map(async (room) => {
         try {
-          const fraudResult = await this.fakeListingService.analyzeRoom(room.id);
+          const fraudResult = await this.fakeListingService.analyzeRoom(
+            room.id,
+          );
           return { ...room, fraudResult };
         } catch {
           return { ...room, fraudResult: null };
@@ -143,8 +149,27 @@ export class AdminService {
       this.prisma.review.count(),
     ]);
 
+    // Auto-analyze fraud for each review
+    const reviewsWithFraud = await Promise.all(
+      reviews.map(async (review) => {
+        try {
+          const fraudResult = await this.fakeReviewService.analyze(
+            review.reviewerId,
+            review.roomId,
+            review.rating,
+            review.comment || '',
+            review.createdAt,
+            review.ipAddress || undefined,
+          );
+          return { ...review, fraudResult };
+        } catch {
+          return { ...review, fraudResult: null };
+        }
+      }),
+    );
+
     return {
-      data: reviews,
+      data: reviewsWithFraud,
       meta: {
         total,
         page,
@@ -165,18 +190,43 @@ export class AdminService {
       review.roomId,
       review.rating,
       review.comment || '',
+      review.createdAt,
+      review.ipAddress || undefined,
     );
   }
 
   async changeReviewStatus(id: string, isVerified: boolean) {
-    return this.prisma.review.update({
+    const review = await this.prisma.review.update({
       where: { id },
       data: { isVerified },
     });
+    await this.updateRoomRating(review.roomId);
+    return review;
   }
 
   async removeReview(id: string) {
-    return this.prisma.review.delete({ where: { id } });
+    const review = await this.prisma.review.findUnique({ where: { id } });
+    if (!review) throw new NotFoundException('Review not found');
+
+    await this.prisma.review.delete({ where: { id } });
+    await this.updateRoomRating(review.roomId);
+    return { message: 'Review deleted successfully' };
+  }
+
+  private async updateRoomRating(roomId: string) {
+    const result = await this.prisma.review.aggregate({
+      where: { roomId, isVerified: true },
+      _avg: { rating: true },
+      _count: { id: true },
+    });
+
+    await this.prisma.room.update({
+      where: { id: roomId },
+      data: {
+        avgRating: result._avg.rating ?? 0,
+        reviewCount: result._count.id,
+      },
+    });
   }
 
   // --- Reports Management ---

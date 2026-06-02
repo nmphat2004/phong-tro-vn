@@ -101,6 +101,11 @@ export class CreateRoomDto {
   @IsArray()
   imageUrls?: string[];
 
+  @ApiProperty({ example: ['abc123def456'] })
+  @IsOptional()
+  @IsArray()
+  imageHashes?: string[];
+
   @ApiProperty({ example: 'https://cloudinary.com/img1.jpg' })
   @IsOptional()
   @IsString()
@@ -201,6 +206,11 @@ export class UpdateRoomDto {
   @IsOptional()
   @IsArray()
   imageUrls?: string[];
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsArray()
+  imageHashes?: string[];
 }
 
 export class SearchRoomDto {

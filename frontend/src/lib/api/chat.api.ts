@@ -73,3 +73,14 @@ export const getUnreadSummary = async () => {
 	}>('/chat/unread-summary');
 	return res.data;
 };
+
+export const sendMessageViaApi = async (
+	conversationId: string,
+	content: string,
+) => {
+	const res = await api.post<ChatMessage>(
+		`/chat/conversations/${conversationId}/messages`,
+		{ content },
+	);
+	return res.data;
+};

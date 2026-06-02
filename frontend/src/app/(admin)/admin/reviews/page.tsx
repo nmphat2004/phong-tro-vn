@@ -1,22 +1,108 @@
 'use client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getAdminReviews, changeReviewStatus, removeReview, analyzeReviewFraud } from '@/lib/api/admin.api';
+import {
+	getAdminReviews,
+	changeReviewStatus,
+	removeReview,
+} from '@/lib/api/admin.api';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
-import { Star, Check, X } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import {
+	Star,
+	Check,
+	X,
+	AlertTriangle,
+	ShieldCheck,
+	ShieldAlert,
+	Info,
+} from 'lucide-react';
+import { useState } from 'react';
 
 const TABS = [
-	{ key: 'all', label: 'All Reviews' },
-	{ key: 'flagged', label: 'Flagged' },
-	{ key: 'verified', label: 'Verified' },
-	{ key: 'pending', label: 'Pending' },
+	{ key: 'all', label: 'Tất cả' },
+	{ key: 'flagged', label: 'Nghi ngờ' },
 ];
+
+function FraudBadge({ fraud }: { fraud: any }) {
+	if (!fraud) {
+		return (
+			<span className='inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold bg-secondary text-muted-foreground'>
+				<Info className='w-3 h-3' />
+				N/A
+			</span>
+		);
+	}
+
+	const score = fraud.score ?? 0;
+	const reasons: string[] = fraud.reasons || [];
+
+	let bgClass = '';
+	let textClass = '';
+	let label = '';
+	let Icon = ShieldCheck;
+
+	if (score >= 80) {
+		bgClass = 'bg-red-500/15';
+		textClass = 'text-red-600';
+		label = 'Nguy cơ cao';
+		Icon = ShieldAlert;
+	} else if (score >= 50) {
+		bgClass = 'bg-orange-500/15';
+		textClass = 'text-orange-600';
+		label = 'Nghi ngờ';
+		Icon = AlertTriangle;
+	} else {
+		bgClass = 'bg-green-500/15';
+		textClass = 'text-green-600';
+		label = 'An toàn';
+		Icon = ShieldCheck;
+	}
+
+	return (
+		<div className='relative group'>
+			<span
+				className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${bgClass} ${textClass} cursor-default`}>
+				<Icon className='w-3.5 h-3.5' />
+				{label}
+				<span className='ml-0.5 opacity-70'>({score})</span>
+			</span>
+
+			{/* Hover tooltip with reasons */}
+			{reasons.length > 0 && (
+				<div className='absolute z-50 right-0 bottom-full mb-2 w-72 bg-card border border-border rounded-xl shadow-2xl p-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none'>
+					<p className={`text-xs font-bold mb-2 ${textClass}`}>
+						Phân tích - Điểm: {score}/100
+					</p>
+					{/* Progress bar */}
+					<div className='h-2 bg-secondary rounded-full overflow-hidden mb-3'>
+						<div
+							className={`h-full rounded-full transition-all ${
+								score >= 80 ? 'bg-red-500'
+								: score >= 50 ? 'bg-orange-500'
+								: 'bg-green-500'
+							}`}
+							style={{ width: `${score}%` }}
+						/>
+					</div>
+					<ul className='space-y-1.5'>
+						{reasons.map((reason: string, i: number) => (
+							<li
+								key={i}
+								className='flex items-start gap-2 text-[11px] text-muted-foreground'>
+								<AlertTriangle className='w-3 h-3 shrink-0 mt-0.5 text-orange-500' />
+								<span>{reason}</span>
+							</li>
+						))}
+					</ul>
+				</div>
+			)}
+		</div>
+	);
+}
 
 export default function AdminReviewsPage() {
 	const queryClient = useQueryClient();
 	const [activeTab, setActiveTab] = useState('all');
-	const [fraudScores, setFraudScores] = useState<Record<string, any>>({});
 
 	const { data: response, isLoading } = useQuery({
 		queryKey: ['admin-reviews'],
@@ -24,7 +110,8 @@ export default function AdminReviewsPage() {
 	});
 
 	const { mutate: handleStatusChange } = useMutation({
-		mutationFn: ({ id, isVerified }: { id: string; isVerified: boolean }) => changeReviewStatus(id, isVerified),
+		mutationFn: ({ id, isVerified }: { id: string; isVerified: boolean }) =>
+			changeReviewStatus(id, isVerified),
 		onSuccess: () => {
 			toast.success('Cập nhật trạng thái đánh giá thành công');
 			queryClient.invalidateQueries({ queryKey: ['admin-reviews'] });
@@ -39,31 +126,17 @@ export default function AdminReviewsPage() {
 		},
 	});
 
-	// Auto-scan all reviews for fraud scores
-	useEffect(() => {
-		if (response?.data) {
-			response.data.forEach(async (review: any) => {
-				if (!fraudScores[review.id]) {
-					try {
-						const result = await analyzeReviewFraud(review.id);
-						setFraudScores((prev) => ({ ...prev, [review.id]: result }));
-					} catch {
-						// silent fail
-					}
-				}
-			});
-		}
-	// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [response?.data]);
-
 	const reviews = response?.data || [];
 	const filteredReviews = reviews.filter((review: any) => {
 		if (activeTab === 'all') return true;
-		if (activeTab === 'flagged') return !review.isVerified && (fraudScores[review.id]?.isSuspicious);
-		if (activeTab === 'verified') return review.isVerified;
-		if (activeTab === 'pending') return !review.isVerified;
+		if (activeTab === 'flagged')
+			return !review.isVerified && review.fraudResult?.isSuspicious;
 		return true;
 	});
+
+	const flaggedCount = reviews.filter(
+		(review: any) => review.fraudResult?.isSuspicious && !review.isVerified,
+	).length;
 
 	const renderStars = (rating: number) => {
 		return (
@@ -80,7 +153,9 @@ export default function AdminReviewsPage() {
 
 	return (
 		<div>
-			<h1 className='text-3xl font-bold text-foreground mb-8'>Reviews Management</h1>
+			<div className='flex items-center justify-between mb-8'>
+				<h1 className='text-3xl font-bold text-foreground'>Quản lý đánh giá</h1>
+			</div>
 
 			{/* Tabs */}
 			<div className='border-b border-border mb-8'>
@@ -90,11 +165,19 @@ export default function AdminReviewsPage() {
 							key={tab.key}
 							onClick={() => setActiveTab(tab.key)}
 							className={`px-6 py-3 text-sm font-semibold transition-colors relative
-								${activeTab === tab.key
-									? 'text-blue-600'
-									: 'text-muted-foreground hover:text-foreground'
+								${
+									activeTab === tab.key ?
+										'text-blue-600'
+									:	'text-muted-foreground hover:text-foreground'
 								}`}>
-							{tab.label}
+							<span className='flex items-center gap-2'>
+								{tab.label}
+								{tab.key === 'flagged' && flaggedCount > 0 && (
+									<span className='px-1.5 py-0.5 text-xs font-bold rounded-full bg-orange-500 text-white animate-pulse'>
+										{flaggedCount}
+									</span>
+								)}
+							</span>
 							{activeTab === tab.key && (
 								<div className='absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-full' />
 							)}
@@ -104,64 +187,84 @@ export default function AdminReviewsPage() {
 			</div>
 
 			{/* Reviews List */}
-			<div className='bg-card rounded-2xl border border-border overflow-hidden'>
-				{isLoading ? (
+			<div className='bg-card rounded-2xl border border-border'>
+				{isLoading ?
 					<div className='p-6 space-y-4'>
 						{[...Array(3)].map((_, i) => (
 							<Skeleton key={i} className='w-full h-24' />
 						))}
 					</div>
-				) : filteredReviews.length === 0 ? (
+				: filteredReviews.length === 0 ?
 					<div className='py-16 text-center text-muted-foreground text-sm'>
 						Không có đánh giá nào trong danh mục này
 					</div>
-				) : (
-					<div className='divide-y divide-border'>
+				:	<div className='divide-y divide-border'>
 						{filteredReviews.map((review: any) => {
-							const fraud = fraudScores[review.id];
-							const isSuspicious = fraud?.isSuspicious;
-							const scoreLabel = fraud ? (fraud.score >= 60 ? 'Suspicious' : 'Clean') : null;
-							const scoreColor = fraud ? (fraud.score >= 60 ? 'text-red-500' : 'text-green-500') : '';
-							const initial = review.reviewer?.fullName?.charAt(0)?.toUpperCase() || '?';
-							const bgColors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-orange-500', 'bg-pink-500'];
+							const fraud = review.fraudResult;
+							const bgClass =
+								fraud?.score >= 80 ? 'bg-red-500/5 hover:bg-red-500/10'
+								: fraud?.score >= 50 ? 'bg-orange-500/5 hover:bg-orange-500/10'
+								: 'hover:bg-secondary/50';
+
+							const initial =
+								review.reviewer?.fullName?.charAt(0)?.toUpperCase() || '?';
+							const bgColors = [
+								'bg-blue-500',
+								'bg-green-500',
+								'bg-purple-500',
+								'bg-orange-500',
+								'bg-pink-500',
+							];
 							const bgColor = bgColors[initial.charCodeAt(0) % bgColors.length];
 
 							return (
-								<div key={review.id} className='p-6 flex items-start gap-4 hover:bg-secondary/50 transition-colors'>
+								<div
+									key={review.id}
+									className={`p-6 flex items-start gap-4 transition-colors first:rounded-t-2xl last:rounded-b-2xl ${bgClass}`}>
 									{/* Avatar */}
-									<div className={`w-10 h-10 rounded-full ${bgColor} flex items-center justify-center text-white font-bold text-sm shrink-0`}>
+									<div
+										className={`w-10 h-10 rounded-full ${bgColor} flex items-center justify-center text-white font-bold text-sm shrink-0`}>
 										{initial}
 									</div>
 
 									{/* Content */}
 									<div className='flex-1 min-w-0'>
 										<div className='flex items-center gap-3 mb-1'>
-											<span className='font-semibold text-foreground text-sm'>{review.reviewer?.fullName}</span>
+											<span className='font-semibold text-foreground text-sm'>
+												{review.reviewer?.fullName}
+											</span>
 											{renderStars(review.rating)}
 										</div>
 										<p className='text-sm text-muted-foreground mb-2 line-clamp-2'>
 											{review.comment || 'Không có nhận xét'}
 										</p>
-										<p className='text-xs text-muted-foreground'>
-											on {review.room?.title || 'Phòng đã xóa'} • {new Date(review.createdAt).toLocaleDateString('vi-VN')}
+										<p className='text-xs text-muted-foreground font-medium'>
+											thuộc{' '}
+											<span className='font-bold text-blue-600 dark:text-blue-400'>
+												{review.room?.title || 'Phòng đã xóa'}
+											</span>{' '}
+											• {new Date(review.createdAt).toLocaleDateString('vi-VN')}
 										</p>
 									</div>
 
 									{/* Fraud Score + Actions */}
 									<div className='flex items-center gap-4 shrink-0'>
-										{fraud && (
-											<div className='text-right'>
-												<p className={`text-sm font-bold ${scoreColor}`}>
-													Score: {fraud.score} – {scoreLabel}
-												</p>
-											</div>
-										)}
+										<FraudBadge fraud={fraud} />
 										<div className='flex gap-2'>
 											<button
-												onClick={() => handleStatusChange({ id: review.id, isVerified: !review.isVerified })}
-												className='px-4 py-2 bg-green-600 text-white text-xs font-bold rounded-lg hover:bg-green-700 transition-colors flex items-center gap-1.5'>
+												onClick={() =>
+													handleStatusChange({
+														id: review.id,
+														isVerified: !review.isVerified,
+													})
+												}
+												className={`px-4 py-2 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 ${
+													review.isVerified ?
+														'bg-amber-600 hover:bg-amber-700'
+													:	'bg-green-600 hover:bg-green-700'
+												}`}>
 												<Check className='w-3.5 h-3.5' />
-												Approve
+												{review.isVerified ? 'Bỏ duyệt' : 'Duyệt'}
 											</button>
 											<button
 												onClick={() => {
@@ -171,7 +274,7 @@ export default function AdminReviewsPage() {
 												}}
 												className='px-4 py-2 bg-red-600 text-white text-xs font-bold rounded-lg hover:bg-red-700 transition-colors flex items-center gap-1.5'>
 												<X className='w-3.5 h-3.5' />
-												Delete
+												Xóa
 											</button>
 										</div>
 									</div>
@@ -179,7 +282,7 @@ export default function AdminReviewsPage() {
 							);
 						})}
 					</div>
-				)}
+				}
 			</div>
 		</div>
 	);

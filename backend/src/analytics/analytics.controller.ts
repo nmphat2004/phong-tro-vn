@@ -39,6 +39,11 @@ export class AnalyticsController {
     @Query('address') address: string,
     @Query('currentPrice') currentPrice?: string,
     @Query('type') type?: string,
+    @Query('amenities') amenities?: string,
+    @Query('description') description?: string,
+    @Query('electricityCost') electricityCost?: string,
+    @Query('waterCost') waterCost?: string,
+    @Query('deposit') deposit?: string,
   ) {
     return this.priceEstimatorService.estimate(
       parseFloat(area),
@@ -47,6 +52,11 @@ export class AnalyticsController {
       address,
       currentPrice ? parseFloat(currentPrice) : undefined,
       type,
+      amenities,
+      description,
+      electricityCost ? parseFloat(electricityCost) : undefined,
+      waterCost ? parseFloat(waterCost) : undefined,
+      deposit ? parseFloat(deposit) : undefined,
     );
   }
 

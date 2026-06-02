@@ -136,6 +136,26 @@ export class ChatService {
     if (room.ownerId === renterId)
       throw new ForbiddenException('Cannot chat with yourself');
 
+    const conversationInclude = {
+      room: {
+        select: {
+          id: true,
+          title: true,
+          price: true,
+          images: {
+            where: { isPrimary: true },
+            take: 1,
+          },
+        },
+      },
+      renter: { select: { id: true, fullName: true, avatarUrl: true } },
+      owner: { select: { id: true, fullName: true, avatarUrl: true } },
+      messages: {
+        orderBy: { sentAt: 'desc' as const },
+        take: 1,
+      },
+    };
+
     const existing = await this.prisma.conversation.findUnique({
       where: {
         roomId_renterId: {
@@ -143,16 +163,7 @@ export class ChatService {
           renterId,
         },
       },
-      include: {
-        room: {
-          select: {
-            id: true,
-            title: true,
-            price: true,
-          },
-        },
-        renter: { select: { id: true, fullName: true, avatarUrl: true } },
-      },
+      include: conversationInclude,
     });
 
     if (existing) return existing;
@@ -163,16 +174,7 @@ export class ChatService {
         renterId,
         ownerId: room.ownerId,
       },
-      include: {
-        room: {
-          select: {
-            id: true,
-            title: true,
-            price: true,
-          },
-        },
-        renter: { select: { id: true, fullName: true, avatarUrl: true } },
-      },
+      include: conversationInclude,
     });
 
     await this.prisma.conversationRead.createMany({

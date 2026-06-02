@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { CreateConversationDto } from './dto/chat.dto';
+import { CreateConversationDto, SendMessageHttpDto } from './dto/chat.dto';
 import { JwtGuard } from 'src/auth/guards/jwt.guard';
 
 @ApiTags('Chat')
@@ -56,5 +56,18 @@ export class ChatController {
   @ApiOperation({ summary: 'Mark conversation as read' })
   markConversationRead(@Req() req: any, @Param('id') id: string) {
     return this.chatService.markConversationAsRead(id, req.user.id);
+  }
+
+  @Post('conversations/:id/messages')
+  @ApiOperation({ summary: 'Send message via HTTP (fallback)' })
+  sendMessage(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body() dto: SendMessageHttpDto,
+  ) {
+    return this.chatService.saveMessage(req.user.id, {
+      conversationId: id,
+      content: dto.content,
+    });
   }
 }

@@ -11,6 +11,7 @@ import {
   Delete,
   UseGuards,
   Req,
+  Ip,
 } from '@nestjs/common';
 import { ReviewsService } from './reviews.service';
 import { CreateReviewDto, UpdateReviewDto } from './dto/review.dto';
@@ -47,9 +48,10 @@ export class ReviewsController {
   create(
     @Param('roomId') roomId: string,
     @Req() req: any,
+    @Ip() ip: string,
     @Body() dto: CreateReviewDto,
   ) {
-    return this.reviewsService.create(roomId, req.user.id, dto);
+    return this.reviewsService.create(roomId, req.user.id, dto, ip);
   }
 
   @Put(':id')
@@ -59,9 +61,10 @@ export class ReviewsController {
   update(
     @Param('id') id: string,
     @Req() req: any,
+    @Ip() ip: string,
     @Body() dto: UpdateReviewDto,
   ) {
-    return this.reviewsService.update(id, req.user.id, dto);
+    return this.reviewsService.update(id, req.user.id, dto, ip);
   }
 
   @Delete(':id')

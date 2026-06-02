@@ -2,6 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { v2 as cloudinary } from 'cloudinary';
 
+export interface UploadResult {
+  url: string;
+  hash: string;
+}
+
 @Injectable()
 export class UploadService {
   constructor(private configService: ConfigService) {
@@ -12,8 +17,8 @@ export class UploadService {
     });
   }
 
-  async uploadImage(file: Express.Multer.File): Promise<string> {
-    return new Promise((resole, reject) => {
+  async uploadImage(file: Express.Multer.File): Promise<UploadResult> {
+    return new Promise((resolve, reject) => {
       cloudinary.uploader
         .upload_stream(
           {
@@ -26,14 +31,20 @@ export class UploadService {
           (error, result) => {
             // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
             if (error) reject(error);
-            else resole(result!.secure_url);
+            else
+              resolve({
+                url: result!.secure_url,
+                hash: result!.etag || '',
+              });
           },
         )
         .end(file.buffer);
     });
   }
 
-  async uploadMultipleImages(files: Express.Multer.File[]): Promise<string[]> {
+  async uploadMultipleImages(
+    files: Express.Multer.File[],
+  ): Promise<UploadResult[]> {
     const uploadPromises = files.map((file) => this.uploadImage(file));
     return Promise.all(uploadPromises);
   }

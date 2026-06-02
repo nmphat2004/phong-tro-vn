@@ -111,6 +111,41 @@ export class FakeListingService {
     }
     score += details.bulkPosting;
 
+    // ── Rule 6: Ảnh trùng lặp với phòng khác (0–20đ) ────────────
+    const imageHashes = room.images
+      .map((img) => img.hash)
+      .filter((h): h is string => !!h);
+
+    let duplicateScore = 0;
+    if (imageHashes.length > 0) {
+      const duplicateImages = await this.prisma.roomImage.findMany({
+        where: {
+          hash: { in: imageHashes },
+          roomId: { not: room.id },
+        },
+        select: { hash: true, roomId: true },
+      });
+
+      if (duplicateImages.length > 0) {
+        const uniqueRooms = new Set(duplicateImages.map((d) => d.roomId));
+        const duplicateCount = duplicateImages.length;
+
+        if (duplicateCount >= 3) {
+          duplicateScore = 20;
+          reasons.push(
+            `${duplicateCount} ảnh trùng lặp với ${uniqueRooms.size} tin đăng khác (nghiêm trọng)`,
+          );
+        } else {
+          duplicateScore = 15;
+          reasons.push(
+            `${duplicateCount} ảnh trùng lặp với ${uniqueRooms.size} tin đăng khác`,
+          );
+        }
+      }
+    }
+    details.duplicateImages = duplicateScore;
+    score += duplicateScore;
+
     score = Math.min(100, score);
 
     // Cập nhật DB nếu cần flag

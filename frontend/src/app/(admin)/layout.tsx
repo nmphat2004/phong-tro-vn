@@ -45,7 +45,7 @@ export default function AdminLayout({
 
 	const navItems = [
 		{ label: 'Tổng quan', href: '/admin/dashboard', icon: LayoutDashboard },
-		{ label: 'Danh sách phòng', href: '/admin/rooms', icon: Home },
+		{ label: 'Tin đăng', href: '/admin/rooms', icon: Home },
 		{ label: 'Người dùng', href: '/admin/users', icon: Users },
 		{ label: 'Đánh giá', href: '/admin/reviews', icon: Star },
 		{ label: 'Báo cáo', href: '/admin/reports', icon: AlertTriangle },

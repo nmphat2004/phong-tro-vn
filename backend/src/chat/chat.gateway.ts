@@ -25,8 +25,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
-  // Map lưu userId → socketId
-  private connectedUsers = new Map<string, string>();
+  // Map lưu userId → Set các socketId (hỗ trợ nhiều tab)
+  private connectedUsers = new Map<string, Set<string>>();
 
   constructor(
     private chatService: ChatService,
@@ -55,8 +55,19 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       client.data.userId = payload.sub;
       client.data.fullName = payload.fullName;
 
-      // Lưu vào map
-      this.connectedUsers.set(payload.sub, client.id);
+      // Lưu vào map (hỗ trợ nhiều tab)
+      let userSockets = this.connectedUsers.get(payload.sub);
+      if (!userSockets) {
+        userSockets = new Set<string>();
+        this.connectedUsers.set(payload.sub, userSockets);
+        // Phát sự kiện online cho các user khác
+        this.server.emit('user_online', payload.sub);
+      }
+      userSockets.add(client.id);
+
+      // Gửi danh sách các user đang online cho chính client này
+      client.emit('online_users', Array.from(this.connectedUsers.keys()));
+
       await this.emitUnreadSummary(payload.sub);
 
       console.log(`✅ User ${payload.sub} connected — socket: ${client.id}`);
@@ -67,9 +78,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   // Khi user ngắt kết nối
   handleDisconnect(client: Socket) {
-    if (client.data.userId) {
-      this.connectedUsers.delete(client.data.userId);
-      console.log(`❌ User ${client.data.userId} disconnected`);
+    const userId = client.data.userId;
+    if (userId) {
+      const userSockets = this.connectedUsers.get(userId);
+      if (userSockets) {
+        userSockets.delete(client.id);
+        if (userSockets.size === 0) {
+          this.connectedUsers.delete(userId);
+          // Phát sự kiện offline khi tắt tất cả các tab
+          this.server.emit('user_offline', userId);
+        }
+      }
+      console.log(`❌ User ${userId} disconnected`);
     }
   }
 
@@ -111,12 +131,23 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       // Gửi tin nhắn đến tất cả user trong conversation room
       this.server.to(dto.conversationId).emit('new_message', message);
-      await this.emitUnreadSummary(message.senderId);
 
+      // Xác định receiver
       const receiverId =
         message.conversation.ownerId === message.senderId
           ? message.conversation.renterId
           : message.conversation.ownerId;
+
+      // Gửi trực tiếp cho receiver để đảm bảo nhận được dù chưa join room
+      // Frontend sẽ tự deduplicate bằng msg.id
+      const receiverSockets = this.connectedUsers.get(receiverId);
+      if (receiverSockets) {
+        for (const socketId of receiverSockets) {
+          this.server.to(socketId).emit('new_message', message);
+        }
+      }
+
+      await this.emitUnreadSummary(message.senderId);
       await this.emitUnreadSummary(receiverId);
       this.emitNotificationCreated(receiverId);
 
@@ -150,15 +181,19 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   private async emitUnreadSummary(userId: string) {
-    const socketId = this.connectedUsers.get(userId);
-    if (!socketId) return;
+    const socketIds = this.connectedUsers.get(userId);
+    if (!socketIds || socketIds.size === 0) return;
     const summary = await this.chatService.getUnreadSummary(userId);
-    this.server.to(socketId).emit('unread_summary', summary);
+    for (const socketId of socketIds) {
+      this.server.to(socketId).emit('unread_summary', summary);
+    }
   }
 
   private emitNotificationCreated(userId: string) {
-    const socketId = this.connectedUsers.get(userId);
-    if (!socketId) return;
-    this.server.to(socketId).emit('notification_created');
+    const socketIds = this.connectedUsers.get(userId);
+    if (!socketIds || socketIds.size === 0) return;
+    for (const socketId of socketIds) {
+      this.server.to(socketId).emit('notification_created');
+    }
   }
 }

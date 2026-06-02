@@ -24,6 +24,8 @@ export interface PriceEstimate {
 
 @Injectable()
 export class PriceEstimatorService {
+  private aiEstimateCache = new Map<string, { adjustedPrice: number | null; insight: string }>();
+
   constructor(
     private prisma: PrismaService,
     private aiService: AiService,
@@ -36,6 +38,11 @@ export class PriceEstimatorService {
     address: string,
     currentPrice?: number,
     type?: string,
+    amenities?: string,
+    description?: string,
+    electricityCost?: number,
+    waterCost?: number,
+    deposit?: number,
   ): Promise<PriceEstimate> {
     // Lấy dữ liệu phòng cùng khu vực để train
     const rawData = await this.getTrainingData(address, type);
@@ -112,6 +119,11 @@ export class PriceEstimatorService {
         trainingData.length,
         currentPrice,
         type,
+        amenities,
+        description,
+        electricityCost,
+        waterCost,
+        deposit,
       );
 
       if (aiResult) {
@@ -194,8 +206,18 @@ export class PriceEstimatorService {
     sampleSize: number,
     currentPrice?: number,
     type?: string,
+    amenities?: string,
+    description?: string,
+    electricityCost?: number,
+    waterCost?: number,
+    deposit?: number,
   ): Promise<{ adjustedPrice: number | null; insight: string } | null> {
-    const district = this.extractDistrict(address);
+    const district = this.extractDistrict(address).trim().toLowerCase() || address.trim().toLowerCase();
+    const cacheKey = `${type || 'room'}_${area}_${amenityCount}_${floor}_${district}_${amenities || ''}`;
+
+    if (this.aiEstimateCache.has(cacheKey)) {
+      return this.aiEstimateCache.get(cacheKey) || null;
+    }
 
     const typeNames: Record<string, string> = {
       room: 'Phòng trọ',
@@ -207,23 +229,48 @@ export class PriceEstimatorService {
     };
     const typeLabel = type ? (typeNames[type] || type) : 'Phòng trọ';
 
+    // Xây dựng phần mô tả chi tiết tiện nghi và thông tin bổ sung
+    let amenityDetails = `- Số tiện nghi: ${amenityCount}`;
+    if (amenities && amenities.length > 0) {
+      amenityDetails += `\n- Danh sách tiện nghi cụ thể: ${amenities}`;
+    }
+    if (amenityCount === 0 && (!amenities || amenities.length === 0)) {
+      amenityDetails += ' (Phòng trống, không nội thất/tiện nghi)';
+    }
+
+    let extraInfo = '';
+    if (electricityCost && electricityCost > 0) {
+      extraInfo += `\n- Tiền điện: ${electricityCost.toLocaleString('vi-VN')}đ/kWh`;
+    }
+    if (waterCost && waterCost > 0) {
+      extraInfo += `\n- Tiền nước: ${waterCost.toLocaleString('vi-VN')}đ/m³`;
+    }
+    if (deposit && deposit > 0) {
+      extraInfo += `\n- Tiền đặt cọc: ${deposit.toLocaleString('vi-VN')}đ`;
+    }
+    if (description && description.length > 10) {
+      // Lấy tối đa 300 ký tự mô tả để AI có thêm ngữ cảnh
+      extraInfo += `\n- Mô tả của chủ nhà: "${description.substring(0, 300)}${description.length > 300 ? '...' : ''}"`;
+    }
+
     const prompt = `Bạn là chuyên gia định giá bất động sản và phòng trọ tại Việt Nam. Phân tích và đưa ra giá thuê hợp lý cho loại bất động sản sau:
 
 THÔNG TIN CHI TIẾT:
 - Loại hình: ${typeLabel}
 - Diện tích: ${area}m²
-- Số tiện nghi: ${amenityCount} (VD: điều hòa, máy giặt, tủ lạnh, v.v.)
+${amenityDetails}
 - Tầng: ${floor}
 - Khu vực: ${address}
 ${district ? `- Quận/Huyện: ${district}` : ''}
-${currentPrice ? `- Giá chủ nhà đang đặt: ${currentPrice.toLocaleString('vi-VN')}đ/tháng` : ''}
+${currentPrice ? `- Giá chủ nhà đang đặt: ${currentPrice.toLocaleString('vi-VN')}đ/tháng` : ''}${extraInfo}
 
 THAM KHẢO THUẬT TOÁN:
 - Giá ước tính bằng hồi quy tuyến tính (cho các phòng cùng khu vực): ${olsEstimate.toLocaleString('vi-VN')}đ/tháng
 - Dựa trên ${sampleSize} mẫu trong khu vực
 
 YÊU CẦU: Trả về JSON duy nhất (không markdown, không giải thích thêm) với format:
-{"adjustedPrice": <số nguyên giá đề xuất VND/tháng hoặc null nếu đồng ý với thuật toán>, "insight": "<1-2 câu nhận xét ngắn gọn bằng tiếng Việt về mức giá và loại hình, ví dụ lý do tại sao giá của loại hình này cao/thấp hơn phòng thông thường, phù hợp hiển thị cho chủ nhà>"}`;
+{"adjustedPrice": <số nguyên giá đề xuất VND/tháng hoặc null nếu đồng ý với thuật toán>, "insight": "<1-2 câu nhận xét ngắn gọn bằng tiếng Việt về mức giá dựa trên toàn bộ thông tin đã cung cấp (loại hình, tiện nghi, khu vực, chi phí điện nước...), phù hợp hiển thị cho chủ nhà>"}`;
+
 
     const result = await this.aiService.generateText(prompt);
     if (!result) return null;
@@ -234,13 +281,15 @@ YÊU CẦU: Trả về JSON duy nhất (không markdown, không giải thích th
       if (!jsonMatch) return null;
 
       const parsed = JSON.parse(jsonMatch[0]);
-      return {
+      const finalResult = {
         adjustedPrice:
           typeof parsed.adjustedPrice === 'number'
             ? Math.round(parsed.adjustedPrice)
             : null,
         insight: parsed.insight || '',
       };
+      this.aiEstimateCache.set(cacheKey, finalResult);
+      return finalResult;
     } catch {
       return null;
     }

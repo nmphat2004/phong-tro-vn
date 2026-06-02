@@ -10,7 +10,6 @@ import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
 import {
 	Eye,
-	Pencil,
 	Trash2,
 	AlertTriangle,
 	ShieldCheck,
@@ -68,9 +67,9 @@ function FraudBadge({ fraud }: { fraud: any }) {
 
 			{/* Hover tooltip with reasons */}
 			{reasons.length > 0 && (
-				<div className='absolute z-50 left-0 top-full mt-2 w-72 bg-card border border-border rounded-xl shadow-2xl p-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none'>
+				<div className='absolute z-50 left-0 bottom-full mb-2 w-72 bg-card border border-border rounded-xl shadow-2xl p-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none'>
 					<p className={`text-xs font-bold mb-2 ${textClass}`}>
-						Phân tích AI - Điểm: {score}/100
+						Phân tích - Điểm: {score}/100
 					</p>
 					{/* Progress bar */}
 					<div className='h-2 bg-secondary rounded-full overflow-hidden mb-3'>
@@ -157,13 +156,13 @@ export default function AdminRoomsPage() {
 						<option value='all'>Tất cả ({rooms.length})</option>
 						<option value='AVAILABLE'>Đang hoạt động</option>
 						<option value='HIDDEN'>Đã ẩn</option>
-						<option value='flagged'>Bị gắn cờ ({flaggedCount})</option>
+						<option value='flagged'>Nghi ngờ ({flaggedCount})</option>
 					</select>
 				</div>
 			</div>
 
 			{/* Table */}
-			<div className='bg-card rounded-2xl border border-border overflow-hidden'>
+			<div className='bg-card rounded-2xl border border-border'>
 				{isLoading ?
 					<div className='p-6 space-y-4'>
 						{[...Array(5)].map((_, i) => (
@@ -192,7 +191,7 @@ export default function AdminRoomsPage() {
 									Trạng thái
 								</th>
 								<th className='text-left px-4 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
-									Phân tích AI
+									Phân tích
 								</th>
 								<th className='text-left px-4 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
 									Lượt xem
@@ -256,9 +255,11 @@ export default function AdminRoomsPage() {
 										</td>
 										<td className='px-4 py-4'>
 											<span
-												className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold
+												className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap
 													${room.status === 'AVAILABLE' ? 'bg-green-500/15 text-green-600' : 'bg-secondary text-muted-foreground'}`}>
-												{room.status === 'AVAILABLE' ? 'Active' : 'Hidden'}
+												{room.status === 'AVAILABLE' ?
+													'Đang hiển thị'
+												:	'Đã ẩn'}
 											</span>
 										</td>
 										<td className='px-4 py-4'>
@@ -284,11 +285,6 @@ export default function AdminRoomsPage() {
 													title={room.status === 'AVAILABLE' ? 'Ẩn' : 'Hiện'}
 													className='p-2 rounded-lg hover:bg-secondary text-muted-foreground transition-colors'>
 													<Eye className='w-4 h-4' />
-												</button>
-												<button
-													title='Chỉnh sửa'
-													className='p-2 rounded-lg hover:bg-secondary text-muted-foreground transition-colors'>
-													<Pencil className='w-4 h-4' />
 												</button>
 												<button
 													onClick={() => {
