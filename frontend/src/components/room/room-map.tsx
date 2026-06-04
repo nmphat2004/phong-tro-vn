@@ -136,7 +136,7 @@ export default function RoomMap({
 	const externalQuery = `${finalLat},${finalLng}`;
 
 	return (
-		<div className='w-full rounded-xl overflow-hidden border border-border mt-4 relative'>
+		<div className='w-full rounded-xl overflow-hidden border border-border mt-4 relative z-0'>
 			{/* Address header */}
 			<div className='bg-card px-4 py-3 border-b border-border z-10 relative'>
 				<div className='flex items-start gap-2'>

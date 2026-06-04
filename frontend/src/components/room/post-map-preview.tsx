@@ -56,7 +56,7 @@ export default function PostMapPreview({
 	);
 
 	return (
-		<div className='h-[400px] w-full rounded-xl overflow-hidden border border-border shadow-md relative group'>
+		<div className='h-[400px] w-full rounded-xl overflow-hidden border border-border shadow-md relative z-0 group'>
 			<MapContainer
 				center={position}
 				zoom={15}
