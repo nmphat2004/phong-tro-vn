@@ -7,11 +7,11 @@ const WEIGHT_AREA = 2;
 const WEIGHT_AMENITY = 1;
 
 interface UserProfile {
-  avgPrice: number;
-  avgArea: number;
-  amenityFreq: Record<string, number>;
-  amenitySet: string[];
-  totalLiked: number;
+  avgPrice: number; // giá trung bình cho tất cả phòng đã thích cũng như đánh giá của user
+  avgArea: number; // diện tích trung bình cho tất cả phòng đã thích cũng như đánh giá của user
+  amenityFreq: Record<string, number>; // tần suất xuất hiện của các tiện ích
+  amenitySet: string[]; // mảng chứ tên các tiện ích
+  totalLiked: number; // tổng số phòng mà user đã thích và đánh giá cao
 }
 
 @Injectable()
@@ -87,15 +87,15 @@ export class RecommendationService {
       }),
     ]);
 
-    const all = [...saved.map((s) => s.room), ...reviewed.map((r) => r.room)];
+    const all = [...saved.map((s) => s.room), ...reviewed.map((r) => r.room)]; // gộp phòng đã thích và phòng đánh giá cao thành 1 mảng
 
     // Loại trùng
-    return all.filter((r, i, arr) => arr.findIndex((x) => x.id === r.id) === i);
+    return all.filter((r, i, arr) => arr.findIndex((x) => x.id === r.id) === i); // lọc ra các phòng trùng nhau chỉ lấy phòng có index đầu tiên và loại các phòng còn lại
   }
 
   // Xây dựng vector đặc trưng của người dùng
   private buildUserProfile(rooms: any[]): UserProfile {
-    const prices = rooms.map((r) => Number(r.price)).filter(Boolean);
+    const prices = rooms.map((r) => Number(r.price)).filter(Boolean); // trả về 1 mảng chứa giá của các phòng và loại bỏ các giá trị ko hợp lệ
     const areas = rooms.map((r) => r.area).filter(Boolean);
 
     // Tần suất amenity trong phòng đã thích
@@ -103,11 +103,12 @@ export class RecommendationService {
     rooms.forEach((room) => {
       room.amenities?.forEach(({ amenity }: any) => {
         amenityFreq[amenity.name] = (amenityFreq[amenity.name] || 0) + 1;
+        // duyệt qua tất cả các phòng trọ và tiện ích của phòng nếu có tiện ích sẽ cộng dồn
       });
     });
 
     return {
-      avgPrice: prices.reduce((a, b) => a + b, 0) / (prices.length || 1),
+      avgPrice: prices.reduce((a, b) => a + b, 0) / (prices.length || 1), // tính toán giá trung bình của tất cả phòng
       avgArea: areas.reduce((a, b) => a + b, 0) / (areas.length || 1),
       amenityFreq,
       amenitySet: Object.keys(amenityFreq),
@@ -121,7 +122,7 @@ export class RecommendationService {
     const roomAmenities = room.amenities?.map((a: any) => a.amenity.name) || [];
 
     // Tính max price/area từ profile để normalize tốt hơn
-    const priceNorm = Math.max(profile.avgPrice, 1);
+    const priceNorm = Math.max(profile.avgPrice, 1); // tránh trường hợp giá trung bình = 0
     const areaNorm = Math.max(profile.avgArea, 1);
 
     // Vector A — user profile (chuẩn hóa về [0, 1])
@@ -129,7 +130,7 @@ export class RecommendationService {
       profile.avgPrice / priceNorm, // = 1.0 (anchor)
       profile.avgArea / areaNorm, // = 1.0 (anchor)
       ...profile.amenitySet.map(
-        (a) => (profile.amenityFreq[a] || 0) / profile.totalLiked,
+        (a) => (profile.amenityFreq[a] || 0) / profile.totalLiked, // số lần tiện ích xuất hiện so với số phòng đã thích
       ),
     ];
 
@@ -151,17 +152,17 @@ export class RecommendationService {
     let dot = 0,
       normA = 0,
       normB = 0;
-    const len = Math.min(vectorA.length, vectorB.length);
+    const len = Math.min(vectorA.length, vectorB.length); // lấy vector có độ dài thấp nhất tránh trường hợp lỗi
 
     for (let i = 0; i < len; i++) {
       const w = weights[i] || 1;
-      dot += w * vectorA[i] * vectorB[i];
-      normA += w * vectorA[i] ** 2;
+      dot += w * vectorA[i] * vectorB[i]; // tính tích vô hướng của 2 vector bằng tổng các tích các vector nhân với trọng số
+      normA += w * vectorA[i] ** 2; // tổng các bình phương của các phần tử vector A nhân với trọng số
       normB += w * vectorB[i] ** 2;
     }
 
-    const denom = Math.sqrt(normA) * Math.sqrt(normB);
-    return denom > 0 ? Math.max(0, dot / denom) : 0;
+    const denom = Math.sqrt(normA) * Math.sqrt(normB); // độ dài vector = căn bậc 2 tổng bình phương => tính mẫu số = tích độ dài 2 vector
+    return denom > 0 ? Math.max(0, dot / denom) : 0; // tính cosin
   }
 
   // Giải thích lý do gợi ý

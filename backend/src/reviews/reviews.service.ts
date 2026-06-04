@@ -8,6 +8,7 @@ import { CreateReviewDto, UpdateReviewDto } from './dto/review.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { FakeReviewService } from 'src/fraud/fake-review.service';
 import { AiService } from '../analytics/ai.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class ReviewsService {
@@ -15,6 +16,7 @@ export class ReviewsService {
     private prisma: PrismaService,
     private fakeReviewService: FakeReviewService,
     private aiService: AiService,
+    private notificationsService: NotificationsService,
   ) {}
 
   async findByRoom(roomId: string, page: number = 1, limit: number = 10) {
@@ -108,7 +110,12 @@ export class ReviewsService {
     return { eligible: true };
   }
 
-  async create(roomId: string, reviewerId: string, dto: CreateReviewDto, ipAddress?: string) {
+  async create(
+    roomId: string,
+    reviewerId: string,
+    dto: CreateReviewDto,
+    ipAddress?: string,
+  ) {
     const room = await this.prisma.room.findUnique({ where: { id: roomId } });
     if (!room) throw new NotFoundException('Room not found');
 
@@ -173,14 +180,29 @@ export class ReviewsService {
           });
 
           // Cập nhật lại điểm đánh giá cho các phòng bị ảnh hưởng
-          const uniqueRoomIds = Array.from(new Set(reviewsToInvalidate.map((r) => r.roomId)));
-          await Promise.all(uniqueRoomIds.map((rId) => this.updateRoomRating(rId)));
+          const uniqueRoomIds = Array.from(
+            new Set(reviewsToInvalidate.map((r) => r.roomId)),
+          );
+          await Promise.all(
+            uniqueRoomIds.map((rId) => this.updateRoomRating(rId)),
+          );
         }
       }
 
       throw new BadRequestException(
         'Đánh giá bị từ chối vì có dấu hiệu không hợp lệ',
       );
+    }
+
+    // Gửi thông báo cảnh báo cho người dùng khi review bị gắn cờ nghi ngờ (chờ kiểm duyệt)
+    if (fraudResult.action === 'flag') {
+      await this.notificationsService.create({
+        userId: reviewerId,
+        type: 'REVIEW_FLAGGED_FRAUD',
+        title: 'Đánh giá đang chờ kiểm duyệt',
+        content: `Đánh giá của bạn trên phòng "${room.title}" đang được kiểm duyệt và sẽ hiển thị sau khi được xác nhận.`,
+        link: `/rooms/${roomId}`,
+      });
     }
 
     const review = await this.prisma.review.create({
@@ -204,6 +226,17 @@ export class ReviewsService {
 
     await this.updateRoomRating(roomId);
 
+    // Gửi thông báo cho chủ phòng khi có đánh giá mới được xác nhận (chỉ khi review được approve)
+    if (fraudResult.action === 'approve' && room.ownerId !== reviewerId) {
+      await this.notificationsService.create({
+        userId: room.ownerId,
+        type: 'NEW_REVIEW',
+        title: 'Đánh giá mới',
+        content: `Phòng "${room.title}" vừa nhận được một đánh giá mới ${dto.rating} sao.`,
+        link: `/rooms/${roomId}`,
+      });
+    }
+
     if (dto.comment)
       this.analyzeSentiment(review.id, dto.comment).catch(console.error);
 
@@ -214,7 +247,12 @@ export class ReviewsService {
     };
   }
 
-  async update(id: string, userId: string, dto: UpdateReviewDto, ipAddress?: string) {
+  async update(
+    id: string,
+    userId: string,
+    dto: UpdateReviewDto,
+    ipAddress?: string,
+  ) {
     const review = await this.prisma.review.findUnique({ where: { id } });
     if (!review) throw new NotFoundException('Review not found');
 
@@ -256,8 +294,12 @@ export class ReviewsService {
             data: { isVerified: false },
           });
 
-          const uniqueRoomIds = Array.from(new Set(reviewsToInvalidate.map((r) => r.roomId)));
-          await Promise.all(uniqueRoomIds.map((rId) => this.updateRoomRating(rId)));
+          const uniqueRoomIds = Array.from(
+            new Set(reviewsToInvalidate.map((r) => r.roomId)),
+          );
+          await Promise.all(
+            uniqueRoomIds.map((rId) => this.updateRoomRating(rId)),
+          );
         }
       }
 

@@ -7,11 +7,27 @@ import {
 } from '@/lib/api/notification.api';
 import { useNotificationStore } from '@/stores/notification.store';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Bell, CheckCheck, Loader2 } from 'lucide-react';
+import { Bell, CheckCheck, Loader2, ShieldAlert, AlertTriangle, Star } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '../ui/button';
+
+
+// Hàm phụ trả về icon và màu sắc tương ứng với từng loại thông báo
+const getNotificationIcon = (type: string) => {
+	switch (type) {
+		case 'ROOM_HIDDEN_FRAUD':
+			return <ShieldAlert className='w-4 h-4 mt-1 text-red-500' />;
+		case 'ROOM_FLAGGED_FRAUD':
+		case 'REVIEW_FLAGGED_FRAUD':
+			return <AlertTriangle className='w-4 h-4 mt-1 text-yellow-500' />;
+		case 'NEW_REVIEW':
+			return <Star className='w-4 h-4 mt-1 text-yellow-400' />;
+		default:
+			return <Bell className='w-4 h-4 mt-1 text-primary' />;
+	}
+};
 
 const Notification = () => {
 	const router = useRouter();
@@ -171,7 +187,7 @@ const Notification = () => {
 								}}
 								className={`w-full text-left p-3 rounded-lg border transition-colors ${item.isRead ? 'bg-card' : 'bg-primary/5 border-primary/30'}`}>
 								<div className='flex items-start gap-3'>
-									<Bell className='w-4 h-4 mt-1 text-primary' />
+									{getNotificationIcon(item.type)}
 									<div className='flex-1'>
 										<p className='font-medium text-sm'>{item.title}</p>
 										<p className='text-sm text-muted-foreground'>
