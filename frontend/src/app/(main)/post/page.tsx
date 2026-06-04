@@ -572,7 +572,6 @@ const PostRoomPage = () => {
 													{errors.price.message}
 												</p>
 											)}
-
 										</div>
 										<div>
 											<Label className='block mb-2'>Diện tích (m²) *</Label>
@@ -958,8 +957,8 @@ const PostRoomPage = () => {
 											</p>
 											{priceEstimate.similarRoomsCount > 0 && (
 												<p className='text-xs text-muted-foreground mt-1'>
-													Dựa trên {priceEstimate.similarRoomsCount} phòng
-													tương tự trong khu vực
+													Dựa trên {priceEstimate.similarRoomsCount} phòng tương
+													tự trong khu vực
 													{priceEstimate.method === 'hybrid' &&
 														' + AI xác thực'}
 												</p>
@@ -982,21 +981,6 @@ const PostRoomPage = () => {
 											</button>
 										</div>
 									)}
-
-									<div className='flex items-start gap-3 p-4 bg-primary/5 border border-primary/20 rounded-lg'>
-										<div className='text-blue-600 dark:text-blue-400 mt-0.5'>
-											ℹ️
-										</div>
-										<div className='flex-1 text-sm'>
-											<p className='mb-1'>
-												Tin đăng của bạn sẽ được kiểm duyệt trong vòng 24 giờ.
-											</p>
-											<p className='text-muted-foreground'>
-												Đảm bảo thông tin chính xác để tăng cơ hội được duyệt
-												nhanh.
-											</p>
-										</div>
-									</div>
 								</div>
 							)}
 
@@ -1059,7 +1043,6 @@ const PostRoomPage = () => {
 										<>
 											<li>✓ Kiểm tra kỹ thông tin</li>
 											<li>✓ Đảm bảo số điện thoại chính xác</li>
-											<li>✓ Tin đăng sẽ được duyệt trong 24h</li>
 										</>
 									)}
 								</ul>
