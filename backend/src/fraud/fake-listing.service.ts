@@ -38,10 +38,10 @@ export class FakeListingService {
     const reasons: string[] = []; // Danh sách các lý do vi phạm được tích lũy
     let score = 0; // Tổng điểm phạt tích lũy
 
-    // ── Rule 1: Đánh giá dựa trên độ tuổi tài khoản của chủ trọ (0–25 điểm) ──
-    // Tính toán số ngày từ lúc chủ trọ tạo tài khoản đến thời điểm hiện tại (86400000 ms = 1 ngày)
+    // ── Rule 1: Đánh giá dựa trên độ tuổi tài khoản của chủ trọ tại thời điểm đăng tin (0–25 điểm) ──
+    // Tính toán số ngày từ lúc chủ trọ tạo tài khoản đến thời điểm đăng tin phòng này (86400000 ms = 1 ngày)
     const accountAgeDays =
-      (Date.now() - new Date(room.owner.createdAt).getTime()) / 86400000;
+      (new Date(room.createdAt).getTime() - new Date(room.owner.createdAt).getTime()) / 86400000;
     if (accountAgeDays < 1) {
       details.newAccount = 25; // Nếu tài khoản mới tạo dưới 24 giờ: phạt tối đa 25 điểm
       reasons.push('Tài khoản chủ trọ tạo trong vòng 24 giờ');
@@ -107,11 +107,14 @@ export class FakeListingService {
     score += details.spamTitle; // Cộng điểm phạt của Rule 4 vào tổng điểm
 
     // ── Rule 5: Chủ trọ đăng số lượng tin đăng nhiều bất thường trong thời gian ngắn (0–15 điểm) ──
-    // Đếm số phòng trọ mà chủ này đã tạo trong vòng 7 ngày qua (7 * 86400000 ms)
+    // Đếm số phòng trọ mà chủ này đã tạo trong vòng 7 ngày trước thời điểm đăng tin phòng này (7 * 86400000 ms)
     const ownerRoomCount = await this.prisma.room.count({
       where: {
         ownerId: room.ownerId,
-        createdAt: { gte: new Date(Date.now() - 7 * 86400000) }, // Điều kiện lọc thời gian trong 7 ngày
+        createdAt: {
+          gte: new Date(new Date(room.createdAt).getTime() - 7 * 86400000),
+          lte: new Date(room.createdAt),
+        },
       },
     });
     if (ownerRoomCount > 10) {
