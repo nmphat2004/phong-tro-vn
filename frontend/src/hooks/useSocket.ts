@@ -23,7 +23,7 @@ const useSocket = () => {
 
 	useEffect(() => {
 		if (!accessToken || !user) return;
-		if (socketInstance?.connected) return;
+		if (socketInstance) return;
 
 		socketInstance = io(`${process.env.NEXT_PUBLIC_API_URL}/chat`, {
 			auth: { token: accessToken },
@@ -72,8 +72,12 @@ const useSocket = () => {
 		socketInstance.on('disconnect', () => console.log('Socket disconnected!'));
 
 		return () => {
-			socketInstance?.disconnect();
-			socketInstance = null;
+			// Chỉ ngắt kết nối thực sự khi người dùng logout (token bị xóa khỏi store)
+			const currentToken = useAuthStore.getState().accessToken;
+			if (!currentToken) {
+				socketInstance?.disconnect();
+				socketInstance = null;
+			}
 		};
 	}, [
 		accessToken,

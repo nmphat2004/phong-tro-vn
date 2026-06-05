@@ -129,32 +129,39 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         dto,
       );
 
-      // Gửi tin nhắn đến tất cả user trong conversation room
-      this.server.to(dto.conversationId).emit('new_message', message);
-
-      // Xác định receiver
-      const receiverId =
-        message.conversation.ownerId === message.senderId
-          ? message.conversation.renterId
-          : message.conversation.ownerId;
-
-      // Gửi trực tiếp cho receiver để đảm bảo nhận được dù chưa join room
-      // Frontend sẽ tự deduplicate bằng msg.id
-      const receiverSockets = this.connectedUsers.get(receiverId);
-      if (receiverSockets) {
-        for (const socketId of receiverSockets) {
-          this.server.to(socketId).emit('new_message', message);
-        }
-      }
-
-      await this.emitUnreadSummary(message.senderId);
-      await this.emitUnreadSummary(receiverId);
-      this.emitNotificationCreated(receiverId);
+      await this.broadcastNewMessage(message);
 
       return { success: true, message };
     } catch (error) {
       return { success: false, error: error.message };
     }
+  }
+
+  // Phát tin nhắn realtime dùng chung cho cả WebSocket Gateway và REST API Fallback
+  async broadcastNewMessage(message: any) {
+    if (!this.server) return;
+
+    // Gửi tin nhắn đến tất cả user trong conversation room
+    this.server.to(message.conversationId).emit('new_message', message);
+
+    // Xác định receiver
+    const receiverId =
+      message.conversation.ownerId === message.senderId
+        ? message.conversation.renterId
+        : message.conversation.ownerId;
+
+    // Gửi trực tiếp cho receiver để đảm bảo nhận được dù chưa join room
+    // Frontend sẽ tự deduplicate bằng msg.id
+    const receiverSockets = this.connectedUsers.get(receiverId);
+    if (receiverSockets) {
+      for (const socketId of receiverSockets) {
+        this.server.to(socketId).emit('new_message', message);
+      }
+    }
+
+    await this.emitUnreadSummary(message.senderId);
+    await this.emitUnreadSummary(receiverId);
+    this.emitNotificationCreated(receiverId);
   }
 
   // Đang gõ...

@@ -12,6 +12,7 @@ import {
   Body,
 } from '@nestjs/common';
 import { ChatService } from './chat.service';
+import { ChatGateway } from './chat.gateway';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CreateConversationDto, SendMessageHttpDto } from './dto/chat.dto';
 import { JwtGuard } from 'src/auth/guards/jwt.guard';
@@ -21,7 +22,10 @@ import { JwtGuard } from 'src/auth/guards/jwt.guard';
 @ApiBearerAuth()
 @Controller('chat')
 export class ChatController {
-  constructor(private chatService: ChatService) {}
+  constructor(
+    private chatService: ChatService,
+    private chatGateway: ChatGateway,
+  ) {}
 
   @Get('conversations')
   @ApiOperation({ summary: 'Get my conversations' })
@@ -60,14 +64,18 @@ export class ChatController {
 
   @Post('conversations/:id/messages')
   @ApiOperation({ summary: 'Send message via HTTP (fallback)' })
-  sendMessage(
+  async sendMessage(
     @Req() req: any,
     @Param('id') id: string,
     @Body() dto: SendMessageHttpDto,
   ) {
-    return this.chatService.saveMessage(req.user.id, {
+    const message = await this.chatService.saveMessage(req.user.id, {
       conversationId: id,
       content: dto.content,
     });
+
+    await this.chatGateway.broadcastNewMessage(message);
+
+    return message;
   }
 }
