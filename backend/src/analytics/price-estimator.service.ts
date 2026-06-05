@@ -174,8 +174,14 @@ export class PriceEstimatorService {
               Math.min(maxAdjusted, aiResult.adjustedPrice),
             );
 
-            // Trọng số AI giảm khi có nhiều mẫu: 30% (5-9 mẫu) → 20% (10+ mẫu)
-            const aiWeight = trainingData.length >= 10 ? 0.2 : 0.3;
+            // Trọng số AI:
+            // - Nếu dùng dữ liệu fallback toàn thành phố (matchedDistrict rỗng), tin AI nhiều hơn (50%) để tránh kéo giá quận trung tâm xuống quá thấp.
+            // - Nếu có dữ liệu quận cụ thể: tin OLS hơn (30% cho 5-9 mẫu, 20% cho 10+ mẫu)
+            const aiWeight = !matchedDistrict
+              ? 0.5
+              : trainingData.length >= 10
+                ? 0.2
+                : 0.3;
             estimated = Math.round(
               estimated * (1 - aiWeight) + clampedAI * aiWeight,
             );
@@ -302,7 +308,7 @@ export class PriceEstimatorService {
       extraInfo += `\n- Tiền điện: ${electricityCost.toLocaleString('vi-VN')}đ/kWh`;
     }
     if (waterCost && waterCost > 0) {
-      extraInfo += `\n- Tiền nước: ${waterCost.toLocaleString('vi-VN')}đ/tháng`;
+      extraInfo += `\n- Tiền nước: ${waterCost.toLocaleString('vi-VN')}đ/m3`;
     }
     if (deposit && deposit > 0) {
       extraInfo += `\n- Tiền đặt cọc: ${deposit.toLocaleString('vi-VN')}đ`;

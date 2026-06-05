@@ -45,7 +45,7 @@ const roomSchema = z.object({
 	electricityCost: z.coerce.number().default(0),
 	waterCost: z.coerce.number().default(0),
 	deposit: z.coerce.number().default(0),
-	minStay: z.string().default('1 tháng'),
+	minStay: z.string().optional().default(''),
 });
 
 type RoomFormData = z.infer<typeof roomSchema>;
@@ -98,7 +98,7 @@ const EditRoomPage = () => {
 				electricityCost: Number(room.electricityCost) || 0,
 				waterCost: Number(room.waterCost) || 0,
 				deposit: Number(room.deposit) || 0,
-				minStay: room.minStay || '1 tháng',
+				minStay: room.minStay || '',
 			});
 			if (room.images) {
 				setUploadedImages(
@@ -246,7 +246,7 @@ const EditRoomPage = () => {
 				electricityCost: data.electricityCost || 0,
 				waterCost: data.waterCost || 0,
 				deposit: data.deposit || 0,
-				minStay: data.minStay || '1 tháng',
+				minStay: data.minStay || '',
 				description: data.description,
 				address: data.address,
 				rule: data.rules,
