@@ -21,6 +21,7 @@ export interface PriceEstimate {
   similarRoomsCount: number; // Số lượng mẫu phòng trọ tương tự thu thập được trong khu vực
   coefficients: Coefficients; // Các hệ số hồi quy đã sử dụng để tính toán (để hiển thị báo cáo chi tiết)
   method: 'ols' | 'ai' | 'hybrid'; // Phương pháp định giá: OLS (Hồi quy tuyến tính), AI (Gemini), hoặc Hybrid (kết hợp cả hai)
+  matchedDistrict: string; // Quận/huyện đã match được từ địa chỉ (rỗng nếu không match được)
   aiInsight?: string; // Nhận xét, phân tích chuyên sâu được sinh từ AI
 }
 
@@ -52,7 +53,8 @@ export class PriceEstimatorService {
     deposit?: number, // Tiền đặt cọc
   ): Promise<PriceEstimate> {
     // 1. Lấy danh sách dữ liệu các phòng trọ tương tự cùng quận và cùng loại hình từ Database làm tập mẫu (Training Data)
-    const rawData = await this.getTrainingData(address, type);
+    const { data: rawData, district: matchedDistrict } =
+      await this.getTrainingData(address, type);
 
     // 2. Loại bỏ các dữ liệu dị biệt (Outliers) có giá quá cao hoặc quá thấp bằng thuật toán IQR (Interquartile Range) để dữ liệu huấn luyện sạch hơn
     const trainingData = this.removeOutliers(rawData);
@@ -137,6 +139,7 @@ export class PriceEstimatorService {
         address,
         estimated,
         trainingData.length,
+        matchedDistrict,
         currentPrice,
         type,
         amenities,
@@ -218,6 +221,7 @@ export class PriceEstimatorService {
         Math.abs(percentageDiff),
       ),
       similarRoomsCount: trainingData.length,
+      matchedDistrict,
       coefficients,
       method,
       aiInsight,
@@ -233,6 +237,7 @@ export class PriceEstimatorService {
     address: string,
     olsEstimate: number,
     sampleSize: number,
+    matchedDistrict: string,
     currentPrice?: number,
     type?: string,
     amenities?: string,
@@ -280,7 +285,7 @@ export class PriceEstimatorService {
       extraInfo += `\n- Tiền điện: ${electricityCost.toLocaleString('vi-VN')}đ/kWh`;
     }
     if (waterCost && waterCost > 0) {
-      extraInfo += `\n- Tiền nước: ${waterCost.toLocaleString('vi-VN')}đ/m³`;
+      extraInfo += `\n- Tiền nước: ${waterCost.toLocaleString('vi-VN')}đ/tháng`;
     }
     if (deposit && deposit > 0) {
       extraInfo += `\n- Tiền đặt cọc: ${deposit.toLocaleString('vi-VN')}đ`;
@@ -303,8 +308,8 @@ ${district ? `- Quận/Huyện: ${district}` : ''}
 ${currentPrice ? `- Giá chủ nhà đang đặt: ${currentPrice.toLocaleString('vi-VN')}đ/tháng` : ''}${extraInfo}
 
 THAM KHẢO THUẬT TOÁN:
-- Giá ước tính bằng hồi quy tuyến tính (cho các phòng cùng khu vực): ${olsEstimate.toLocaleString('vi-VN')}đ/tháng
-- Dựa trên ${sampleSize} mẫu trong khu vực
+- Giá ước tính bằng hồi quy tuyến tính: ${olsEstimate.toLocaleString('vi-VN')}đ/tháng
+- Dựa trên ${sampleSize} mẫu ${matchedDistrict ? `cùng loại hình tại ${matchedDistrict}` : 'cùng loại hình (chưa xác định được khu vực cụ thể)'}
 
 YÊU CẦU: Trả về JSON duy nhất (không markdown, không giải thích thêm) với format:
 {"adjustedPrice": <số nguyên giá đề xuất VND/tháng hoặc null nếu đồng ý với thuật toán>, "insight": "<1-2 câu nhận xét ngắn gọn bằng tiếng Việt về mức giá dựa trên toàn bộ thông tin đã cung cấp (loại hình, tiện nghi, khu vực, chi phí điện nước...), phù hợp hiển thị cho chủ nhà>"}`;
@@ -529,21 +534,71 @@ YÊU CẦU: Trả về JSON duy nhất (không markdown, không giải thích th
     });
 
     // Chuyển đổi cấu trúc dữ liệu thô từ database thành cấu trúc tham số đầu vào cho thuật toán định giá
-    return rooms.map((r) => ({
-      price: Number(r.price), // Ép giá phòng về kiểu dữ liệu số
-      area: r.area || 20, // Diện tích mặc định là 20m² nếu bị thiếu
-      amenityCount: r.amenities.length, // Đếm tổng số tiện nghi của phòng trọ này
-      floor: r.floor || 1, // Tầng mặc định là tầng 1 nếu bị thiếu
-    }));
+    return {
+      data: rooms.map((r) => ({
+        price: Number(r.price), // Ép giá phòng về kiểu dữ liệu số
+        area: r.area || 20, // Diện tích mặc định là 20m² nếu bị thiếu
+        amenityCount: r.amenities.length, // Đếm tổng số tiện nghi của phòng trọ này
+        floor: r.floor || 1, // Tầng mặc định là tầng 1 nếu bị thiếu
+      })),
+      district, // Trả về district đã match để biết thực tế có filter theo khu vực hay không
+    };
   }
 
-  // Hàm sử dụng Regular Expression (Biểu thức chính quy) để trích xuất tên Quận/Huyện từ địa chỉ đầy đủ ở Việt Nam
+  // Hàm trích xuất tên Quận/Huyện từ địa chỉ đầy đủ ở Việt Nam
+  // Ưu tiên match tên quận cụ thể trước để tránh lỗi cắt tên đa từ (VD: "Bình Thạnh" bị cắt thành "Bình")
   private extractDistrict(address: string): string {
-    const match = address.match(
-      /Quận\s+\d+|Quận\s+[A-Za-zÀ-ỹ]+|Huyện\s+[A-Za-zÀ-ỹ]+|Bình Thạnh|Gò Vấp|Tân Bình|Phú Nhuận|Thủ Đức|Bình Tân|Tân Phú|Bình Chánh|Hóc Môn|Nhà Bè|Cần Giờ|Củ Chi|Ba Đình|Hoàn Kiếm|Đống Đa|Hai Bà Trưng|Cầu Giấy|Thanh Xuân|Hoàng Mai|Long Biên|Nam Từ Liêm|Bắc Từ Liêm|Hà Đông|Tây Hồ/i,
+    // Danh sách tên quận/huyện đa từ phổ biến (sắp xếp tên dài trước để ưu tiên match chính xác)
+    const namedDistricts = [
+      'Hai Bà Trưng',
+      'Nam Từ Liêm',
+      'Bắc Từ Liêm',
+      'Bình Thạnh',
+      'Bình Chánh',
+      'Bình Tân',
+      'Thanh Xuân',
+      'Hoàng Mai',
+      'Long Biên',
+      'Phú Nhuận',
+      'Tân Bình',
+      'Tân Phú',
+      'Hoàn Kiếm',
+      'Cầu Giấy',
+      'Thủ Đức',
+      'Hà Đông',
+      'Tây Hồ',
+      'Ba Đình',
+      'Đống Đa',
+      'Gò Vấp',
+      'Hóc Môn',
+      'Nhà Bè',
+      'Cần Giờ',
+      'Củ Chi',
+    ];
+
+    // 1. Ưu tiên tìm tên quận cụ thể (không phân biệt hoa/thường)
+    const lowerAddr = address.toLowerCase();
+    for (const d of namedDistricts) {
+      if (lowerAddr.includes(d.toLowerCase())) {
+        return d;
+      }
+    }
+
+    // 2. Tìm quận theo số (Quận 1, Quận 12, ...)
+    const numMatch = address.match(/Quận\s+\d+/i);
+    if (numMatch) {
+      return numMatch[0];
+    }
+
+    // 3. Tìm huyện theo tên (Huyện + 1-2 từ)
+    const huyenMatch = address.match(
+      /Huyện\s+[A-Za-zÀ-ỹ]+(?:\s+[A-Za-zÀ-ỹ]+)?/i,
     );
-    // Trả về cụm từ khớp đầu tiên tìm thấy (ví dụ: 'Quận Bình Thạnh' hoặc 'Quận 1'), ngược lại trả về chuỗi rỗng
-    return match ? match[0] : '';
+    if (huyenMatch) {
+      return huyenMatch[0];
+    }
+
+    return '';
   }
 
   // Hàm sinh gợi ý hiển thị cho chủ trọ dựa trên kết quả phân loại trạng thái so sánh giá

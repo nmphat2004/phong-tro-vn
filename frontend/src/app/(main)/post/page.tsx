@@ -957,8 +957,10 @@ const PostRoomPage = () => {
 											</p>
 											{priceEstimate.similarRoomsCount > 0 && (
 												<p className='text-xs text-muted-foreground mt-1'>
-													Dựa trên {priceEstimate.similarRoomsCount} phòng tương
-													tự trong khu vực
+													Dựa trên {priceEstimate.similarRoomsCount} phòng{' '}
+													{priceEstimate.matchedDistrict
+														? `cùng loại hình tại ${priceEstimate.matchedDistrict}`
+														: 'cùng loại hình'}
 													{priceEstimate.method === 'hybrid' &&
 														' + AI xác thực'}
 												</p>
