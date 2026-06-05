@@ -481,7 +481,11 @@ const PostRoomPage = () => {
 													variant='outline'
 													size='lg'
 													key={type.value}
-													onClick={() => setValue('roomType', type.value, { shouldValidate: true })}
+													onClick={() =>
+														setValue('roomType', type.value, {
+															shouldValidate: true,
+														})
+													}
 													className={`p-4 h-20 border rounded-lg text-left transition-all ${formData.roomType === type.value ? 'border-primary bg-primary/10 text-primary font-semibold dark:border-primary' : 'border-border hover:bg-secondary'}`}>
 													<div className='text-2xl mb-2'>{type.icon}</div>
 													<div>{type.label}</div>
@@ -958,11 +962,10 @@ const PostRoomPage = () => {
 											{priceEstimate.similarRoomsCount > 0 && (
 												<p className='text-xs text-muted-foreground mt-1'>
 													Dựa trên {priceEstimate.similarRoomsCount} phòng{' '}
-													{priceEstimate.matchedDistrict
-														? `cùng loại hình tại ${priceEstimate.matchedDistrict}`
-														: 'cùng loại hình'}
-													{priceEstimate.method === 'hybrid' &&
-														' + AI xác thực'}
+													{priceEstimate.matchedDistrict ?
+														`cùng loại hình tại ${priceEstimate.matchedDistrict}`
+													:	'cùng loại hình'}
+													{priceEstimate.method === 'hybrid'}
 												</p>
 											)}
 											{priceEstimate.aiInsight && (

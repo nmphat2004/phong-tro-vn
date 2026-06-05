@@ -63,12 +63,20 @@ export class PriceEstimatorService {
     let estimated: number; // Biến lưu trữ mức giá ước tính ban đầu
     let method: PriceEstimate['method'] = 'ols'; // Mặc định dùng phương pháp OLS
 
+    // Tính diện tích thực tế sử dụng để định giá (đối với KTX/ở ghép thì giới hạn diện tích ảnh hưởng ở mức tối đa 15m² vì tính theo giường)
+    const effectiveArea = type === 'shared' ? Math.min(area, 15) : area;
+
     // 3. Nếu số lượng phòng trọ mẫu tìm được trong khu vực >= 5: Đủ điều kiện chạy thuật toán hồi quy tuyến tính OLS đa biến
     if (trainingData.length >= 5) {
       // Huấn luyện mô hình hồi quy tuyến tính dựa trên tập dữ liệu mẫu để tìm ra bộ hệ số tối ưu
       coefficients = this.trainOLS(trainingData);
       // Áp dụng bộ hệ số vừa tìm được để dự đoán giá dựa trên diện tích, số tiện nghi và tầng của phòng trọ hiện tại
-      estimated = this.predict(coefficients, area, amenityCount, floor);
+      estimated = this.predict(
+        coefficients,
+        effectiveArea,
+        amenityCount,
+        floor,
+      );
     } else {
       // 4. Nếu thiếu dữ liệu mẫu (< 5): Áp dụng bộ hệ số định giá mặc định dựa trên đặc trưng thị trường Việt Nam
       const defaultCoefficients: Record<string, Coefficients> = {
@@ -121,7 +129,12 @@ export class PriceEstimatorService {
         ? defaultCoefficients[type] || defaultCoefficients.room
         : defaultCoefficients.room;
       // Dự đoán giá bằng bộ hệ số mặc định
-      estimated = this.predict(coefficients, area, amenityCount, floor);
+      estimated = this.predict(
+        coefficients,
+        effectiveArea,
+        amenityCount,
+        floor,
+      );
       method = 'ai'; // Sẽ ưu tiên gọi AI để điều chỉnh lại giá cho chính xác vì OLS không có đủ dữ liệu mẫu
     }
 
@@ -150,24 +163,28 @@ export class PriceEstimatorService {
       );
 
       if (aiResult) {
-        // Nếu AI đề xuất một mức giá điều chỉnh khác biệt trên 20% so với giá ước tính của thuật toán
-        if (
-          aiResult.adjustedPrice &&
-          Math.abs(aiResult.adjustedPrice - estimated) / estimated > 0.2
-        ) {
+        if (aiResult.adjustedPrice) {
           if (trainingData.length >= 5) {
-            // Trường hợp đủ dữ liệu mẫu OLS: Lấy giá trung bình cộng của cả OLS và AI (Phương pháp kết hợp Hybrid)
-            estimated = Math.round((estimated + aiResult.adjustedPrice) / 2);
+            // Đủ dữ liệu mẫu OLS: Tin tưởng OLS, chỉ cho AI điều chỉnh nhẹ
+            // Giới hạn AI không được lệch quá ±30% so với OLS
+            const maxAdjusted = estimated * 1.3;
+            const minAdjusted = estimated * 0.7;
+            const clampedAI = Math.max(
+              minAdjusted,
+              Math.min(maxAdjusted, aiResult.adjustedPrice),
+            );
+
+            // Trọng số AI giảm khi có nhiều mẫu: 30% (5-9 mẫu) → 20% (10+ mẫu)
+            const aiWeight = trainingData.length >= 10 ? 0.2 : 0.3;
+            estimated = Math.round(
+              estimated * (1 - aiWeight) + clampedAI * aiWeight,
+            );
             method = 'hybrid';
           } else {
-            // Trường hợp thiếu dữ liệu mẫu: Ưu tiên tin tưởng hoàn toàn vào giá đề xuất của AI
+            // Thiếu dữ liệu mẫu: Ưu tiên tin tưởng hoàn toàn vào giá đề xuất của AI
             estimated = aiResult.adjustedPrice;
             method = 'ai';
           }
-        } else if (aiResult.adjustedPrice && trainingData.length < 5) {
-          // Ít dữ liệu mẫu: Ưu tiên sử dụng giá của AI điều chỉnh
-          estimated = aiResult.adjustedPrice;
-          method = 'ai';
         }
 
         // Lưu nhận xét phân tích từ AI
@@ -300,7 +317,7 @@ export class PriceEstimatorService {
 
 THÔNG TIN CHI TIẾT:
 - Loại hình: ${typeLabel}
-- Diện tích: ${area}m²
+- Diện tích: ${area}m²${type === 'shared' ? ' (Lưu ý: Đây là tổng diện tích của cả phòng/căn hộ KTX/ở ghép, nhưng giá thuê là tính trên từng GIƯỜNG hoặc từng NGƯỜI)' : ''}
 ${amenityDetails}
 - Tầng: ${floor}
 - Khu vực: ${address}
@@ -510,38 +527,58 @@ YÊU CẦU: Trả về JSON duy nhất (không markdown, không giải thích th
   }
 
   // Hàm lấy dữ liệu huấn luyện từ Database
+  // Chiến lược: Ưu tiên filter quận+loại hình → nếu < 5 kết quả → fallback chỉ filter loại hình
   private async getTrainingData(address: string, type?: string) {
     // Trích xuất quận/huyện từ địa chỉ đầy đủ của phòng trọ
     const district = this.extractDistrict(address);
 
-    // Truy vấn tối đa 100 phòng trọ thỏa mãn điều kiện
-    const rooms = await this.prisma.room.findMany({
-      where: {
-        status: { not: 'HIDDEN' }, // Chỉ lấy các phòng đang mở hiển thị công khai (không lấy phòng bị ẩn)
-        area: { not: null, gt: 0 }, // Diện tích phòng phải hợp lệ lớn hơn 0
-        // Lọc địa chỉ theo quận/huyện để tìm phòng lân cận (không phân biệt chữ hoa chữ thường)
-        ...(district && {
+    const baseWhere = {
+      status: { not: 'HIDDEN' as const },
+      area: { not: null, gt: 0 },
+      ...(type && { type }),
+    };
+
+    // Bước 1: Thử filter cả quận + loại hình
+    let rooms: any[] = [];
+    let usedDistrict = district;
+
+    if (district) {
+      rooms = await this.prisma.room.findMany({
+        where: {
+          ...baseWhere,
           address: { contains: district, mode: 'insensitive' },
-        }),
-        // Lọc theo loại hình phòng trọ nếu có truyền tham số loại hình
-        ...(type && {
-          type,
-        }),
-      },
-      include: { amenities: true }, // Nối bảng lấy số lượng tiện ích kèm theo
-      orderBy: { createdAt: 'desc' }, // Sắp xếp theo ngày đăng mới nhất trước
-      take: 100, // Chỉ lấy tối đa 100 mẫu phòng gần nhất làm dữ liệu tham chiếu
-    });
+        },
+        include: { amenities: true },
+        orderBy: { createdAt: 'desc' },
+        take: 100,
+      });
+    }
+
+    // Bước 2: Nếu thiếu dữ liệu (< 5 mẫu), fallback chỉ filter loại hình (bỏ filter quận)
+    if (rooms.length < 5) {
+      const fallbackRooms = await this.prisma.room.findMany({
+        where: baseWhere,
+        include: { amenities: true },
+        orderBy: { createdAt: 'desc' },
+        take: 100,
+      });
+
+      // Chỉ dùng fallback nếu nó cho nhiều kết quả hơn
+      if (fallbackRooms.length > rooms.length) {
+        rooms = fallbackRooms;
+        usedDistrict = ''; // Đánh dấu là không filter theo quận
+      }
+    }
 
     // Chuyển đổi cấu trúc dữ liệu thô từ database thành cấu trúc tham số đầu vào cho thuật toán định giá
     return {
-      data: rooms.map((r) => ({
+      data: rooms.map((r: any) => ({
         price: Number(r.price), // Ép giá phòng về kiểu dữ liệu số
-        area: r.area || 20, // Diện tích mặc định là 20m² nếu bị thiếu
+        area: type === 'shared' ? Math.min(r.area || 20, 15) : r.area || 20, // Giới hạn diện tích KTX/ở ghép ở mức 15m² vì tính theo giường
         amenityCount: r.amenities.length, // Đếm tổng số tiện nghi của phòng trọ này
         floor: r.floor || 1, // Tầng mặc định là tầng 1 nếu bị thiếu
       })),
-      district, // Trả về district đã match để biết thực tế có filter theo khu vực hay không
+      district: usedDistrict, // Trả về district thực tế đã dùng (rỗng nếu fallback)
     };
   }
 
