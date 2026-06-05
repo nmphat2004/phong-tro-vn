@@ -38,20 +38,37 @@ export class AdminService {
     };
   }
 
-  async getUsers() {
-    return this.prisma.user.findMany({
-      select: {
-        id: true,
-        fullName: true,
-        email: true,
-        role: true,
-        phone: true,
-        isDeleted: true,
-        isVerified: true,
-        createdAt: true,
+  async getUsers(page: number = 1, limit: number = 10) {
+    const skip = (page - 1) * limit;
+
+    const [users, total] = await Promise.all([
+      this.prisma.user.findMany({
+        skip,
+        take: limit,
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+          role: true,
+          phone: true,
+          isDeleted: true,
+          isVerified: true,
+          createdAt: true,
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.user.count(),
+    ]);
+
+    return {
+      data: users,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
       },
-      orderBy: { createdAt: 'desc' },
-    });
+    };
   }
 
   async toggleUserBan(id: string) {

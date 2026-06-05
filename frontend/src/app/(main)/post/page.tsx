@@ -481,7 +481,7 @@ const PostRoomPage = () => {
 													variant='outline'
 													size='lg'
 													key={type.value}
-													onClick={() => setValue('roomType', type.value)}
+													onClick={() => setValue('roomType', type.value, { shouldValidate: true })}
 													className={`p-4 h-20 border rounded-lg text-left transition-all ${formData.roomType === type.value ? 'border-primary bg-primary/10 text-primary font-semibold dark:border-primary' : 'border-border hover:bg-secondary'}`}>
 													<div className='text-2xl mb-2'>{type.icon}</div>
 													<div>{type.label}</div>

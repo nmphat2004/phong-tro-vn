@@ -29,8 +29,11 @@ export class AdminController {
   // --- Users Management ---
   @Get('users')
   @ApiOperation({ summary: 'Get all users' })
-  getUsers() {
-    return this.adminService.getUsers();
+  getUsers(
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '10',
+  ) {
+    return this.adminService.getUsers(parseInt(page, 10), parseInt(limit, 10));
   }
 
   @Put('users/:id/ban')

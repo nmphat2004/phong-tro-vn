@@ -6,6 +6,7 @@ import {
 	removeReview,
 } from '@/lib/api/admin.api';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Pagination } from '@/components/ui/pagination';
 import { toast } from 'sonner';
 import {
 	Star,
@@ -100,13 +101,16 @@ function FraudBadge({ fraud }: { fraud: any }) {
 	);
 }
 
+const ITEMS_PER_PAGE = 10;
+
 export default function AdminReviewsPage() {
 	const queryClient = useQueryClient();
 	const [activeTab, setActiveTab] = useState('all');
+	const [page, setPage] = useState(1);
 
 	const { data: response, isLoading } = useQuery({
-		queryKey: ['admin-reviews'],
-		queryFn: () => getAdminReviews(1, 100),
+		queryKey: ['admin-reviews', page],
+		queryFn: () => getAdminReviews(page, ITEMS_PER_PAGE),
 	});
 
 	const { mutate: handleStatusChange } = useMutation({
@@ -127,6 +131,7 @@ export default function AdminReviewsPage() {
 	});
 
 	const reviews = response?.data || [];
+	const meta = response?.meta;
 	const filteredReviews = reviews.filter((review: any) => {
 		if (activeTab === 'all') return true;
 		if (activeTab === 'flagged')
@@ -154,7 +159,7 @@ export default function AdminReviewsPage() {
 	return (
 		<div>
 			<div className='flex items-center justify-between mb-8'>
-				<h1 className='text-3xl font-bold text-foreground'>Quản lý đánh giá</h1>
+				<h1 className='text-2xl sm:text-3xl font-bold text-foreground'>Quản lý đánh giá</h1>
 			</div>
 
 			{/* Tabs */}
@@ -164,7 +169,7 @@ export default function AdminReviewsPage() {
 						<button
 							key={tab.key}
 							onClick={() => setActiveTab(tab.key)}
-							className={`px-6 py-3 text-sm font-semibold transition-colors relative
+							className={`px-4 sm:px-6 py-3 text-sm font-semibold transition-colors relative
 								${
 									activeTab === tab.key ?
 										'text-blue-600'
@@ -198,90 +203,103 @@ export default function AdminReviewsPage() {
 					<div className='py-16 text-center text-muted-foreground text-sm'>
 						Không có đánh giá nào trong danh mục này
 					</div>
-				:	<div className='divide-y divide-border'>
-						{filteredReviews.map((review: any) => {
-							const fraud = review.fraudResult;
-							const bgClass =
-								fraud?.score >= 80 ? 'bg-red-500/5 hover:bg-red-500/10'
-								: fraud?.score >= 50 ? 'bg-orange-500/5 hover:bg-orange-500/10'
-								: 'hover:bg-secondary/50';
+				:	<>
+						<div className='divide-y divide-border'>
+							{filteredReviews.map((review: any) => {
+								const fraud = review.fraudResult;
+								const bgClass =
+									fraud?.score >= 80 ? 'bg-red-500/5 hover:bg-red-500/10'
+									: fraud?.score >= 50 ? 'bg-orange-500/5 hover:bg-orange-500/10'
+									: 'hover:bg-secondary/50';
 
-							const initial =
-								review.reviewer?.fullName?.charAt(0)?.toUpperCase() || '?';
-							const bgColors = [
-								'bg-blue-500',
-								'bg-green-500',
-								'bg-purple-500',
-								'bg-orange-500',
-								'bg-pink-500',
-							];
-							const bgColor = bgColors[initial.charCodeAt(0) % bgColors.length];
+								const initial =
+									review.reviewer?.fullName?.charAt(0)?.toUpperCase() || '?';
+								const bgColors = [
+									'bg-blue-500',
+									'bg-green-500',
+									'bg-purple-500',
+									'bg-orange-500',
+									'bg-pink-500',
+								];
+								const bgColor = bgColors[initial.charCodeAt(0) % bgColors.length];
 
-							return (
-								<div
-									key={review.id}
-									className={`p-6 flex items-start gap-4 transition-colors first:rounded-t-2xl last:rounded-b-2xl ${bgClass}`}>
-									{/* Avatar */}
+								return (
 									<div
-										className={`w-10 h-10 rounded-full ${bgColor} flex items-center justify-center text-white font-bold text-sm shrink-0`}>
-										{initial}
-									</div>
-
-									{/* Content */}
-									<div className='flex-1 min-w-0'>
-										<div className='flex items-center gap-3 mb-1'>
-											<span className='font-semibold text-foreground text-sm'>
-												{review.reviewer?.fullName}
-											</span>
-											{renderStars(review.rating)}
+										key={review.id}
+										className={`p-4 sm:p-6 flex flex-col sm:flex-row items-start gap-4 transition-colors first:rounded-t-2xl last:rounded-b-2xl ${bgClass}`}>
+										{/* Avatar */}
+										<div
+											className={`w-10 h-10 rounded-full ${bgColor} flex items-center justify-center text-white font-bold text-sm shrink-0`}>
+											{initial}
 										</div>
-										<p className='text-sm text-muted-foreground mb-2 line-clamp-2'>
-											{review.comment || 'Không có nhận xét'}
-										</p>
-										<p className='text-xs text-muted-foreground font-medium'>
-											thuộc{' '}
-											<span className='font-bold text-blue-600 dark:text-blue-400'>
-												{review.room?.title || 'Phòng đã xóa'}
-											</span>{' '}
-											• {new Date(review.createdAt).toLocaleDateString('vi-VN')}
-										</p>
-									</div>
 
-									{/* Fraud Score + Actions */}
-									<div className='flex items-center gap-4 shrink-0'>
-										<FraudBadge fraud={fraud} />
-										<div className='flex gap-2'>
-											<button
-												onClick={() =>
-													handleStatusChange({
-														id: review.id,
-														isVerified: !review.isVerified,
-													})
-												}
-												className={`px-4 py-2 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 ${
-													review.isVerified ?
-														'bg-amber-600 hover:bg-amber-700'
-													:	'bg-green-600 hover:bg-green-700'
-												}`}>
-												<Check className='w-3.5 h-3.5' />
-												{review.isVerified ? 'Bỏ duyệt' : 'Duyệt'}
-											</button>
-											<button
-												onClick={() => {
-													if (confirm('Xóa vĩnh viễn đánh giá này?')) {
-														handleDelete(review.id);
+										{/* Content */}
+										<div className='flex-1 min-w-0'>
+											<div className='flex items-center gap-3 mb-1 flex-wrap'>
+												<span className='font-semibold text-foreground text-sm'>
+													{review.reviewer?.fullName}
+												</span>
+												{renderStars(review.rating)}
+											</div>
+											<p className='text-sm text-muted-foreground mb-2 line-clamp-2'>
+												{review.comment || 'Không có nhận xét'}
+											</p>
+											<p className='text-xs text-muted-foreground font-medium'>
+												thuộc{' '}
+												<span className='font-bold text-blue-600 dark:text-blue-400'>
+													{review.room?.title || 'Phòng đã xóa'}
+												</span>{' '}
+												• {new Date(review.createdAt).toLocaleDateString('vi-VN')}
+											</p>
+										</div>
+
+										{/* Fraud Score + Actions */}
+										<div className='flex items-center gap-3 sm:gap-4 shrink-0 w-full sm:w-auto flex-wrap sm:flex-nowrap'>
+											<FraudBadge fraud={fraud} />
+											<div className='flex gap-2'>
+												<button
+													onClick={() =>
+														handleStatusChange({
+															id: review.id,
+															isVerified: !review.isVerified,
+														})
 													}
-												}}
-												className='px-4 py-2 bg-red-600 text-white text-xs font-bold rounded-lg hover:bg-red-700 transition-colors flex items-center gap-1.5'>
-												<X className='w-3.5 h-3.5' />
-												Xóa
-											</button>
+													className={`px-3 sm:px-4 py-2 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 ${
+														review.isVerified ?
+															'bg-amber-600 hover:bg-amber-700'
+														:	'bg-green-600 hover:bg-green-700'
+													}`}>
+													<Check className='w-3.5 h-3.5' />
+													{review.isVerified ? 'Bỏ duyệt' : 'Duyệt'}
+												</button>
+												<button
+													onClick={() => {
+														if (confirm('Xóa vĩnh viễn đánh giá này?')) {
+															handleDelete(review.id);
+														}
+													}}
+													className='px-3 sm:px-4 py-2 bg-red-600 text-white text-xs font-bold rounded-lg hover:bg-red-700 transition-colors flex items-center gap-1.5'>
+													<X className='w-3.5 h-3.5' />
+													Xóa
+												</button>
+											</div>
 										</div>
 									</div>
-								</div>
-							);
-						})}
-					</div>
+								);
+							})}
+						</div>
+
+						{/* Pagination */}
+						{meta && (
+							<Pagination
+								page={meta.page}
+								totalPages={meta.totalPages}
+								total={meta.total}
+								limit={meta.limit}
+								onPageChange={setPage}
+							/>
+						)}
+					</>
 				}
 			</div>
 		</div>

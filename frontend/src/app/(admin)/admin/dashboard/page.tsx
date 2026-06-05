@@ -71,32 +71,32 @@ export default function AdminDashboardPage() {
 
 	return (
 		<div>
-			<h1 className='text-3xl font-bold text-foreground mb-8'>Tổng quan</h1>
+			<h1 className='text-2xl sm:text-3xl font-bold text-foreground mb-8'>Tổng quan</h1>
 
 			{/* Stats Cards */}
 			{statsLoading ?
-				<div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8'>
+				<div className='grid grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6 mb-8'>
 					{[...Array(4)].map((_, i) => (
 						<Skeleton key={i} className='h-32 rounded-2xl' />
 					))}
 				</div>
-			:	<div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8'>
+			:	<div className='grid grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6 mb-8'>
 					{statCards.map((card) => {
 						const Icon = card.icon;
 						return (
 							<Link
 								key={card.label}
 								href={card.href}
-								className='bg-card rounded-2xl border border-border p-6 hover:shadow-lg transition-shadow duration-300 block'>
-								<div className='flex items-center justify-between mb-4'>
-									<p className='text-sm font-medium text-muted-foreground'>
+								className='bg-card rounded-2xl border border-border p-4 sm:p-6 hover:shadow-lg transition-shadow duration-300 block'>
+								<div className='flex items-center justify-between mb-3 sm:mb-4'>
+									<p className='text-xs sm:text-sm font-medium text-muted-foreground line-clamp-1'>
 										{card.label}
 									</p>
-									<div className={`p-2.5 rounded-xl ${card.bg}`}>
-										<Icon className={`w-5 h-5 ${card.color}`} />
+									<div className={`p-2 sm:p-2.5 rounded-xl ${card.bg}`}>
+										<Icon className={`w-4 h-4 sm:w-5 sm:h-5 ${card.color}`} />
 									</div>
 								</div>
-								<p className='text-3xl font-bold text-foreground mb-1'>
+								<p className='text-2xl sm:text-3xl font-bold text-foreground mb-1'>
 									{card.value}
 								</p>
 							</Link>
@@ -107,7 +107,7 @@ export default function AdminDashboardPage() {
 
 			{/* Recent Reports */}
 			<div className='bg-card rounded-2xl border border-border overflow-hidden'>
-				<div className='px-6 py-5 border-b border-border'>
+				<div className='px-4 sm:px-6 py-5 border-b border-border'>
 					<h2 className='text-lg font-bold text-foreground'>Báo cáo gần đây</h2>
 				</div>
 				{reportsLoading ?
@@ -120,22 +120,22 @@ export default function AdminDashboardPage() {
 						<table className='w-full'>
 							<thead>
 								<tr className='border-b border-border'>
-									<th className='text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
+									<th className='text-left px-4 sm:px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
 										Phòng
 									</th>
-									<th className='text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
+									<th className='hidden md:table-cell text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
 										Người báo cáo
 									</th>
-									<th className='text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
+									<th className='hidden lg:table-cell text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
 										Lý do
 									</th>
-									<th className='text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
+									<th className='hidden sm:table-cell text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
 										Ngày báo cáo
 									</th>
-									<th className='text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
+									<th className='text-left px-4 sm:px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
 										Trạng thái
 									</th>
-									<th className='text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
+									<th className='text-left px-4 sm:px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
 										Hành động
 									</th>
 								</tr>
@@ -154,29 +154,29 @@ export default function AdminDashboardPage() {
 									<tr
 										key={report.id}
 										className='border-b border-border hover:bg-secondary/50 transition-colors'>
-										<td className='px-6 py-4'>
-											<span className='text-sm font-medium text-foreground'>
+										<td className='px-4 sm:px-6 py-4'>
+											<span className='text-sm font-medium text-foreground line-clamp-1'>
 												{report.room?.title || 'Phòng đã xóa'}
 											</span>
 										</td>
-										<td className='px-6 py-4'>
+										<td className='hidden md:table-cell px-6 py-4'>
 											<span className='text-sm text-muted-foreground'>
 												{report.reporter?.fullName}
 											</span>
 										</td>
-										<td className='px-6 py-4'>
-											<span className='text-sm text-muted-foreground'>
+										<td className='hidden lg:table-cell px-6 py-4'>
+											<span className='text-sm text-muted-foreground line-clamp-1'>
 												{report.reason}
 											</span>
 										</td>
-										<td className='px-6 py-4'>
-											<span className='text-sm text-muted-foreground'>
+										<td className='hidden sm:table-cell px-6 py-4'>
+											<span className='text-sm text-muted-foreground whitespace-nowrap'>
 												{formatRelativeTime(report.createdAt)}
 											</span>
 										</td>
-										<td className='px-6 py-4'>
+										<td className='px-4 sm:px-6 py-4'>
 											<span
-												className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold
+												className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap
 												${
 													report.status === 'pending' ?
 														'bg-yellow-500/15 text-yellow-600'
@@ -191,7 +191,7 @@ export default function AdminDashboardPage() {
 												:	'Bỏ qua'}
 											</span>
 										</td>
-										<td className='px-6 py-4'>
+										<td className='px-4 sm:px-6 py-4'>
 											<div className='flex gap-2'>
 												{report.status === 'pending' && (
 													<>

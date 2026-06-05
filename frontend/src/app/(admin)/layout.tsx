@@ -1,7 +1,7 @@
 'use client';
 import { useAuthStore } from '@/stores/auth.store';
 import { useRouter, usePathname } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
 	LayoutDashboard,
@@ -9,9 +9,9 @@ import {
 	Home,
 	Star,
 	AlertTriangle,
-	Settings,
 	LogOut,
-	HelpCircle,
+	Menu,
+	X,
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -24,6 +24,7 @@ export default function AdminLayout({
 	const { user, isLoading, logout } = useAuthStore();
 	const router = useRouter();
 	const pathname = usePathname();
+	const [sidebarOpen, setSidebarOpen] = useState(false);
 
 	useEffect(() => {
 		if (!isLoading) {
@@ -34,6 +35,12 @@ export default function AdminLayout({
 			}
 		}
 	}, [user, isLoading, router]);
+
+	// Close sidebar when navigating on mobile
+	useEffect(() => {
+		// eslint-disable-next-line react-hooks/set-state-in-effect
+		setSidebarOpen(false);
+	}, [pathname]);
 
 	if (isLoading || !user || user.role !== 'ADMIN') {
 		return (
@@ -53,16 +60,33 @@ export default function AdminLayout({
 
 	return (
 		<div className='min-h-screen flex bg-background'>
-			{/* Sidebar - Dark Theme */}
-			<div className='w-64 bg-[#1a1a2e] flex flex-col fixed h-full'>
-				{/* Logo */}
-				<div className='px-6 py-6 flex items-center gap-3'>
-					<div className='w-9 h-9 bg-blue-500 rounded-xl flex items-center justify-center'>
-						<Home className='w-5 h-5 text-white' />
+			{/* Mobile overlay */}
+			{sidebarOpen && (
+				<div
+					className='fixed inset-0 bg-black/50 z-40 lg:hidden'
+					onClick={() => setSidebarOpen(false)}
+				/>
+			)}
+
+			{/* Sidebar */}
+			<div
+				className={`fixed h-full z-50 bg-[#1a1a2e] flex flex-col w-64 transition-transform duration-300 ease-in-out
+					${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
+				{/* Logo + close button */}
+				<div className='px-6 py-6 flex items-center justify-between'>
+					<div className='flex items-center gap-3'>
+						<div className='w-9 h-9 bg-blue-500 rounded-xl flex items-center justify-center'>
+							<Home className='w-5 h-5 text-white' />
+						</div>
+						<span className='text-xl font-bold text-white tracking-tight'>
+							Phòng trọ VN
+						</span>
 					</div>
-					<span className='text-xl font-bold text-white tracking-tight'>
-						Phòng trọ VN
-					</span>
+					<button
+						onClick={() => setSidebarOpen(false)}
+						className='lg:hidden p-1.5 rounded-lg text-gray-400 hover:bg-white/10 hover:text-white transition-colors'>
+						<X className='w-5 h-5' />
+					</button>
 				</div>
 
 				{/* Navigation */}
@@ -116,8 +140,18 @@ export default function AdminLayout({
 			</div>
 
 			{/* Main Content */}
-			<div className='flex-1 ml-64 p-8 overflow-auto min-h-screen'>
-				{children}
+			<div className='flex-1 lg:ml-64 min-h-screen'>
+				{/* Mobile header */}
+				<div className='sticky top-0 z-30 lg:hidden bg-background/80 backdrop-blur-lg border-b border-border px-4 py-3'>
+					<button
+						onClick={() => setSidebarOpen(true)}
+						className='p-2 rounded-xl hover:bg-secondary text-foreground transition-colors'>
+						<Menu className='w-5 h-5' />
+					</button>
+				</div>
+
+				{/* Page content */}
+				<div className='p-4 sm:p-6 lg:p-8'>{children}</div>
 			</div>
 		</div>
 	);

@@ -5,8 +5,8 @@ export const getAdminStats = async () => {
 	return res.data;
 };
 
-export const getAdminUsers = async () => {
-	const res = await api.get('/admin/users');
+export const getAdminUsers = async (page = 1, limit = 10) => {
+	const res = await api.get('/admin/users', { params: { page, limit } });
 	return res.data;
 };
 

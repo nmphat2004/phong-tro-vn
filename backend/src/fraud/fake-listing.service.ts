@@ -41,7 +41,9 @@ export class FakeListingService {
     // ── Rule 1: Đánh giá dựa trên độ tuổi tài khoản của chủ trọ tại thời điểm đăng tin (0–25 điểm) ──
     // Tính toán số ngày từ lúc chủ trọ tạo tài khoản đến thời điểm đăng tin phòng này (86400000 ms = 1 ngày)
     const accountAgeDays =
-      (new Date(room.createdAt).getTime() - new Date(room.owner.createdAt).getTime()) / 86400000;
+      (new Date(room.createdAt).getTime() -
+        new Date(room.owner.createdAt).getTime()) /
+      86400000;
     if (accountAgeDays < 1) {
       details.newAccount = 25; // Nếu tài khoản mới tạo dưới 24 giờ: phạt tối đa 25 điểm
       reasons.push('Tài khoản chủ trọ tạo trong vòng 24 giờ');
