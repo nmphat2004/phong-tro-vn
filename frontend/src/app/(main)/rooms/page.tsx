@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 import SeasonalWidget from '@/components/analytics/seasonal-widget';
 import FilterChip from '@/components/room/filter-chip';
@@ -21,7 +20,6 @@ import {
 	List,
 	School,
 	Search,
-	Store,
 	X,
 } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
@@ -640,7 +638,7 @@ const RoomsContent = () => {
 						className={
 							layout === 'grid' ?
 								'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'
-							:	'space-y-4'
+							:	'flex flex-col gap-4'
 						}>
 						{data?.data.map((room) => (
 							<RoomCard room={room} key={room.id} layout={layout} />
@@ -795,11 +793,12 @@ const RoomsContent = () => {
 
 export default function RoomsPage() {
 	return (
-		<Suspense fallback={
-			<div className='bg-background min-h-screen flex items-center justify-center'>
-				<div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary'></div>
-			</div>
-		}>
+		<Suspense
+			fallback={
+				<div className='bg-background min-h-screen flex items-center justify-center'>
+					<div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary'></div>
+				</div>
+			}>
 			<RoomsContent />
 		</Suspense>
 	);
