@@ -22,7 +22,7 @@ export class RoomsService {
         electricityCost: dto.electricityCost,
         waterCost: dto.waterCost,
         deposit: dto.deposit,
-        minStay: dto.minStay,
+        minStay: dto.minStay ?? '',
         description: dto.description,
         address: dto.address,
         rule: dto.rule,

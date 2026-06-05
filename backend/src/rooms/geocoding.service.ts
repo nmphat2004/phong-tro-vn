@@ -45,7 +45,9 @@ export class GeocodingService {
     }
   }
 
-  private getFallbackCoords(address: string): { lat: number; lng: number } | null {
+  private getFallbackCoords(
+    address: string,
+  ): { lat: number; lng: number } | null {
     const addr = address.toLowerCase();
     if (
       addr.includes('hồ chí minh') ||

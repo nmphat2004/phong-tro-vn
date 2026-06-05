@@ -52,10 +52,10 @@ export class CreateRoomDto {
   @Type(() => Number)
   deposit: number;
 
-  @ApiProperty({ example: '3 tháng' })
-  @IsNotEmpty()
+  @ApiProperty({ example: '3 tháng', required: false })
+  @IsOptional()
   @IsString()
-  minStay: string;
+  minStay?: string;
 
   @ApiProperty({ example: 'Không cho nuôi chó mèo' })
   @IsString()
