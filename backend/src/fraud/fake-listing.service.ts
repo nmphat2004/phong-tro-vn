@@ -20,7 +20,10 @@ export class FakeListingService {
   ) {}
 
   // Hàm chính để phân tích một phòng trọ cụ thể dựa trên ID
-  async analyzeRoom(roomId: string): Promise<FakeListingResult> {
+  async analyzeRoom(
+    roomId: string,
+    persist = true,
+  ): Promise<FakeListingResult> {
     // Truy vấn thông tin chi tiết phòng trọ từ database, bao gồm thông tin chủ trọ, hình ảnh, tiện ích và đánh giá
     const room = await this.prisma.room.findUnique({
       where: { id: roomId },
@@ -211,7 +214,7 @@ export class FakeListingService {
     }
 
     // Nếu trạng thái hiện tại trên DB khác với trạng thái dự kiến, cập nhật ngay
-    if (room.status !== expectedStatus) {
+    if (persist && room.status !== expectedStatus) {
       await this.prisma.room.update({
         where: { id: roomId },
         data: { status: expectedStatus as any },

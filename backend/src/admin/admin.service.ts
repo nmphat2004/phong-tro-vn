@@ -121,6 +121,7 @@ export class AdminService {
         try {
           const fraudResult = await this.fakeListingService.analyzeRoom(
             room.id,
+            false,
           );
           return { ...room, fraudResult };
         } catch {
@@ -155,7 +156,7 @@ export class AdminService {
   }
 
   async analyzeRoomFraud(roomId: string) {
-    return this.fakeListingService.analyzeRoom(roomId);
+    return this.fakeListingService.analyzeRoom(roomId, false);
   }
 
   async getReviews(page: number = 1, limit: number = 10) {

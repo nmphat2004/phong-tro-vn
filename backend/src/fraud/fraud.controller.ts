@@ -18,6 +18,6 @@ export class FraudController {
   @Get('listing/:roomId')
   @ApiOperation({ summary: 'Analyze a room listing for fraud signals' })
   analyzeListing(@Param('roomId') roomId: string): Promise<FakeListingResult> {
-    return this.fakeListingService.analyzeRoom(roomId);
+    return this.fakeListingService.analyzeRoom(roomId, false);
   }
 }
