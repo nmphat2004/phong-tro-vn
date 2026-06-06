@@ -143,6 +143,9 @@ export class FakeListingService {
         where: {
           hash: { in: imageHashes }, // Mã băm trùng với danh sách của phòng hiện tại
           roomId: { not: room.id }, // Không thuộc về phòng trọ đang phân tích này
+          room: {
+            createdAt: { lt: room.createdAt }, // Chỉ phạt phòng tạo sau nếu trùng ảnh với phòng đầu
+          },
         },
         select: { hash: true, roomId: true },
       });
