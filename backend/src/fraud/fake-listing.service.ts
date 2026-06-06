@@ -9,6 +9,7 @@ export interface FakeListingResult {
   action: 'approve' | 'flag' | 'reject'; // Hành động xử lý: duyệt (approve), gắn cờ kiểm tra (flag), từ chối/ẩn (reject)
   reasons: string[]; // Danh sách lý do chi tiết tại sao tin đăng bị nghi ngờ
   details: Record<string, number>; // Điểm số chi tiết phạt được tính từ từng quy tắc (rule)
+  duplicateRooms?: { id: string; title: string }[]; // Danh sách phòng bị trùng ảnh
 }
 
 @Injectable()
@@ -137,6 +138,7 @@ export class FakeListingService {
       .filter((h): h is string => !!h);
 
     let duplicateScore = 0; // Khởi tạo điểm phạt trùng ảnh
+    let duplicateRooms: { id: string; title: string }[] = [];
     if (imageHashes.length > 0) {
       // Tìm kiếm xem các mã băm ảnh này có xuất hiện ở các phòng trọ khác trong DB hay không
       const duplicateImages = await this.prisma.roomImage.findMany({
@@ -147,7 +149,13 @@ export class FakeListingService {
             createdAt: { lt: room.createdAt }, // Chỉ phạt phòng tạo sau nếu trùng ảnh với phòng đầu
           },
         },
-        select: { hash: true, roomId: true },
+        select: {
+          hash: true,
+          roomId: true,
+          room: {
+            select: { title: true, ownerId: true },
+          },
+        },
       });
 
       if (duplicateImages.length > 0) {
@@ -155,15 +163,34 @@ export class FakeListingService {
         const uniqueRooms = new Set(duplicateImages.map((d) => d.roomId));
         const duplicateCount = duplicateImages.length; // Số lượng ảnh bị trùng
 
-        if (duplicateCount >= 3) {
-          duplicateScore = 20; // Trùng từ 3 ảnh trở lên: phạt tối đa 20 điểm (hành vi sao chép ảnh rất rõ ràng)
+        duplicateRooms = Array.from(
+          new Map(
+            duplicateImages.map((img) => [
+              img.roomId,
+              { id: img.roomId, title: img.room.title },
+            ]),
+          ).values(),
+        );
+
+        // Kiểm tra xem có trùng ảnh của chủ phòng khác không
+        const hasDifferentOwnerDuplicate = duplicateImages.some(
+          (img) => img.room?.ownerId !== room.ownerId,
+        );
+
+        if (hasDifferentOwnerDuplicate) {
+          duplicateScore = 60; // Phạt nặng 60 điểm nếu trùng ảnh từ phòng của chủ trọ khác (đảm bảo bị gắn cờ nghi ngờ)
           reasons.push(
-            `${duplicateCount} ảnh trùng lặp với ${uniqueRooms.size} tin đăng khác (nghiêm trọng)`,
+            `Phát hiện trùng lặp ${duplicateCount} ảnh từ phòng của chủ trọ khác (nghi ngờ giả mạo tin đăng)`,
+          );
+        } else if (duplicateCount >= 3) {
+          duplicateScore = 20; // Trùng từ 3 ảnh trở lên của chính mình: phạt tối đa 20 điểm
+          reasons.push(
+            `${duplicateCount} ảnh trùng lặp với ${uniqueRooms.size} tin đăng khác của bạn`,
           );
         } else {
-          duplicateScore = 15; // Trùng ít hơn 3 ảnh: phạt 15 điểm
+          duplicateScore = 15; // Trùng ít hơn 3 ảnh của chính mình: phạt 15 điểm
           reasons.push(
-            `${duplicateCount} ảnh trùng lặp với ${uniqueRooms.size} tin đăng khác`,
+            `${duplicateCount} ảnh trùng lặp với ${uniqueRooms.size} tin đăng khác của bạn`,
           );
         }
       }
@@ -175,38 +202,67 @@ export class FakeListingService {
     score = Math.min(100, score);
 
     // Xác định trạng thái phòng trọ mong muốn dựa trên điểm phạt:
-    // Nếu điểm phạt cực cao (>= 80), hệ thống sẽ tự động ẩn bài đăng này đi (HIDDEN)
-    // Nếu điểm phạt ở mức nghi ngờ (từ 60 đến 79), bài đăng vẫn để AVAILABLE nhưng được gắn cờ cảnh báo
-    const expectedStatus = score >= 80 ? 'HIDDEN' : 'AVAILABLE';
-    // Nếu tin đăng đáng nghi ngờ (score >= 60) và trạng thái hiện tại trên DB khác với trạng thái dự kiến
-    if (score >= 60 && room.status !== expectedStatus) {
-      // Thực hiện cập nhật trạng thái phòng trọ trong cơ sở dữ liệu
-      await this.prisma.room.update({
-        where: { id: roomId },
-        data: { status: expectedStatus },
-      });
+    let expectedStatus =
+      score >= 80 ? 'HIDDEN' : score >= 60 ? 'PENDING' : 'AVAILABLE';
 
-      // Gửi thông báo cho chủ trọ khi phòng bị tự động ẩn do điểm phạt quá cao (>= 80)
-      if (score >= 80) {
-        await this.notificationsService.create({
-          userId: room.ownerId,
-          type: 'ROOM_HIDDEN_FRAUD',
-          title: 'Tin đăng đã bị ẩn',
-          content: `Tin đăng "${room.title}" đã bị ẩn tự động do vi phạm chính sách đăng tin. Vui lòng liên hệ quản trị viên để biết thêm chi tiết.`,
-          link: `/rooms/${room.id}`,
-        });
-      }
+    // Nếu phòng đang ở trạng thái RENTED, và dự kiến là AVAILABLE, giữ nguyên RENTED
+    if (room.status === 'RENTED' && expectedStatus === 'AVAILABLE') {
+      expectedStatus = 'RENTED';
     }
 
-    // Gửi thông báo cảnh báo cho chủ trọ khi phòng bị gắn cờ nghi ngờ (60 <= score < 80)
-    if (score >= 60 && score < 80) {
-      await this.notificationsService.create({
-        userId: room.ownerId,
-        type: 'ROOM_FLAGGED_FRAUD',
-        title: 'Tin đăng bị cảnh báo',
-        content: `Tin đăng "${room.title}" đã bị gắn cờ cảnh báo do có dấu hiệu bất thường. Vui lòng kiểm tra lại thông tin tin đăng.`,
-        link: `/rooms/${room.id}`,
+    // Nếu trạng thái hiện tại trên DB khác với trạng thái dự kiến, cập nhật ngay
+    if (room.status !== expectedStatus) {
+      await this.prisma.room.update({
+        where: { id: roomId },
+        data: { status: expectedStatus as any },
       });
+
+      const targetType =
+        expectedStatus === 'HIDDEN'
+          ? 'ROOM_HIDDEN_FRAUD'
+          : expectedStatus === 'PENDING'
+            ? 'ROOM_PENDING_FRAUD'
+            : 'ROOM_APPROVED_FRAUD';
+
+      // Kiểm tra thông báo gần đây nhất của phòng để tránh lặp lại khi F5
+      const latestNotification = await this.prisma.notification.findFirst({
+        where: {
+          userId: room.ownerId,
+          link: `/rooms/${room.id}`,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+
+      if (!latestNotification || latestNotification.type !== targetType) {
+        // Gửi thông báo tương ứng với trạng thái mới
+        if (expectedStatus === 'HIDDEN') {
+          await this.notificationsService.create({
+            userId: room.ownerId,
+            type: 'ROOM_HIDDEN_FRAUD',
+            title: 'Tin đăng đã bị ẩn do vi phạm',
+            content: `Tin đăng "${room.title}" đã bị ẩn tự động vì điểm nghi ngờ quá cao (${score}/100).`,
+            link: `/rooms/${room.id}`,
+          });
+        } else if (expectedStatus === 'PENDING') {
+          await this.notificationsService.create({
+            userId: room.ownerId,
+            type: 'ROOM_PENDING_FRAUD',
+            title: 'Tin đăng chờ kiểm duyệt',
+            content: `Tin đăng "${room.title}" có dấu hiệu vi phạm (${score}/100) và đang chờ admin kiểm duyệt. Bạn hãy chỉnh sửa lại tin để hệ thống tự động kiểm tra lại.`,
+            link: `/rooms/${room.id}`,
+          });
+        } else if (expectedStatus === 'AVAILABLE') {
+          await this.notificationsService.create({
+            userId: room.ownerId,
+            type: 'ROOM_APPROVED_FRAUD',
+            title: 'Tin đăng đã hoạt động',
+            content: `Tin đăng "${room.title}" đã được duyệt hoạt động bình thường trên hệ thống.`,
+            link: `/rooms/${room.id}`,
+          });
+        }
+      }
     }
 
     // Trả về kết quả phân tích đầy đủ cho phía gọi API sử dụng
@@ -217,6 +273,7 @@ export class FakeListingService {
       action: score >= 80 ? 'reject' : score >= 60 ? 'flag' : 'approve',
       reasons,
       details,
+      duplicateRooms,
     };
   }
 

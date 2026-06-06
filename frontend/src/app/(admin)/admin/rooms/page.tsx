@@ -160,6 +160,7 @@ export default function AdminRoomsPage() {
 						className='px-4 py-2.5 bg-card border border-border rounded-xl text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto'>
 						<option value='all'>Tất cả ({meta?.total || rooms.length})</option>
 						<option value='AVAILABLE'>Đang hoạt động</option>
+						<option value='PENDING'>Chờ duyệt</option>
 						<option value='HIDDEN'>Đã ẩn</option>
 						<option value='flagged'>Nghi ngờ ({flaggedCount})</option>
 					</select>
@@ -242,13 +243,29 @@ export default function AdminRoomsPage() {
 													</div>
 												</td>
 												<td className='px-4 py-4'>
-													<Link
-														href={`/rooms/${room.id}`}
-														target='_blank'
-														rel='noopener noreferrer'
-														className='text-sm font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 hover:underline transition-colors line-clamp-1'>
-														{room.title}
-													</Link>
+													<div className='flex flex-col'>
+														<Link
+															href={`/rooms/${room.id}`}
+															target='_blank'
+															rel='noopener noreferrer'
+															className='text-sm font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 hover:underline transition-colors line-clamp-1'>
+															{room.title}
+														</Link>
+														{fraud?.duplicateRooms && fraud.duplicateRooms.length > 0 && (
+															<div className='flex flex-wrap gap-x-2 gap-y-1 mt-1 text-[11px] text-orange-600 dark:text-orange-400'>
+																<span className='font-medium shrink-0'>Trùng ảnh với:</span>
+																{fraud.duplicateRooms.map((dup: any) => (
+																	<Link
+																		key={dup.id}
+																		href={`/rooms/${dup.id}`}
+																		target='_blank'
+																		className='hover:underline font-semibold'>
+																		🔗 {dup.title}
+																	</Link>
+																))}
+															</div>
+														)}
+													</div>
 												</td>
 												<td className='hidden lg:table-cell px-4 py-4'>
 													<span className='text-sm text-muted-foreground'>
@@ -263,10 +280,16 @@ export default function AdminRoomsPage() {
 												<td className='px-4 py-4'>
 													<span
 														className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap
-															${room.status === 'AVAILABLE' ? 'bg-green-500/15 text-green-600' : 'bg-secondary text-muted-foreground'}`}>
-														{room.status === 'AVAILABLE' ?
-															'Đang hiển thị'
-														:	'Đã ẩn'}
+															${
+																room.status === 'AVAILABLE' ? 'bg-green-500/15 text-green-600'
+																: room.status === 'PENDING' ? 'bg-yellow-500/15 text-yellow-600'
+																: room.status === 'HIDDEN' ? 'bg-red-500/15 text-red-600'
+																: 'bg-secondary text-muted-foreground'
+															}`}>
+														{room.status === 'AVAILABLE' ? 'Đang hiển thị'
+														: room.status === 'PENDING' ? 'Chờ kiểm duyệt'
+														: room.status === 'HIDDEN' ? 'Đã ẩn'
+														: 'Đã thuê'}
 													</span>
 												</td>
 												<td className='px-4 py-4'>
@@ -279,20 +302,47 @@ export default function AdminRoomsPage() {
 												</td>
 												<td className='px-4 py-4'>
 													<div className='flex items-center justify-center gap-1'>
-														<button
-															onClick={() =>
-																handleStatusChange({
-																	id: room.id,
-																	status:
-																		room.status === 'AVAILABLE' ?
-																			'HIDDEN'
-																		:	'AVAILABLE',
-																})
-															}
-															title={room.status === 'AVAILABLE' ? 'Ẩn' : 'Hiện'}
-															className='p-2 rounded-lg hover:bg-secondary text-muted-foreground transition-colors'>
-															<Eye className='w-4 h-4' />
-														</button>
+														{room.status === 'PENDING' ? (
+															<>
+																<button
+																	onClick={() =>
+																		handleStatusChange({
+																			id: room.id,
+																			status: 'AVAILABLE',
+																		})
+																	}
+																	title='Duyệt'
+																	className='p-2 rounded-lg hover:bg-green-500/10 text-green-600 transition-colors'>
+																	<ShieldCheck className='w-4 h-4' />
+																</button>
+																<button
+																	onClick={() =>
+																		handleStatusChange({
+																			id: room.id,
+																			status: 'HIDDEN',
+																		})
+																	}
+																	title='Từ chối / Ẩn'
+																	className='p-2 rounded-lg hover:bg-red-500/10 text-red-500 transition-colors'>
+																	<ShieldAlert className='w-4 h-4' />
+																</button>
+															</>
+														) : (
+															<button
+																onClick={() =>
+																	handleStatusChange({
+																		id: room.id,
+																		status:
+																			room.status === 'AVAILABLE' ?
+																				'HIDDEN'
+																			:	'AVAILABLE',
+																	})
+																}
+																title={room.status === 'AVAILABLE' ? 'Ẩn' : 'Hiện'}
+																className='p-2 rounded-lg hover:bg-secondary text-muted-foreground transition-colors'>
+																<Eye className='w-4 h-4' />
+															</button>
+														)}
 														<button
 															onClick={() => {
 																if (

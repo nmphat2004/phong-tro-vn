@@ -94,11 +94,16 @@ export class AdminService {
     });
   }
 
-  async getRooms(page: number = 1, limit: number = 10) {
+  async getRooms(page: number = 1, limit: number = 10, status?: string) {
     const skip = (page - 1) * limit;
+    const where: any = {};
+    if (status && status !== 'all') {
+      where.status = status as any;
+    }
 
     const [rooms, total] = await Promise.all([
       this.prisma.room.findMany({
+        where,
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
@@ -107,7 +112,7 @@ export class AdminService {
           images: { where: { isPrimary: true }, take: 1 },
         },
       }),
-      this.prisma.room.count(),
+      this.prisma.room.count({ where }),
     ]);
 
     // Auto-analyze fraud for each room
@@ -135,7 +140,10 @@ export class AdminService {
     };
   }
 
-  async changeRoomStatus(id: string, status: 'AVAILABLE' | 'HIDDEN') {
+  async changeRoomStatus(
+    id: string,
+    status: 'AVAILABLE' | 'HIDDEN' | 'PENDING' | 'RENTED',
+  ) {
     return this.prisma.room.update({
       where: { id },
       data: { status },

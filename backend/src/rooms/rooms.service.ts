@@ -5,10 +5,14 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateRoomDto, SearchRoomDto, UpdateRoomDto } from './dto/room.dto';
+import { FakeListingService } from '../fraud/fake-listing.service';
 
 @Injectable()
 export class RoomsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private fakeListingService: FakeListingService,
+  ) {}
 
   async create(ownerId: string, dto: CreateRoomDto) {
     const { lat, lng } = dto;
@@ -59,7 +63,31 @@ export class RoomsService {
       },
     });
 
-    return room;
+    // Tự động phân tích tin đăng ảo ngay sau khi tạo
+    try {
+      await this.fakeListingService.analyzeRoom(room.id);
+    } catch (error) {
+      console.error('Error analyzing room fraud on create:', error);
+    }
+
+    // Lấy lại phòng đã được cập nhật trạng thái
+    const updatedRoom = await this.prisma.room.findUnique({
+      where: { id: room.id },
+      include: {
+        images: true,
+        amenities: { include: { amenity: true } },
+        owner: {
+          select: {
+            id: true,
+            fullName: true,
+            phone: true,
+            avatarUrl: true,
+          },
+        },
+      },
+    });
+
+    return updatedRoom || room;
   }
 
   async update(id: string, ownerId: string, dto: UpdateRoomDto) {
@@ -70,7 +98,7 @@ export class RoomsService {
     if (!room) throw new NotFoundException('Room not found');
     if (room.ownerId !== ownerId) throw new ForbiddenException('Not your room');
 
-    return this.prisma.room.update({
+    const updatedRoom = await this.prisma.room.update({
       where: { id },
       data: {
         ...rest,
@@ -100,6 +128,24 @@ export class RoomsService {
         amenities: { include: { amenity: true } },
       },
     });
+
+    // Tự động phân tích lại tin đăng ảo sau khi chỉnh sửa
+    try {
+      await this.fakeListingService.analyzeRoom(id);
+    } catch (error) {
+      console.error('Error analyzing room fraud on update:', error);
+    }
+
+    // Lấy lại phòng đã được cập nhật trạng thái
+    const finalRoom = await this.prisma.room.findUnique({
+      where: { id },
+      include: {
+        images: true,
+        amenities: { include: { amenity: true } },
+      },
+    });
+
+    return finalRoom || updatedRoom;
   }
 
   async remove(id: string, ownerId: string, role: string) {

@@ -54,15 +54,20 @@ export class AdminController {
   getRooms(
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
+    @Query('status') status?: string,
   ) {
-    return this.adminService.getRooms(parseInt(page, 10), parseInt(limit, 10));
+    return this.adminService.getRooms(
+      parseInt(page, 10),
+      parseInt(limit, 10),
+      status,
+    );
   }
 
   @Put('rooms/:id/status')
-  @ApiOperation({ summary: 'Change room status (AVAILABLE/HIDDEN)' })
+  @ApiOperation({ summary: 'Change room status' })
   changeRoomStatus(
     @Param('id') id: string,
-    @Body('status') status: 'AVAILABLE' | 'HIDDEN',
+    @Body('status') status: 'AVAILABLE' | 'HIDDEN' | 'PENDING' | 'RENTED',
   ) {
     return this.adminService.changeRoomStatus(id, status);
   }

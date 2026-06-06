@@ -20,12 +20,12 @@ export const toggleUserVerification = async (id: string) => {
 	return res.data;
 };
 
-export const getAdminRooms = async (page = 1, limit = 10) => {
-	const res = await api.get('/admin/rooms', { params: { page, limit } });
+export const getAdminRooms = async (page = 1, limit = 10, status?: string) => {
+	const res = await api.get('/admin/rooms', { params: { page, limit, status } });
 	return res.data;
 };
 
-export const changeRoomStatus = async (id: string, status: 'AVAILABLE' | 'HIDDEN') => {
+export const changeRoomStatus = async (id: string, status: 'AVAILABLE' | 'HIDDEN' | 'PENDING' | 'RENTED') => {
 	const res = await api.put(`/admin/rooms/${id}/status`, { status });
 	return res.data;
 };

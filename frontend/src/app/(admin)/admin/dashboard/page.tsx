@@ -1,15 +1,14 @@
 'use client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
 	getAdminStats,
-	getAdminReports,
-	updateReportStatus,
+	getAdminRooms,
+	changeRoomStatus,
 } from '@/lib/api/admin.api';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Home, Users, AlertTriangle, Star } from 'lucide-react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { formatRelativeTime } from '@/lib/time-format';
+import { formatCurrency } from '@/lib/utils';
 import Link from 'next/link';
 
 export default function AdminDashboardPage() {
@@ -19,17 +18,22 @@ export default function AdminDashboardPage() {
 		queryFn: getAdminStats,
 	});
 
-	const { data: reportsData, isLoading: reportsLoading } = useQuery({
-		queryKey: ['admin-reports-recent'],
-		queryFn: () => getAdminReports(1, 5),
+	const { data: pendingRoomsData, isLoading: roomsLoading } = useQuery({
+		queryKey: ['admin-rooms-pending'],
+		queryFn: () => getAdminRooms(1, 5, 'PENDING'),
 	});
 
-	const { mutate: handleReportStatus } = useMutation({
-		mutationFn: ({ id, status }: { id: string; status: string }) =>
-			updateReportStatus(id, status),
+	const { mutate: handleStatusChange } = useMutation({
+		mutationFn: ({
+			id,
+			status,
+		}: {
+			id: string;
+			status: 'AVAILABLE' | 'HIDDEN' | 'PENDING' | 'RENTED';
+		}) => changeRoomStatus(id, status),
 		onSuccess: () => {
-			toast.success('Cập nhật trạng thái báo cáo thành công');
-			queryClient.invalidateQueries({ queryKey: ['admin-reports-recent'] });
+			toast.success('Cập nhật trạng thái phòng thành công');
+			queryClient.invalidateQueries({ queryKey: ['admin-rooms-pending'] });
 			queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
 		},
 	});
@@ -105,12 +109,12 @@ export default function AdminDashboardPage() {
 				</div>
 			}
 
-			{/* Recent Reports */}
+			{/* Pending Rooms */}
 			<div className='bg-card rounded-2xl border border-border overflow-hidden'>
 				<div className='px-4 sm:px-6 py-5 border-b border-border'>
-					<h2 className='text-lg font-bold text-foreground'>Báo cáo gần đây</h2>
+					<h2 className='text-lg font-bold text-foreground'>Tin đăng chờ duyệt</h2>
 				</div>
-				{reportsLoading ?
+				{roomsLoading ?
 					<div className='p-6 space-y-4'>
 						{[...Array(3)].map((_, i) => (
 							<Skeleton key={i} className='w-full h-14' />
@@ -121,101 +125,117 @@ export default function AdminDashboardPage() {
 							<thead>
 								<tr className='border-b border-border'>
 									<th className='text-left px-4 sm:px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
-										Phòng
+										Tin đăng
 									</th>
 									<th className='hidden md:table-cell text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
-										Người báo cáo
+										Chủ trọ
 									</th>
 									<th className='hidden lg:table-cell text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
-										Lý do
+										Giá
 									</th>
 									<th className='hidden sm:table-cell text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
-										Ngày báo cáo
+										Điểm nghi ngờ
 									</th>
 									<th className='text-left px-4 sm:px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
-										Trạng thái
+										Trùng ảnh với
 									</th>
-									<th className='text-left px-4 sm:px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
+									<th className='text-center px-4 sm:px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
 										Hành động
 									</th>
 								</tr>
 							</thead>
 							<tbody>
-								{reportsData?.data?.length === 0 && (
+								{pendingRoomsData?.data?.length === 0 && (
 									<tr>
 										<td
 											colSpan={6}
 											className='text-center py-12 text-muted-foreground text-sm'>
-											Không có báo cáo nào
+											Không có tin đăng nào chờ duyệt
 										</td>
 									</tr>
 								)}
-								{reportsData?.data?.map((report: any) => (
-									<tr
-										key={report.id}
-										className='border-b border-border hover:bg-secondary/50 transition-colors'>
-										<td className='px-4 sm:px-6 py-4'>
-											<span className='text-sm font-medium text-foreground line-clamp-1'>
-												{report.room?.title || 'Phòng đã xóa'}
-											</span>
-										</td>
-										<td className='hidden md:table-cell px-6 py-4'>
-											<span className='text-sm text-muted-foreground'>
-												{report.reporter?.fullName}
-											</span>
-										</td>
-										<td className='hidden lg:table-cell px-6 py-4'>
-											<span className='text-sm text-muted-foreground line-clamp-1'>
-												{report.reason}
-											</span>
-										</td>
-										<td className='hidden sm:table-cell px-6 py-4'>
-											<span className='text-sm text-muted-foreground whitespace-nowrap'>
-												{formatRelativeTime(report.createdAt)}
-											</span>
-										</td>
-										<td className='px-4 sm:px-6 py-4'>
-											<span
-												className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap
-												${
-													report.status === 'pending' ?
-														'bg-yellow-500/15 text-yellow-600'
-													: report.status === 'resolved' ?
-														'bg-green-500/15 text-green-600'
-													:	'bg-secondary text-muted-foreground'
-												}`}>
-												{report.status === 'pending' ?
-													'Đang chờ'
-												: report.status === 'resolved' ?
-													'Đã duyệt'
-												:	'Bỏ qua'}
-											</span>
-										</td>
-										<td className='px-4 sm:px-6 py-4'>
-											<div className='flex gap-2'>
-												{report.status === 'pending' && (
-													<>
-														<Link
-															href='/admin/reports'
-															className='px-3 py-1.5 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center'>
-															Xem
-														</Link>
-														<button
-															onClick={() =>
-																handleReportStatus({
-																	id: report.id,
-																	status: 'dismissed',
-																})
-															}
-															className='px-3 py-1.5 bg-card text-muted-foreground text-xs font-semibold rounded-lg border border-border hover:bg-secondary transition-colors'>
-															Bỏ qua
-														</button>
-													</>
+								{pendingRoomsData?.data?.map((room: any) => {
+									const fraud = room.fraudResult;
+									const score = fraud?.score ?? 0;
+									const duplicateRooms = fraud?.duplicateRooms || [];
+
+									return (
+										<tr
+											key={room.id}
+											className='border-b border-border hover:bg-secondary/50 transition-colors'>
+											<td className='px-4 sm:px-6 py-4'>
+												<div className='flex flex-col'>
+													<Link
+														href={`/rooms/${room.id}`}
+														target='_blank'
+														className='text-sm font-semibold text-blue-600 hover:underline line-clamp-1'>
+														{room.title}
+													</Link>
+													<span className='text-xs text-muted-foreground mt-0.5 line-clamp-1'>
+														{room.address}
+													</span>
+												</div>
+											</td>
+											<td className='hidden md:table-cell px-6 py-4'>
+												<span className='text-sm text-muted-foreground'>
+													{room.owner?.fullName || 'N/A'}
+												</span>
+											</td>
+											<td className='hidden lg:table-cell px-6 py-4'>
+												<span className='text-sm font-medium text-foreground whitespace-nowrap'>
+													{formatCurrency(Number(room.price))}
+												</span>
+											</td>
+											<td className='hidden sm:table-cell px-6 py-4'>
+												<span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap
+													${score >= 80 ? 'bg-red-500/15 text-red-600' : 'bg-orange-500/15 text-orange-600'}`}>
+													{score}/100
+												</span>
+											</td>
+											<td className='px-4 sm:px-6 py-4'>
+												{duplicateRooms.length === 0 ? (
+													<span className='text-xs text-muted-foreground'>Không trùng</span>
+												) : (
+													<div className='flex flex-col gap-1'>
+														{duplicateRooms.map((dup: any) => (
+															<Link
+																key={dup.id}
+																href={`/rooms/${dup.id}`}
+																target='_blank'
+																className='text-xs font-semibold text-orange-600 dark:text-orange-400 hover:underline line-clamp-1'>
+																🔗 {dup.title}
+															</Link>
+														))}
+													</div>
 												)}
-											</div>
-										</td>
-									</tr>
-								))}
+											</td>
+											<td className='px-4 sm:px-6 py-4'>
+												<div className='flex items-center justify-center gap-2'>
+													<button
+														onClick={() =>
+															handleStatusChange({
+																id: room.id,
+																status: 'AVAILABLE',
+															})
+														}
+														className='px-3 py-1.5 bg-green-600 text-white text-xs font-semibold rounded-lg hover:bg-green-700 transition-colors'>
+														Duyệt
+													</button>
+													<button
+														onClick={() =>
+															handleStatusChange({
+																id: room.id,
+																status: 'HIDDEN',
+															})
+														}
+														className='px-3 py-1.5 bg-red-600 text-white text-xs font-semibold rounded-lg hover:bg-red-700 transition-colors'>
+														Ẩn
+													</button>
+												</div>
+											</td>
+										</tr>
+									);
+								})}
 							</tbody>
 						</table>
 					</div>
