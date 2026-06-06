@@ -22,6 +22,8 @@ import { useState } from 'react';
 const TABS = [
 	{ key: 'all', label: 'Tất cả' },
 	{ key: 'flagged', label: 'Nghi ngờ' },
+	{ key: 'positive', label: 'Tích cực' },
+	{ key: 'negative', label: 'Tiêu cực' },
 ];
 
 function FraudBadge({ fraud }: { fraud: any }) {
@@ -136,6 +138,8 @@ export default function AdminReviewsPage() {
 		if (activeTab === 'all') return true;
 		if (activeTab === 'flagged')
 			return !review.isVerified && review.fraudResult?.isSuspicious;
+		if (activeTab === 'positive') return review.sentiment === 'positive';
+		if (activeTab === 'negative') return review.sentiment === 'negative';
 		return true;
 	});
 
@@ -159,7 +163,9 @@ export default function AdminReviewsPage() {
 	return (
 		<div>
 			<div className='flex items-center justify-between mb-8'>
-				<h1 className='text-2xl sm:text-3xl font-bold text-foreground'>Quản lý đánh giá</h1>
+				<h1 className='text-2xl sm:text-3xl font-bold text-foreground'>
+					Quản lý đánh giá
+				</h1>
 			</div>
 
 			{/* Tabs */}
@@ -209,8 +215,9 @@ export default function AdminReviewsPage() {
 								const fraud = review.fraudResult;
 								const bgClass =
 									fraud?.score >= 80 ? 'bg-red-500/5 hover:bg-red-500/10'
-									: fraud?.score >= 50 ? 'bg-orange-500/5 hover:bg-orange-500/10'
-									: 'hover:bg-secondary/50';
+									: fraud?.score >= 50 ?
+										'bg-orange-500/5 hover:bg-orange-500/10'
+									:	'hover:bg-secondary/50';
 
 								const initial =
 									review.reviewer?.fullName?.charAt(0)?.toUpperCase() || '?';
@@ -221,7 +228,8 @@ export default function AdminReviewsPage() {
 									'bg-orange-500',
 									'bg-pink-500',
 								];
-								const bgColor = bgColors[initial.charCodeAt(0) % bgColors.length];
+								const bgColor =
+									bgColors[initial.charCodeAt(0) % bgColors.length];
 
 								return (
 									<div
@@ -249,8 +257,25 @@ export default function AdminReviewsPage() {
 												<span className='font-bold text-blue-600 dark:text-blue-400'>
 													{review.room?.title || 'Phòng đã xóa'}
 												</span>{' '}
-												• {new Date(review.createdAt).toLocaleDateString('vi-VN')}
+												•{' '}
+												{new Date(review.createdAt).toLocaleDateString('vi-VN')}
 											</p>
+											{review.sentiment && (
+												<div className='mt-2'>
+													<span
+														className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${
+															review.sentiment === 'positive' ?
+																'bg-green-100 text-green-700'
+															: review.sentiment === 'negative' ?
+																'bg-red-100 text-red-700'
+															:	'bg-gray-100 text-gray-700'
+														}`}>
+														{review.sentiment === 'positive' && 'Tích cực 😄'}
+														{review.sentiment === 'negative' && 'Tiêu cực 😡'}
+														{review.sentiment === 'neutral' && 'Trung lập 😐'}
+													</span>
+												</div>
+											)}
 										</div>
 
 										{/* Fraud Score + Actions */}
