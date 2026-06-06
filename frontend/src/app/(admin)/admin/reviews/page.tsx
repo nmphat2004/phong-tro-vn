@@ -270,9 +270,9 @@ export default function AdminReviewsPage() {
 																'bg-red-100 text-red-700'
 															:	'bg-gray-100 text-gray-700'
 														}`}>
-														{review.sentiment === 'positive' && 'Tích cực 😄'}
-														{review.sentiment === 'negative' && 'Tiêu cực 😡'}
-														{review.sentiment === 'neutral' && 'Trung lập 😐'}
+														{review.sentiment === 'positive' && 'Tích cực'}
+														{review.sentiment === 'negative' && 'Tiêu cực'}
+														{review.sentiment === 'neutral' && 'Trung lập'}
 													</span>
 												</div>
 											)}
