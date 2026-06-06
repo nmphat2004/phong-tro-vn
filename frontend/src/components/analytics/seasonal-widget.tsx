@@ -45,14 +45,14 @@ export default function SeasonalWidget({ district }: { district?: string }) {
 				Thời điểm thuê tốt nhất
 			</h3>
 
-			{/* AI Powered Advice */}
+			{/* Hybrid Recommendation Panel */}
 			{data.aiAdvice && (
-				<div className='bg-purple-50 rounded-lg p-3 text-sm text-purple-800 border border-purple-100 flex flex-col gap-1'>
-					<span className='font-semibold text-[10px] uppercase tracking-wider text-purple-500 opacity-70 flex items-center gap-1'>
-						✨ Tư vấn thông minh (AI)
+				<div className='bg-linear-to-br from-indigo-50/60 to-purple-50/60 dark:from-indigo-950/20 dark:to-purple-950/20 rounded-xl p-4 text-sm border border-indigo-100/80 dark:border-indigo-900/30 shadow-sm space-y-2'>
+					<span className='font-semibold text-[10px] uppercase tracking-wider text-indigo-600 dark:text-indigo-400 bg-indigo-100/60 dark:bg-indigo-900/40 px-2.5 py-0.5 rounded-full w-max flex items-center gap-1.5'>
+						✨ Gợi ý thời điểm thuê
 					</span>
-					<div className='italic leading-relaxed'>
-						&quot;{data.aiAdvice}&quot;
+					<div className='text-slate-800 dark:text-slate-200 leading-relaxed font-medium antialiased'>
+						{data.aiAdvice}
 					</div>
 				</div>
 			)}

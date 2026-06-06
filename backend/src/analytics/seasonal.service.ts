@@ -100,6 +100,12 @@ export class SeasonalService {
       avgPrice * (currentIndex - bestMonth.seasonalIndex),
     );
 
+    const currentAdvice = this.getCurrentAdvice(
+      currentMonth,
+      bestMonth.month,
+      saving,
+    );
+
     // AI generated advice
     const aiAdvice = await this.getAiAdvice(
       currentMonth,
@@ -107,6 +113,7 @@ export class SeasonalService {
       worstMonth,
       avgPrice,
       saving,
+      currentAdvice,
     );
 
     return {
@@ -116,11 +123,7 @@ export class SeasonalService {
       predictions,
       bestMonth,
       worstMonth,
-      currentAdvice: this.getCurrentAdvice(
-        currentMonth,
-        bestMonth.month,
-        saving,
-      ),
+      currentAdvice,
       aiAdvice,
     };
   }
@@ -131,21 +134,25 @@ export class SeasonalService {
     worst: { monthName: string; seasonalIndex: number },
     avgPrice: number,
     saving: number,
+    currentAdvice: string,
   ) {
     const prompt = `
-      Bạn là một chuyên gia tư vấn bất động sản tại Việt Nam. 
-      Dựa trên dữ liệu thị trường phòng trọ sau đây, hãy đưa ra một lời khuyên ngắn gọn (khoảng 2-3 câu) cho người đang tìm phòng.
+      Bạn là một chuyên gia tư vấn bất động sản tại Việt Nam.
+      Nhiệm vụ của bạn là kết hợp khuyến nghị phân tích dựa trên thuật toán thị trường dưới đây với nhận xét chuyên môn của bạn thành MỘT lời khuyên/khuyến nghị duy nhất, thống nhất và trôi chảy (khoảng 2-3 câu).
       
-      Dữ liệu:
+      Khuyến nghị của thuật toán: "${currentAdvice}"
+      
+      Dữ liệu thị trường bổ sung:
       - Tháng hiện tại: ${MONTH_VI[currentMonth]}
-      - Tháng tốt nhất để thuê (giá thấp nhất): ${best.monthName} (Tiết kiệm được khoảng ${saving}đ so với hiện tại)
-      - Tháng cao điểm (giá cao nhất, khó tìm phòng): ${worst.monthName} (Mùa nhập học/chuyển trọ)
-      - Giá trung bình khu vực: ${avgPrice}đ
+      - Tháng thuê phòng tốt nhất (giá thấp nhất): ${best.monthName} (Tiết kiệm khoảng ${new Intl.NumberFormat('vi-VN').format(saving)}đ/tháng so với hiện tại)
+      - Tháng cao điểm cạnh tranh (khó thuê, giá cao): ${worst.monthName}
+      - Giá thuê trung bình hiện tại: ${new Intl.NumberFormat('vi-VN').format(Math.round(avgPrice))}đ/tháng
       
       Yêu cầu:
-      - Nếu tháng hiện tại cách xa tháng tốt nhất (> 3 tháng), đừng chỉ khuyên họ chờ đợi. Hãy tư vấn dựa trên việc so sánh với tháng cao điểm sắp tới (Tháng 8, 9).
-      - Ngôn ngữ: Tiếng Việt, thân thiện, chuyên nghiệp.
-      - Trả lời trực tiếp vào lời khuyên.
+      - Viết liền mạch thành MỘT đoạn văn ngắn gọn, không phân chia thành các mục hay gạch đầu dòng khác nhau.
+      - Phải tích hợp tự nhiên số liệu tiết kiệm hoặc đề xuất thời gian từ khuyến nghị của thuật toán vào lời khuyên, đồng thời đưa ra lý do giải thích thực tế (ví dụ: nhu cầu thấp dịp Tết tháng 2 giúp dễ đàm phán giá, hay cạnh tranh khốc liệt mùa tựu trường tháng 8-9).
+      - Ngôn ngữ: Tiếng Việt, thân thiện, chuyên nghiệp, tự nhiên.
+      - Trả lời trực tiếp vào lời khuyên, không có các từ dẫn nhập thừa thãi.
     `;
 
     return this.aiService.generateText(prompt);
