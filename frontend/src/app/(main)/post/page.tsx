@@ -432,19 +432,19 @@ const PostRoomPage = () => {
 				<div className='mb-8'>
 					<div className='flex items-center justify-between mb-4'>
 						{steps.map((step, index) => (
-							<div key={step.number} className='flex items-center flex-1'>
-								<div className='flex flex-col items-center'>
+							<div key={step.number} className='flex items-center flex-1 last:flex-none'>
+								<div className='flex flex-col items-center shrink-0'>
 									<div
-										className={`w-10 h-10 rounded-full flex items-center justify-center ${currentStep >= step.number ? 'bg-primary text-white' : 'bg-secondary text-muted-foreground'}`}>
+										className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm ${currentStep >= step.number ? 'bg-primary text-white font-bold' : 'bg-secondary text-muted-foreground'}`}>
 										{currentStep > step.number ?
 											<Check className='w-5 h-5' />
 										:	step.number}
 									</div>
-									<span className='text-sm mt-2'>{step.title}</span>
+									<span className='text-xs sm:text-sm mt-2 hidden sm:block text-center font-medium max-w-[120px]'>{step.title}</span>
 								</div>
 								{index < steps.length - 1 && (
 									<div
-										className={`flex-1 h-1 mx-4 ${currentStep > step.number ? 'bg-primary' : 'bg-secondary'}`}></div>
+										className={`flex-1 h-0.5 sm:h-1 mx-2 sm:mx-4 ${currentStep > step.number ? 'bg-primary' : 'bg-secondary'}`}></div>
 								)}
 							</div>
 						))}
@@ -562,7 +562,7 @@ const PostRoomPage = () => {
 										)}
 									</div>
 
-									<div className='grid grid-cols-2 gap-4'>
+									<div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
 										<div>
 											<Label className='block mb-2'>Giá thuê (đ/tháng) *</Label>
 											<Input
@@ -593,7 +593,7 @@ const PostRoomPage = () => {
 										</div>
 									</div>
 
-									<div className='grid grid-cols-2 gap-4'>
+									<div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
 										<div>
 											<Label className='block mb-2'>Tầng</Label>
 											<Input
@@ -610,7 +610,7 @@ const PostRoomPage = () => {
 										</div>
 									</div>
 
-									<div className='grid grid-cols-3 gap-4'>
+									<div className='grid grid-cols-1 sm:grid-cols-3 gap-4'>
 										<div>
 											<Label className='block mb-2'>Tiền điện (đ/kWh)</Label>
 											<Input
@@ -734,7 +734,7 @@ const PostRoomPage = () => {
 												<SortableContext
 													items={uploadedImages.map((img) => img.id)}
 													strategy={rectSortingStrategy}>
-													<div className='grid grid-cols-3 gap-4'>
+													<div className='grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4'>
 														{uploadedImages.map((image, index) => (
 															<SortableImageItem
 																key={image.id}
@@ -755,22 +755,22 @@ const PostRoomPage = () => {
 								<div className='space-y-6'>
 									<h2 className='text-2xl font-bold'>Xem trước tin đăng</h2>
 
-									<div className='bg-secondary rounded-xl p-6 space-y-4'>
+									<div className='bg-secondary rounded-xl p-4 sm:p-6 space-y-4'>
 										<div>
-											<h3 className='text-xl font-semibold mb-2'>
+											<h3 className='text-lg sm:text-xl font-semibold mb-2'>
 												{formData.title}
 											</h3>
-											<p className='text-muted-foreground'>
+											<p className='text-xs sm:text-sm text-muted-foreground'>
 												{formData.address}
 											</p>
 										</div>
 
-										<div className='grid grid-cols-2 gap-4'>
+										<div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
 											<div>
-												<span className='text-sm text-muted-foreground block mb-1'>
+												<span className='text-xs sm:text-sm text-muted-foreground block mb-1'>
 													Loại phòng
 												</span>
-												<p className='text-lg font-medium'>
+												<p className='text-base sm:text-lg font-medium'>
 													{
 														roomTypes.find((t) => t.value === formData.roomType)
 															?.label
@@ -778,16 +778,16 @@ const PostRoomPage = () => {
 												</p>
 											</div>
 											<div>
-												<span className='text-sm text-muted-foreground block mb-1'>
+												<span className='text-xs sm:text-sm text-muted-foreground block mb-1'>
 													Giá thuê
 												</span>
-												<p className='text-xl text-accent font-semibold'>
+												<p className='text-lg sm:text-xl text-accent font-semibold'>
 													{Number(formData.price).toLocaleString('vi-VN')}
 													₫/tháng
 												</p>
 											</div>
 											<div>
-												<span className='text-sm text-muted-foreground block mb-1'>
+												<span className='text-xs sm:text-sm text-muted-foreground block mb-1'>
 													Diện tích
 												</span>
 												<p className='text-lg'>{formData.area}m²</p>

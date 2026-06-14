@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useMemo, useRef, useState, Suspense } from 'react';
-import { Search, Send, MoreVertical, Loader2 } from 'lucide-react';
+import { Search, Send, MoreVertical, Loader2, ArrowLeft } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -46,6 +46,13 @@ const ChatContent = () => {
 	const [messageInput, setMessageInput] = useState('');
 	const [filterTab, setFilterTab] = useState('all');
 	const [searchText, setSearchText] = useState('');
+	const [mobileView, setMobileView] = useState<'list' | 'chat'>('list');
+
+	useEffect(() => {
+		if (roomId || conversationId) {
+			setMobileView('chat');
+		}
+	}, [roomId, conversationId]);
 
 	const { data: conversations = [], isLoading: isLoadingConversations } =
 		useQuery({
@@ -151,7 +158,7 @@ const ChatContent = () => {
 				const partner =
 					conversation.owner.id === user?.id ?
 						conversation.renter
-					:	conversation.owner;
+						: conversation.owner;
 				const lastMessage = conversation.messages?.[0];
 				const unread =
 					(
@@ -161,7 +168,7 @@ const ChatContent = () => {
 							conversation.unreadCount > 0)
 					) ?
 						1
-					:	0;
+						: 0;
 				return {
 					id: conversation.id,
 					roomId: conversation.roomId,
@@ -176,7 +183,7 @@ const ChatContent = () => {
 					unread:
 						conversation.id === activeConversationId ?
 							0
-						:	(conversation.unreadCount ?? unread),
+							: (conversation.unreadCount ?? unread),
 					isOwner: conversation.ownerId === user?.id,
 				};
 			});
@@ -228,7 +235,8 @@ const ChatContent = () => {
 			<div className='max-w-7xl mx-auto h-full'>
 				<div className='flex h-full border-x border-border'>
 					{/* Left Column - Conversations List */}
-					<div className='w-80 shrink-0 border-r border-border bg-card flex flex-col'>
+					<div className={`w-full md:w-80 md:shrink-0 border-r border-border bg-card flex flex-col ${mobileView === 'chat' ? 'hidden md:flex' : 'flex'
+						}`}>
 						{/* Search */}
 						<div className='p-4 border-b border-border'>
 							<div className='relative'>
@@ -246,20 +254,18 @@ const ChatContent = () => {
 						<div className='flex border-b border-border'>
 							<button
 								onClick={() => setFilterTab('all')}
-								className={`flex-1 px-4 py-3 text-sm transition-colors ${
-									filterTab === 'all' ?
+								className={`flex-1 px-4 py-3 text-sm transition-colors ${filterTab === 'all' ?
 										'border-b-2 border-primary text-primary'
-									:	'text-muted-foreground hover:text-foreground'
-								}`}>
+										: 'text-muted-foreground hover:text-foreground'
+									}`}>
 								Tất cả
 							</button>
 							<button
 								onClick={() => setFilterTab('unread')}
-								className={`flex-1 px-4 py-3 text-sm transition-colors ${
-									filterTab === 'unread' ?
+								className={`flex-1 px-4 py-3 text-sm transition-colors ${filterTab === 'unread' ?
 										'border-b-2 border-primary text-primary'
-									:	'text-muted-foreground hover:text-foreground'
-								}`}>
+										: 'text-muted-foreground hover:text-foreground'
+									}`}>
 								Chưa đọc
 							</button>
 						</div>
@@ -270,111 +276,119 @@ const ChatContent = () => {
 								<div className='h-full flex items-center justify-center'>
 									<Loader2 className='h-6 w-6 animate-spin text-muted-foreground' />
 								</div>
-							: conversationList.length === 0 ?
-								<div className='h-full flex items-center justify-center px-4 text-center text-sm text-muted-foreground'>
-									Bạn chưa có cuộc trò chuyện nào
-								</div>
-							:	conversationList.map((conversation) => (
-									<button
-										key={conversation.id}
-										onClick={async () => {
-											setActiveConversation(conversation.id);
-											try {
-												await markConversationRead(conversation.id);
-												setConversations((current) =>
-													current.map((conv) =>
-														conv.id === conversation.id ?
-															{ ...conv, unreadCount: 0 }
-														:	conv,
-													),
-												);
-												await queryClient.invalidateQueries({
-													queryKey: ['chat-conversations'],
-												});
-												const summary = await getUnreadSummary();
-												setUnreadSummary({
-													chatUnreadCount: summary.chatUnreadCount,
-													notificationUnreadCount:
-														summary.notificationUnreadCount,
-												});
-											} catch {
-												// ignore
-											}
-										}}
-										className={`w-full p-4 border-b border-border hover:bg-secondary transition-colors text-left ${
-											activeConversationId === conversation.id ?
-												'bg-secondary'
-											:	''
-										}`}>
-										<div className='flex items-start gap-3'>
-											<div className='relative'>
-												<Avatar>
-													<AvatarImage src={conversation.avatar} />
-													<AvatarFallback>
-														{conversation.name?.charAt(0).toUpperCase()}
-													</AvatarFallback>
-												</Avatar>
-												{onlineUsers.includes(conversation.partnerId) && (
-													<span className='absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-card rounded-full' />
-												)}
-											</div>
-											<div className='flex-1 min-w-0'>
-												<div className='flex items-center justify-between mb-1 min-w-0 gap-2'>
-													<div className='flex items-center gap-1.5 min-w-0 flex-1'>
-														<p className='truncate font-semibold text-sm text-foreground'>{conversation.name}</p>
-														{conversation.isOwner ? (
-															<span className='px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-blue-500/15 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 shrink-0 uppercase tracking-wider'>
-																Chủ nhà
-															</span>
-														) : (
-															<span className='px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-amber-500/15 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 shrink-0 uppercase tracking-wider'>
-																Khách
+								: conversationList.length === 0 ?
+									<div className='h-full flex items-center justify-center px-4 text-center text-sm text-muted-foreground'>
+										Bạn chưa có cuộc trò chuyện nào
+									</div>
+									: conversationList.map((conversation) => (
+										<button
+											key={conversation.id}
+											onClick={async () => {
+												setActiveConversation(conversation.id);
+												setMobileView('chat');
+												try {
+													await markConversationRead(conversation.id);
+													setConversations((current) =>
+														current.map((conv) =>
+															conv.id === conversation.id ?
+																{ ...conv, unreadCount: 0 }
+																: conv,
+														),
+													);
+													await queryClient.invalidateQueries({
+														queryKey: ['chat-conversations'],
+													});
+													const summary = await getUnreadSummary();
+													setUnreadSummary({
+														chatUnreadCount: summary.chatUnreadCount,
+														notificationUnreadCount:
+															summary.notificationUnreadCount,
+													});
+												} catch {
+													// ignore
+												}
+											}}
+											className={`w-full p-4 border-b border-border hover:bg-secondary transition-colors text-left ${activeConversationId === conversation.id ?
+													'bg-secondary'
+													: ''
+												}`}>
+											<div className='flex items-start gap-3'>
+												<div className='relative'>
+													<Avatar>
+														<AvatarImage src={conversation.avatar} />
+														<AvatarFallback>
+															{conversation.name?.charAt(0).toUpperCase()}
+														</AvatarFallback>
+													</Avatar>
+													{onlineUsers.includes(conversation.partnerId) && (
+														<span className='absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-card rounded-full' />
+													)}
+												</div>
+												<div className='flex-1 min-w-0'>
+													<div className='flex items-center justify-between mb-1 min-w-0 gap-2'>
+														<div className='flex items-center gap-1.5 min-w-0 flex-1'>
+															<p className='truncate font-semibold text-sm text-foreground'>{conversation.name}</p>
+															{conversation.isOwner ? (
+																<span className='px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-blue-500/15 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 shrink-0 uppercase tracking-wider'>
+																	Chủ nhà
+																</span>
+															) : (
+																<span className='px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-amber-500/15 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 shrink-0 uppercase tracking-wider'>
+																	Khách
+																</span>
+															)}
+														</div>
+														<span className='text-xs text-muted-foreground shrink-0 ml-auto'>
+															{conversation.timestamp ?
+																new Date(
+																	conversation.timestamp,
+																).toLocaleTimeString('vi-VN', {
+																	hour: '2-digit',
+																	minute: '2-digit',
+																})
+																: '--:--'}
+														</span>
+													</div>
+													<Badge
+														variant='default'
+														className='text-xs mb-2 w-full'>
+														<span className='block truncate w-full text-center'>
+															{conversation.roomName}
+														</span>
+													</Badge>
+													<div className='flex items-center justify-between'>
+														<p className='text-sm text-muted-foreground truncate'>
+															{conversation.lastMessage}
+														</p>
+														{conversation.unread > 0 && (
+															<span className='w-5 h-5 bg-accent text-white text-xs rounded-full flex items-center justify-center shrink-0 ml-2'>
+																{conversation.unread}
 															</span>
 														)}
 													</div>
-													<span className='text-xs text-muted-foreground shrink-0 ml-auto'>
-														{conversation.timestamp ?
-															new Date(
-																conversation.timestamp,
-															).toLocaleTimeString('vi-VN', {
-																hour: '2-digit',
-																minute: '2-digit',
-															})
-														:	'--:--'}
-													</span>
-												</div>
-												<Badge
-													variant='default'
-													className='text-xs mb-2 w-full'>
-													<span className='block truncate w-full text-center'>
-														{conversation.roomName}
-													</span>
-												</Badge>
-												<div className='flex items-center justify-between'>
-													<p className='text-sm text-muted-foreground truncate'>
-														{conversation.lastMessage}
-													</p>
-													{conversation.unread > 0 && (
-														<span className='w-5 h-5 bg-accent text-white text-xs rounded-full flex items-center justify-center shrink-0 ml-2'>
-															{conversation.unread}
-														</span>
-													)}
 												</div>
 											</div>
-										</div>
-									</button>
-								))
+										</button>
+									))
 							}
 						</div>
 					</div>
 
 					{/* Right Column - Chat Area */}
 					{currentConversation && (
-						<div className='flex-1 flex flex-col'>
+						<div className={`flex-1 flex flex-col ${mobileView === 'list' ? 'hidden md:flex' : 'flex'
+							}`}>
 							{/* Chat Header */}
 							<div className='p-4 border-b border-border bg-card flex items-center justify-between'>
-								<div className='flex items-center gap-3'>
-									<div className='relative'>
+								<div className='flex items-center gap-2 sm:gap-3 min-w-0 flex-1'>
+									<Button
+										variant='ghost'
+										size='icon'
+										onClick={() => setMobileView('list')}
+										className='md:hidden -ml-2 rounded-xl h-9 w-9 shrink-0'>
+										<ArrowLeft className='w-5 h-5' />
+									</Button>
+									<div className='relative shrink-0'>
 										<Avatar>
 											<AvatarImage src={currentConversation.avatar} />
 											<AvatarFallback>
@@ -385,58 +399,58 @@ const ChatContent = () => {
 											<span className='absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-card rounded-full' />
 										)}
 									</div>
-									<div>
-										<div className='flex items-center gap-2'>
-											<p className='font-semibold text-foreground'>{currentConversation.name}</p>
+									<div className='min-w-0 flex-1'>
+										<div className='flex items-center gap-1.5 sm:gap-2 flex-wrap'>
+											<p className='font-semibold text-foreground truncate max-w-[120px] sm:max-w-none'>{currentConversation.name}</p>
 											{currentConversation.isOwner ? (
-												<span className='px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/15 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 uppercase tracking-wider'>
-													Bạn là Chủ nhà
+												<span className='px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-blue-500/15 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 uppercase tracking-wider shrink-0'>
+													Chủ nhà
 												</span>
 											) : (
-												<span className='px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 uppercase tracking-wider'>
-													Bạn là Khách thuê
+												<span className='px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/15 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 uppercase tracking-wider shrink-0'>
+													Khách thuê
 												</span>
 											)}
 										</div>
-										<p className='text-sm text-muted-foreground'>
+										<p className='text-xs text-muted-foreground truncate'>
 											{onlineUsers.includes(currentConversation.partnerId) ?
 												'Đang hoạt động'
-											:	'Ngoại tuyến'}
+												: 'Ngoại tuyến'}
 										</p>
 									</div>
 								</div>
-								<button className='p-2 hover:bg-secondary rounded-lg transition-colors'>
+								<button className='p-2 hover:bg-secondary rounded-lg transition-colors shrink-0'>
 									<MoreVertical className='w-5 h-5' />
 								</button>
 							</div>
 
 							{/* Pinned Room Card */}
-							<div className='p-4 bg-secondary border-b border-border'>
+							<div className='p-3 sm:p-4 bg-secondary border-b border-border'>
 								<Link
 									href={`/rooms/${currentConversation.roomId}`}
-									className='flex items-center gap-4 p-3 bg-card border border-border rounded-lg hover:shadow-md transition-shadow'>
+									className='flex items-center gap-3 p-2.5 sm:p-3 bg-card border border-border rounded-lg hover:shadow-md transition-shadow'>
 									<Image
 										src={
 											currentConversation.roomImage ||
 											'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=200'
 										}
 										alt={currentConversation.roomName}
-										width={200}
-										height={200}
-										className='w-20 h-20 rounded-lg object-cover'
+										width={120}
+										height={120}
+										className='w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover shrink-0'
 									/>
 									<div className='flex-1 min-w-0'>
-										<div className='flex flex-wrap items-center gap-2 mb-1'>
-											<p className='font-medium text-foreground truncate max-w-[250px] sm:max-w-[400px]'>
+										<div className='flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1'>
+											<p className='font-medium text-xs sm:text-sm text-foreground truncate max-w-[150px] sm:max-w-[400px]'>
 												{currentConversation.roomName}
 											</p>
 											{currentConversation.isOwner ? (
-												<span className='px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 uppercase tracking-wider shrink-0'>
-													Phòng của bạn
+												<span className='px-1 py-0.5 rounded text-[8px] font-bold bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 uppercase tracking-wider shrink-0'>
+													Của bạn
 												</span>
 											) : (
-												<span className='px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 uppercase tracking-wider shrink-0'>
-													Phòng của {currentConversation.name}
+												<span className='px-1 py-0.5 rounded text-[8px] font-bold bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 uppercase tracking-wider shrink-0'>
+													Của {currentConversation.name?.split(' ')?.[0] || 'chủ trọ'}
 												</span>
 											)}
 										</div>
@@ -445,7 +459,7 @@ const ChatContent = () => {
 											size='sm'
 										/>
 									</div>
-									<Button variant='secondary' className='shrink-0'>
+									<Button variant='secondary' size='sm' className='shrink-0 text-xs px-2.5 py-1.5 h-8'>
 										Xem tin
 									</Button>
 								</Link>
@@ -457,53 +471,51 @@ const ChatContent = () => {
 									<div className='h-full flex items-center justify-center'>
 										<Loader2 className='h-6 w-6 animate-spin text-muted-foreground' />
 									</div>
-								: currentMessages.length === 0 ?
-									<div className='h-full flex items-center justify-center text-sm text-muted-foreground'>
-										Chưa có tin nhắn, hãy bắt đầu cuộc trò chuyện
-									</div>
-								:	<>
-										{currentMessages.map((message, index) => {
-											const showTimestamp =
-												index === 0 ||
-												currentMessages[index - 1].sentAt !== message.sentAt;
+									: currentMessages.length === 0 ?
+										<div className='h-full flex items-center justify-center text-sm text-muted-foreground'>
+											Chưa có tin nhắn, hãy bắt đầu cuộc trò chuyện
+										</div>
+										: <>
+											{currentMessages.map((message, index) => {
+												const showTimestamp =
+													index === 0 ||
+													currentMessages[index - 1].sentAt !== message.sentAt;
 
-											return (
-												<div key={message.id}>
-													{showTimestamp && (
-														<div className='flex justify-center mb-4'>
-															<span className='text-xs text-muted-foreground bg-secondary px-3 py-1 rounded-full'>
-																{new Date(message.sentAt).toLocaleString(
-																	'vi-VN',
-																)}
-															</span>
-														</div>
-													)}
-													<div
-														className={`flex ${
-															message.senderId === user?.id ?
-																'justify-end'
-															:	'justify-start'
-														}`}>
+												return (
+													<div key={message.id}>
+														{showTimestamp && (
+															<div className='flex justify-center mb-4'>
+																<span className='text-[10px] sm:text-xs text-muted-foreground bg-secondary px-3 py-1 rounded-full'>
+																	{new Date(message.sentAt).toLocaleString(
+																		'vi-VN',
+																	)}
+																</span>
+															</div>
+														)}
 														<div
-															className={`max-w-[70%] px-4 py-2.5 rounded-2xl ${
-																message.senderId === user?.id ?
-																	'bg-primary text-white rounded-br-sm'
-																:	'bg-secondary text-foreground rounded-bl-sm'
-															}`}>
-															<p>{message.content}</p>
+															className={`flex ${message.senderId === user?.id ?
+																	'justify-end'
+																	: 'justify-start'
+																}`}>
+															<div
+																className={`max-w-[80%] sm:max-w-[70%] px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-2xl text-sm ${message.senderId === user?.id ?
+																		'bg-primary text-white rounded-br-sm'
+																		: 'bg-secondary text-foreground rounded-bl-sm'
+																	}`}>
+																<p className='wrap-break-word whitespace-pre-wrap'>{message.content}</p>
+															</div>
 														</div>
 													</div>
-												</div>
-											);
-										})}
-										<div ref={messagesEndRef} />
-									</>
+												);
+											})}
+											<div ref={messagesEndRef} />
+										</>
 								}
 							</div>
 
 							{/* Message Input */}
-							<div className='p-4 border-t border-border bg-card'>
-								<div className='flex items-center gap-3'>
+							<div className='p-3 sm:p-4 border-t border-border bg-card'>
+								<div className='flex items-center gap-2 sm:gap-3'>
 									<div className='flex-1 relative'>
 										<Input
 											placeholder='Nhập tin nhắn...'
@@ -515,13 +527,16 @@ const ChatContent = () => {
 													handleSendMessage();
 												}
 											}}
+											className='h-9 sm:h-10 text-sm'
 										/>
 									</div>
 
 									<Button
 										variant='default'
+										size='icon'
 										onClick={handleSendMessage}
-										disabled={!messageInput.trim()}>
+										disabled={!messageInput.trim()}
+										className='h-9 w-9 sm:h-10 sm:w-10 rounded-xl'>
 										<Send className='w-4 h-4' />
 									</Button>
 								</div>
@@ -530,9 +545,10 @@ const ChatContent = () => {
 					)}
 
 					{!currentConversation && (
-						<div className='flex-1 flex items-center justify-center bg-secondary'>
-							<div className='text-center'>
-								<p className='text-muted-foreground'>
+						<div className={`flex-1 flex items-center justify-center bg-secondary ${mobileView === 'list' ? 'hidden md:flex' : 'flex'
+							}`}>
+							<div className='text-center p-6'>
+								<p className='text-muted-foreground text-sm sm:text-base'>
 									Chọn một cuộc trò chuyện để bắt đầu
 								</p>
 							</div>

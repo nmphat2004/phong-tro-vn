@@ -34,27 +34,26 @@ const ProfileContent = () => {
 	if (isLoading || !user) return null;
 
 	return (
-		<div className='min-h-screen bg-secondary'>
-			<div className='max-w-6xl mx-auto px-6 py-8'>
+		<div className='min-h-screen bg-secondary/35'>
+			<div className='max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8'>
 				{/* Tabs */}
-				<div className='bg-card rounded-xl shadow-sm mb-6'>
-					<div>
+				<div className='bg-card rounded-xl shadow-sm mb-6 overflow-hidden border border-border/50'>
+					<div className='flex overflow-x-auto pb-0.5 md:pb-0 scrollbar-none border-b border-border/60 bg-card/50 flex-nowrap'>
 						{tabs.map((tab) => (
-							<Button
-								variant='default'
+							<button
 								key={tab.id}
 								onClick={() => setActiveTab(tab.id)}
-								className={`px-8 py-5 text-sm font-medium whitespace-nowrap transition-colors ${
+								className={`px-5 py-3.5 sm:px-8 sm:py-4 text-xs sm:text-sm font-semibold whitespace-nowrap transition-all border-b-2 flex-1 md:flex-none text-center cursor-pointer ${
 									activeTab === tab.id ?
-										' text-white'
-									:	'border-transparent bg-card text-muted-foreground hover:text-secondary-foreground hover:bg-secondary'
+										'border-primary text-primary bg-primary/5'
+									:	'border-transparent text-muted-foreground hover:text-foreground hover:bg-secondary/40'
 								}`}>
 								{tab.label}
-							</Button>
+							</button>
 						))}
 					</div>
 
-					<div className='p-6'>
+					<div className='p-4 sm:p-6'>
 						{/* Personal Information Tab */}
 						{activeTab === 'personal' && <Personal />}
 

@@ -404,18 +404,18 @@ const RoomsContent = () => {
 						)}
 
 						{/* ── Right side: Sort + Layout ── */}
-						<div className='ml-auto flex items-center gap-3'>
+						<div className='w-full md:w-auto md:ml-auto flex items-center justify-between md:justify-end gap-3 pt-3 md:pt-0 border-t border-border/30 md:border-t-0'>
 							<select
 								value={sortBy}
 								onChange={handleSortBy}
-								className='px-4 py-2 rounded-lg border border-border bg-background text-sm'>
+								className='px-3 py-1.5 md:px-4 md:py-2 rounded-lg border border-border bg-background text-sm flex-1 md:flex-none'>
 								<option value='newest'>Mới nhất</option>
 								<option value='price_asc'>Giá: Thấp → Cao</option>
 								<option value='price_desc'>Giá: Cao → Thấp</option>
 								<option value='rating'>Đánh giá cao nhất</option>
 							</select>
 
-							<div className='flex items-center gap-1 border border-border rounded-lg p-1'>
+							<div className='flex items-center gap-1 border border-border rounded-lg p-1 shrink-0 bg-background'>
 								<Button
 									variant='ghost'
 									size='sm'
@@ -443,7 +443,7 @@ const RoomsContent = () => {
 									<Label className='block mb-3 text-sm font-medium'>
 										Danh mục cho thuê
 									</Label>
-									<div className='grid grid-cols-4 md:grid-cols-7 gap-2'>
+									<div className='grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-2'>
 										{roomTypesList.map((type) => {
 											const Icon = type.icon;
 											const isActive = selectedRoomType === type.value;

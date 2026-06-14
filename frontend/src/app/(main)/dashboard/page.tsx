@@ -178,7 +178,7 @@ const DashboardPage = () => {
 								</div>
 							</div>
 
-							<div className='flex items-center gap-2 mt-4'>
+							<div className='flex items-center gap-2 mt-4 overflow-x-auto pb-2 scrollbar-none flex-nowrap shrink-0'>
 								{[
 									{ value: 'all', label: 'Tất cả' },
 									{ value: 'AVAILABLE', label: 'Đang hiển thị' },
@@ -188,7 +188,7 @@ const DashboardPage = () => {
 									<button
 										key={status.value}
 										onClick={() => setFilterStatus(status.value)}
-										className={`px-4 py-2 rounded-lg transition-colors ${
+										className={`px-4 py-2 rounded-lg transition-colors shrink-0 text-sm whitespace-nowrap ${
 											filterStatus === status.value ?
 												'bg-primary text-white'
 											:	'bg-secondary text-foreground hover:bg-secondary/80'
@@ -211,37 +211,42 @@ const DashboardPage = () => {
 								{filteredListings.map((listing) => (
 									<div
 										key={listing.id}
-										className='p-4 md:p-6 flex flex-col md:flex-row md:items-center gap-4'>
-										<Image
-											src={
-												listing.images?.[0]?.url ||
-												'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=200'
-											}
-											alt={listing.title}
-											width={200}
-											height={200}
-											className='w-full md:w-28 h-28 rounded-lg object-cover'
-										/>
-										<div className='flex-1'>
-											<Link
-												href={`/rooms/${listing.id}`}
-												className='hover:text-primary'>
-												{listing.title}
-											</Link>
-											<div className='mt-1'>
-												<PriceTag amount={listing.price} size='sm' />
-											</div>
-											<div className='mt-2 flex flex-wrap gap-4 text-sm text-muted-foreground'>
-												<span>{listing.address}</span>
-												<span>{listing.viewCount} lượt xem</span>
-												<span>
-													{listing._count?.reviews || listing.reviewCount || 0}{' '}
-													đánh giá
-												</span>
-											</div>
+										className='p-4 md:p-6 flex gap-3 sm:gap-4 items-start sm:items-center'>
+										<div className='relative w-24 h-20 sm:w-28 sm:h-28 shrink-0'>
+											<Image
+												src={
+													listing.images?.[0]?.url ||
+													'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=200'
+												}
+												alt={listing.title}
+												fill
+												sizes='(max-width: 640px) 96px, 112px'
+												className='rounded-lg object-cover'
+											/>
 										</div>
-										<div className='flex items-center gap-3'>
-											{getStatusBadge(listing.status)}
+										<div className='flex-1 min-w-0 flex flex-col md:flex-row md:items-center gap-2 md:gap-4 justify-between'>
+											<div className='min-w-0 flex-1'>
+												<Link
+													href={`/rooms/${listing.id}`}
+													className='hover:text-primary font-bold text-sm sm:text-base line-clamp-1 sm:line-clamp-2 text-foreground'>
+													{listing.title}
+												</Link>
+												<div className='mt-1'>
+													<PriceTag amount={listing.price} size='sm' />
+												</div>
+												<div className='mt-1.5 flex flex-wrap gap-x-2 gap-y-1 text-xs text-muted-foreground items-center'>
+													<span className='line-clamp-1 max-w-[180px] sm:max-w-none'>{listing.address}</span>
+													<span className='hidden sm:inline'>•</span>
+													<span>{listing.viewCount} lượt xem</span>
+													<span>•</span>
+													<span>
+														{listing._count?.reviews || listing.reviewCount || 0}{' '}
+														đánh giá
+													</span>
+												</div>
+											</div>
+											<div className='flex items-center justify-between md:justify-end gap-3 mt-1 md:mt-0 pt-2 border-t border-border/10 md:border-t-0 md:pt-0 shrink-0'>
+												{getStatusBadge(listing.status)}
 
 											<DropdownMenu>
 												<DropdownMenuTrigger
@@ -315,7 +320,8 @@ const DashboardPage = () => {
 											</DropdownMenu>
 										</div>
 									</div>
-								))}
+								</div>
+							))}
 							</div>
 						}
 					</div>

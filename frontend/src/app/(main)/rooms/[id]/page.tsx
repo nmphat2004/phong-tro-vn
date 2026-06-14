@@ -167,14 +167,14 @@ const RoomDetailPage = () => {
 	if (isLoading) {
 		return (
 			<div className='container mx-auto px-4 py-8 max-w-5xl'>
-				<Skeleton className='h-96 w-full rounded-xl mb-6' />
-				<div className='grid grid-cols-3 gap-6'>
-					<div className='col-span-2 gap-6'>
+				<Skeleton className='h-64 md:h-96 w-full rounded-xl mb-6' />
+				<div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
+					<div className='lg:col-span-2 space-y-4'>
 						<Skeleton className='h-8 w-3/4' />
 						<Skeleton className='h-4 w-full' />
 						<Skeleton className='h-4 w-full' />
 					</div>
-					<Skeleton className='h-64 rounded-xl' />
+					<Skeleton className='h-64 rounded-xl hidden lg:block' />
 				</div>
 			</div>
 		);
@@ -208,7 +208,7 @@ const RoomDetailPage = () => {
 	const hasMapCoordinates = Number.isFinite(mapLat) && Number.isFinite(mapLng);
 
 	return (
-		<div className='bg-background min-h-screen'>
+		<div className='bg-background min-h-screen pb-20 md:pb-0'>
 			<div className='max-w-7xl mx-auto px-4 py-6 md:py-10 text-pretty'>
 				<div className='grid grid-cols-1 lg:grid-cols-3 gap-8'>
 					{/* Main Content */}
@@ -228,13 +228,13 @@ const RoomDetailPage = () => {
 							</h1>
 							<div className='flex flex-wrap items-center gap-y-2 gap-4 text-sm text-muted-foreground'>
 								<div className='flex items-center gap-1.5'>
-									<MapPin className='w-4 h-4 text-primary' />
-									<span>{room.address}</span>
+									<MapPin className='w-4 h-4 text-primary shrink-0' />
+									<span className='line-clamp-2 md:line-clamp-none'>{room.address}</span>
 								</div>
-								<button className='text-primary font-medium hover:underline transition-all'>
+								<button className='text-primary font-medium hover:underline transition-all shrink-0'>
 									Xem bản đồ
 								</button>
-								<div className='flex items-center gap-4 ml-auto'>
+								<div className='flex items-center gap-4 sm:ml-auto w-full sm:w-auto justify-between sm:justify-start pt-2 sm:pt-0 border-t border-border/30 sm:border-t-0'>
 									<span className='flex items-center gap-1'>
 										<Eye className='w-4 h-4' /> {room.viewCount} lượt xem
 									</span>
@@ -560,27 +560,31 @@ const RoomDetailPage = () => {
 						</div>
 
 						{sameAreaRooms.length > 0 && (
-							<section className='space-y-4 rounded-2xl border border-border bg-card p-4 md:p-5'>
+							<section className='space-y-4 rounded-2xl border border-border bg-card p-4 md:p-5 overflow-hidden'>
 								<div className='flex items-center justify-between'>
 									<h2 className='text-xl font-bold'>Tin đăng cùng khu vực</h2>
 									<span className='text-sm text-muted-foreground'>
 										{district}
 									</span>
 								</div>
-								<div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
+								<div className='flex md:grid overflow-x-auto md:overflow-x-visible pb-2 md:pb-0 snap-x snap-mandatory md:grid-cols-2 lg:grid-cols-4 gap-4'>
 									{sameAreaRooms.map((relatedRoom) => (
-										<RelatedRoomCard key={relatedRoom.id} room={relatedRoom} />
+										<div key={relatedRoom.id} className='w-[260px] sm:w-[280px] md:w-auto shrink-0 snap-start'>
+											<RelatedRoomCard room={relatedRoom} />
+										</div>
 									))}
 								</div>
 							</section>
 						)}
 
 						{latestRooms.length > 0 && (
-							<section className='space-y-4 rounded-2xl border border-border bg-card p-4 md:p-5'>
+							<section className='space-y-4 rounded-2xl border border-border bg-card p-4 md:p-5 overflow-hidden'>
 								<h2 className='text-xl font-bold'>Tin đăng mới cập nhật</h2>
-								<div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
+								<div className='flex md:grid overflow-x-auto md:overflow-x-visible pb-2 md:pb-0 snap-x snap-mandatory md:grid-cols-2 lg:grid-cols-4 gap-4'>
 									{latestRooms.map((latestRoom) => (
-										<RelatedRoomCard key={latestRoom.id} room={latestRoom} />
+										<div key={latestRoom.id} className='w-[260px] sm:w-[280px] md:w-auto shrink-0 snap-start'>
+											<RelatedRoomCard room={latestRoom} />
+										</div>
 									))}
 								</div>
 							</section>
@@ -716,6 +720,62 @@ const RoomDetailPage = () => {
 					roomId={room.id}
 					onClose={() => setEditingReview(null)}
 				/>
+			)}
+
+			{/* Sticky Bottom Contact Bar for Mobile */}
+			{user && user.id === room.owner.id ? (
+				<div className='fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-md border-t border-border p-3 flex gap-3 shadow-xl md:hidden'>
+					<Link href='/dashboard' className='flex-1'>
+						<Button className='w-full h-11 rounded-xl text-xs font-bold bg-primary hover:bg-primary/90 text-white'>
+							QUẢN LÝ TIN
+						</Button>
+					</Link>
+					<Link href={`/post/${room.id}`} className='flex-1'>
+						<Button variant='outline' className='w-full h-11 rounded-xl text-xs font-bold border border-primary text-primary bg-background hover:bg-primary/5'>
+							SỬA TIN
+						</Button>
+					</Link>
+				</div>
+			) : (
+				<div className='fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-md border-t border-border px-4 py-3 flex items-center justify-between gap-3 shadow-xl md:hidden'>
+					<Button
+						variant='outline'
+						size='icon'
+						className={`h-11 w-11 rounded-xl border shrink-0 ${saved ? 'border-red-200 bg-red-50 text-red-600' : ''}`}
+						disabled={isSaving}
+						onClick={() => {
+							if (!user) {
+								toast.error('Vui lòng đăng nhập để lưu phòng');
+								router.push('/login');
+								return;
+							}
+							toggleSavedRoom(saved);
+						}}>
+						<Heart className={`w-5 h-5 ${saved ? 'fill-red-500 text-red-500' : ''}`} />
+					</Button>
+
+					<div className='flex-1 flex gap-2'>
+						<Button
+							variant='outline'
+							onClick={() => {
+								if (!phoneRevealed) {
+									setPhoneRevealed(true);
+								} else {
+									window.location.href = `tel:${room.owner.phone}`;
+								}
+							}}
+							className='flex-1 h-11 rounded-xl text-xs font-bold border-primary text-primary bg-background hover:bg-primary/5'>
+							{phoneRevealed ? room.owner.phone : 'GỌI ĐIỆN'}
+						</Button>
+						
+						<Link href={`/chat?roomId=${room.id}`} className='flex-1'>
+							<Button className='w-full h-11 rounded-xl text-xs font-bold bg-primary hover:bg-primary/90 text-white gap-1.5'>
+								<MessageCircle className='w-4 h-4 font-bold' />
+								NHẮN TIN
+							</Button>
+						</Link>
+					</div>
+				</div>
 			)}
 		</div>
 	);
