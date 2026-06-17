@@ -33,7 +33,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import NotificationBell from './notification-bell';
 
 const roleLabel: Record<string, string> = {
@@ -58,6 +58,17 @@ const Header = () => {
 	const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 	const [showMobileSearch, setShowMobileSearch] = useState(false);
 
+	useEffect(() => {
+		if (mobileMenuOpen) {
+			document.body.style.overflow = 'hidden';
+		} else {
+			document.body.style.overflow = '';
+		}
+		return () => {
+			document.body.style.overflow = '';
+		};
+	}, [mobileMenuOpen]);
+
 	const handleLogout = () => {
 		logout();
 		router.push('/login');
@@ -73,8 +84,9 @@ const Header = () => {
 	};
 
 	return (
-		<header className='sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50 shadow-sm'>
-			<div className='flex max-w-7xl mx-auto px-4 py-4 items-center justify-between'>
+		<>
+			<header className='sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50 shadow-sm'>
+				<div className='flex max-w-7xl mx-auto px-4 py-4 items-center justify-between'>
 				{/* Logo */}
 				<Link href='/' className='flex items-center gap-2 group'>
 					<div className='w-8 h-8 bg-linear-to-br from-primary to-blue-600 rounded-lg flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow'>
@@ -339,6 +351,7 @@ const Header = () => {
 					</form>
 				</div>
 			)}
+			</header>
 
 			{/* Mobile Menu Drawer */}
 			{mobileMenuOpen && (
@@ -505,7 +518,7 @@ const Header = () => {
 					</div>
 				</div>
 			)}
-		</header>
+		</>
 	);
 };
 
