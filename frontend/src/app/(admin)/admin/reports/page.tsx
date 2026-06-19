@@ -151,7 +151,7 @@ export default function AdminReportsPage() {
 										<th className='hidden md:table-cell text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
 											Người báo cáo
 										</th>
-										<th className='hidden lg:table-cell text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
+										<th className='lg:table-cell text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
 											Lý do
 										</th>
 										<th className='hidden md:table-cell text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
@@ -194,7 +194,7 @@ export default function AdminReportsPage() {
 													</p>
 												</div>
 											</td>
-											<td className='hidden lg:table-cell px-6 py-4'>
+											<td className='lg:table-cell px-6 py-4'>
 												<span className='text-sm text-muted-foreground line-clamp-2'>
 													{report.reason}
 												</span>

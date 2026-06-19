@@ -98,7 +98,7 @@ export default function AdminUsersPage() {
 											</td>
 											<td className='px-4 sm:px-6 py-4'>
 												<span
-													className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
+													className={`whitespace-nowrap px-2.5 py-1 rounded-full text-xs font-semibold ${
 														user.role === 'ADMIN' ?
 															'bg-purple-100 text-purple-700'
 														: user.role === 'LANDLORD' ?
