@@ -70,21 +70,21 @@ export default function AdminLayout({
 
 			{/* Sidebar */}
 			<div
-				className={`fixed h-full z-50 bg-[#1a1a2e] flex flex-col w-64 transition-transform duration-300 ease-in-out
+				className={`fixed h-full z-50 bg-zinc-950 border-r border-zinc-800/40 flex flex-col w-64 transition-transform duration-300 ease-in-out
 					${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
 				{/* Logo + close button */}
 				<div className='px-6 py-6 flex items-center justify-between'>
 					<div className='flex items-center gap-3'>
-						<div className='w-9 h-9 bg-blue-500 rounded-xl flex items-center justify-center'>
-							<Home className='w-5 h-5 text-white' />
+						<div className='w-9 h-9 bg-primary rounded-xl flex items-center justify-center shadow-md shadow-primary/20'>
+							<Home className='w-[18px] h-[18px] text-white' />
 						</div>
-						<span className='text-xl font-bold text-white tracking-tight'>
+						<span className='text-lg font-extrabold text-white tracking-tight'>
 							Phòng trọ VN
 						</span>
 					</div>
 					<button
 						onClick={() => setSidebarOpen(false)}
-						className='lg:hidden p-1.5 rounded-lg text-gray-400 hover:bg-white/10 hover:text-white transition-colors'>
+						className='lg:hidden p-1.5 rounded-lg text-zinc-400 hover:bg-white/10 hover:text-white transition-colors cursor-pointer'>
 						<X className='w-5 h-5' />
 					</button>
 				</div>
@@ -98,11 +98,11 @@ export default function AdminLayout({
 							<Link
 								key={item.href}
 								href={item.href}
-								className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200
+								className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer
 									${
 										isActive ?
-											'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
-										:	'text-gray-400 hover:bg-white/5 hover:text-white'
+											'bg-primary text-white shadow-md shadow-primary/25'
+										:	'text-zinc-400 hover:bg-white/5 hover:text-white'
 									}`}>
 								<Icon className='w-[18px] h-[18px]' />
 								<span>{item.label}</span>
@@ -112,19 +112,19 @@ export default function AdminLayout({
 				</nav>
 
 				{/* User Info */}
-				<div className='p-4 border-t border-white/10'>
+				<div className='p-4 border-t border-zinc-800/60'>
 					<div className='flex items-center gap-3 mb-3 px-2'>
-						<Avatar className='w-10 h-10 border-2 border-blue-500/30'>
+						<Avatar className='w-10 h-10 border-2 border-primary/30'>
 							<AvatarImage src={user.avatarUrl} />
-							<AvatarFallback className='bg-blue-600 text-white text-sm font-bold'>
+							<AvatarFallback className='bg-primary text-white text-sm font-bold'>
 								{user.fullName?.substring(0, 2).toUpperCase()}
 							</AvatarFallback>
 						</Avatar>
 						<div className='flex-1 min-w-0'>
-							<p className='text-sm font-semibold text-white truncate'>
+							<p className='text-sm font-bold text-white truncate'>
 								{user.fullName}
 							</p>
-							<p className='text-xs text-gray-400 truncate'>{user.email}</p>
+							<p className='text-xs text-zinc-400 truncate font-medium'>{user.email}</p>
 						</div>
 					</div>
 					<button
@@ -132,7 +132,7 @@ export default function AdminLayout({
 							logout();
 							router.push('/login');
 						}}
-						className='w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-gray-400 hover:bg-red-500/10 hover:text-red-400 transition-colors font-medium'>
+						className='w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-zinc-400 hover:bg-red-500/10 hover:text-red-400 transition-colors font-semibold cursor-pointer'>
 						<LogOut className='w-4 h-4' />
 						Đăng xuất
 					</button>

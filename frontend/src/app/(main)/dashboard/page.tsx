@@ -91,13 +91,13 @@ const DashboardPage = () => {
 	const getStatusBadge = (status: string) => {
 		switch (status) {
 			case 'AVAILABLE':
-				return <Badge>Đang hiển thị</Badge>;
+				return <Badge variant='outline' className='bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:bg-emerald-500/5 dark:text-emerald-400 dark:border-emerald-500/10 rounded-full font-semibold px-2.5 py-0.5'>Đang hiển thị</Badge>;
 			case 'RENTED':
-				return <Badge variant='secondary'>Đã cho thuê</Badge>;
+				return <Badge variant='outline' className='bg-rose-500/10 text-rose-600 border-rose-500/20 dark:bg-rose-500/5 dark:text-rose-400 dark:border-rose-500/10 rounded-full font-semibold px-2.5 py-0.5'>Đã cho thuê</Badge>;
 			case 'HIDDEN':
-				return <Badge variant='default'>Đã ẩn</Badge>;
+				return <Badge variant='outline' className='bg-zinc-500/10 text-zinc-600 border-zinc-500/20 dark:bg-zinc-500/5 dark:text-zinc-400 dark:border-zinc-500/10 rounded-full font-semibold px-2.5 py-0.5'>Đã ẩn</Badge>;
 			default:
-				return <Badge variant='default'>Chờ duyệt</Badge>;
+				return <Badge variant='outline' className='bg-amber-500/10 text-amber-600 border-amber-500/20 dark:bg-amber-500/5 dark:text-amber-400 dark:border-amber-500/10 rounded-full font-semibold px-2.5 py-0.5'>Chờ duyệt</Badge>;
 		}
 	};
 

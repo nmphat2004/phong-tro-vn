@@ -85,14 +85,14 @@ const Header = () => {
 
 	return (
 		<>
-			<header className='sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50 shadow-sm'>
-				<div className='flex max-w-7xl mx-auto px-4 py-4 items-center justify-between'>
+			<header className='sticky top-0 z-50 h-16 bg-background/80 backdrop-blur-xl border-b border-border/50 shadow-xs flex items-center'>
+				<div className='flex w-full max-w-7xl mx-auto px-4 items-center justify-between'>
 				{/* Logo */}
-				<Link href='/' className='flex items-center gap-2 group'>
-					<div className='w-8 h-8 bg-linear-to-br from-primary to-blue-600 rounded-lg flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow'>
-						<Home className='w-4 h-4 text-white' />
+				<Link href='/' className='flex items-center gap-2.5 group'>
+					<div className='w-8.5 h-8.5 bg-linear-to-br from-primary to-indigo-600 rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-300'>
+						<Home className='w-4.5 h-4.5 text-white' />
 					</div>
-					<span className='text-xl font-bold bg-linear-to-r from-primary to-blue-600 bg-clip-text text-transparent'>
+					<span className='text-xl font-extrabold bg-linear-to-r from-primary to-indigo-600 bg-clip-text text-transparent tracking-tight'>
 						Phòng trọ VN
 					</span>
 				</Link>
@@ -102,7 +102,7 @@ const Header = () => {
 					onSubmit={handleSearch}
 					className='hidden md:flex items-center flex-1 max-w-md mx-6'>
 					<div className='relative w-full'>
-						<Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground' />
+						<Search className='absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground' />
 						<input
 							type='text'
 							value={searchKeyword}
@@ -172,7 +172,7 @@ const Header = () => {
 											<div className='flex items-center gap-2 pl-2 pr-1 py-1 rounded-full hover:bg-secondary/80 transition-colors duration-200 cursor-pointer border border-transparent hover:border-border/50'>
 												<Avatar className='w-8 h-8 ring-2 ring-primary/20'>
 													<AvatarImage src={user.avatarUrl} />
-													<AvatarFallback className='bg-linear-to-br from-primary to-blue-600 text-white text-sm font-bold'>
+													<AvatarFallback className='bg-linear-to-br from-primary to-indigo-600 text-white text-sm font-bold'>
 														{user.fullName?.charAt(0).toUpperCase()}
 													</AvatarFallback>
 												</Avatar>
@@ -188,7 +188,7 @@ const Header = () => {
 													<div className='flex items-center gap-3'>
 														<Avatar className='w-12 h-12 ring-2 ring-background shadow-md'>
 															<AvatarImage src={user.avatarUrl} />
-															<AvatarFallback className='bg-linear-to-br from-primary to-blue-600 text-white font-bold text-lg'>
+															<AvatarFallback className='bg-linear-to-br from-primary to-indigo-600 text-white font-bold text-lg'>
 																{user.fullName?.charAt(0).toUpperCase()}
 															</AvatarFallback>
 														</Avatar>
@@ -475,7 +475,7 @@ const Header = () => {
 									<div className='flex items-center gap-3 px-2'>
 										<Avatar className='w-10 h-10 ring-2 ring-primary/20'>
 											<AvatarImage src={user.avatarUrl} />
-											<AvatarFallback className='bg-linear-to-br from-primary to-blue-600 text-white font-bold'>
+											<AvatarFallback className='bg-linear-to-br from-primary to-indigo-600 text-white font-bold'>
 												{user.fullName?.charAt(0).toUpperCase()}
 											</AvatarFallback>
 										</Avatar>

@@ -37,7 +37,7 @@ const ProfileContent = () => {
 		<div className='min-h-screen bg-secondary/35'>
 			<div className='max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8'>
 				{/* Tabs */}
-				<div className='bg-card rounded-xl shadow-sm mb-6 overflow-hidden border border-border/50'>
+				<div className='bg-card rounded-2xl shadow-sm mb-6 overflow-hidden border border-border/50'>
 					<div className='flex overflow-x-auto pb-0.5 md:pb-0 scrollbar-none border-b border-border/60 bg-card/50 flex-nowrap'>
 						{tabs.map((tab) => (
 							<button

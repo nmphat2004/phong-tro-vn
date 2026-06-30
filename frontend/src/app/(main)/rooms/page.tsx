@@ -299,17 +299,17 @@ const RoomsContent = () => {
 
 	// ─── Chip style helper ───────────────────────────────────
 	const chipClass = (active: boolean) =>
-		`px-3 py-1.5 text-sm rounded-full border transition-all duration-200 cursor-pointer ${
+		`px-3.5 py-1.5 text-sm rounded-xl border transition-all duration-200 cursor-pointer ${
 			active ?
-				'bg-primary text-primary-foreground border-primary'
-			:	'bg-background text-foreground border-border hover:bg-secondary'
+				'bg-primary text-primary-foreground border-primary shadow-xs'
+			:	'bg-background text-foreground border-border/80 hover:bg-secondary hover:text-foreground'
 		}`;
 
 	const filterBtnClass = (hasValue: boolean, isOpen: boolean) =>
-		`inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border text-sm font-medium transition-all cursor-pointer ${
+		`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all cursor-pointer ${
 			hasValue ?
-				'border-primary bg-primary/5 text-primary'
-			:	'border-border hover:bg-secondary'
+				'border-primary bg-primary/8 text-primary shadow-xs'
+			:	'border-border/80 hover:bg-secondary hover:text-foreground bg-background text-muted-foreground'
 		} ${isOpen ? 'ring-2 ring-primary/20' : ''}`;
 
 	// ─── Render ──────────────────────────────────────────────
@@ -319,9 +319,9 @@ const RoomsContent = () => {
 				{/* ── Filter Bar ────────────────────────────── */}
 				<div
 					ref={filterRef}
-					className='bg-card border border-border rounded-xl mb-6'>
+					className='bg-card border border-border/50 rounded-2xl mb-6 shadow-sm'>
 					{/* Filter buttons row */}
-					<div className='flex items-center gap-2 p-4 flex-wrap'>
+					<div className='flex items-center gap-2.5 p-4 flex-wrap'>
 						{/* Room Type */}
 						<button
 							onClick={() => toggleFilter('roomType')}
@@ -373,7 +373,7 @@ const RoomsContent = () => {
 							: selectedDistrict !== 'all' ?
 								selectedDistrict
 							:	'Quận/Huyện'}
-							<ChevronDown className='w-4 h-4' />
+							<ChevronDown className='w-4 h-4 text-muted-foreground' />
 						</button>
 
 						{/* Amenities */}
@@ -385,7 +385,7 @@ const RoomsContent = () => {
 							)}>
 							Đặc điểm nổi bật
 							{selectedAmenities.length > 0 && (
-								<span className='bg-primary text-white text-xs w-5 h-5 rounded-full flex items-center justify-center'>
+								<span className='bg-primary text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold'>
 									{selectedAmenities.length}
 								</span>
 							)}
@@ -398,36 +398,39 @@ const RoomsContent = () => {
 						{hasActiveFilters && (
 							<button
 								onClick={handleReset}
-								className='text-sm text-muted-foreground hover:text-destructive transition-colors cursor-pointer ml-1'>
+								className='text-sm text-muted-foreground hover:text-destructive font-semibold transition-colors cursor-pointer ml-2.5'>
 								Đặt lại bộ lọc
 							</button>
 						)}
 
 						{/* ── Right side: Sort + Layout ── */}
-						<div className='w-full md:w-auto md:ml-auto flex items-center justify-between md:justify-end gap-3 pt-3 md:pt-0 border-t border-border/30 md:border-t-0'>
-							<select
-								value={sortBy}
-								onChange={handleSortBy}
-								className='px-3 py-1.5 md:px-4 md:py-2 rounded-lg border border-border bg-background text-sm flex-1 md:flex-none'>
-								<option value='newest'>Mới nhất</option>
-								<option value='price_asc'>Giá: Thấp → Cao</option>
-								<option value='price_desc'>Giá: Cao → Thấp</option>
-								<option value='rating'>Đánh giá cao nhất</option>
-							</select>
+						<div className='w-full lg:w-auto lg:ml-auto flex items-center justify-between lg:justify-end gap-3 pt-4 lg:pt-0 border-t border-border/30 lg:border-t-0'>
+							<div className="relative flex-1 lg:flex-none">
+								<select
+									value={sortBy}
+									onChange={handleSortBy}
+									className='w-full px-3.5 py-2.5 pr-8 rounded-xl border border-border bg-background text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium'>
+									<option value='newest'>Mới nhất</option>
+									<option value='price_asc'>Giá: Thấp → Cao</option>
+									<option value='price_desc'>Giá: Cao → Thấp</option>
+									<option value='rating'>Đánh giá cao nhất</option>
+								</select>
+								<ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+							</div>
 
-							<div className='flex items-center gap-1 border border-border rounded-lg p-1 shrink-0 bg-background'>
+							<div className='flex items-center gap-1 border border-border/80 rounded-xl p-1 shrink-0 bg-background'>
 								<Button
 									variant='ghost'
 									size='sm'
 									onClick={() => setLayout('list')}
-									className={`p-2 rounded ${layout === 'list' ? 'bg-primary text-white' : 'text-muted-foreground'}`}>
+									className={`p-2 rounded-lg cursor-pointer ${layout === 'list' ? 'bg-primary text-white hover:bg-primary/90' : 'text-muted-foreground hover:bg-secondary'}`}>
 									<List className='w-4 h-4' />
 								</Button>
 								<Button
 									variant='ghost'
 									size='sm'
 									onClick={() => setLayout('grid')}
-									className={`p-2 rounded ${layout === 'grid' ? 'bg-primary text-white' : 'text-muted-foreground'}`}>
+									className={`p-2 rounded-lg cursor-pointer ${layout === 'grid' ? 'bg-primary text-white hover:bg-primary/90' : 'text-muted-foreground hover:bg-secondary'}`}>
 									<Grid className='w-4 h-4' />
 								</Button>
 							</div>

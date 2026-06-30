@@ -6,6 +6,7 @@ import { Skeleton } from '../ui/skeleton';
 import { ChevronRight, Sparkles, TrendingUp } from 'lucide-react';
 import RoomCard from './room-card';
 import Link from 'next/link';
+import { motion } from 'motion/react';
 
 const RoomRecommendations = () => {
 	const { user } = useAuthStore();
@@ -67,51 +68,70 @@ const RoomRecommendations = () => {
 
 	const isPersonalized = data.type === 'personalized';
 
-	return (
-		<section className='py-16 relative overflow-hidden'>
-			{/* Decorative background */}
-			<div className='absolute inset-0 bg-linear-to-br from-primary/3 via-transparent to-violet-500/3' />
-			<div className='absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2' />
-			<div className='absolute bottom-0 left-0 w-80 h-80 bg-violet-500/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2' />
+	const containerVariants = {
+		hidden: { opacity: 0 },
+		show: {
+			opacity: 1,
+			transition: {
+				staggerChildren: 0.08
+			}
+		}
+	};
 
-			<div className='max-w-7xl mx-auto px-4 relative z-10'>
+	const itemVariants = {
+		hidden: { opacity: 0, y: 16 },
+		show: { opacity: 1, y: 0, transition: { type: 'spring' as const, stiffness: 100, damping: 15 } }
+	};
+
+	return (
+		<section className='py-16 md:py-20 relative overflow-hidden bg-secondary/10 border-y border-border/40'>
+			{/* Subtle mesh background */}
+			<div className='absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,rgba(67,56,202,0.03),transparent_35%)] pointer-events-none' />
+
+			<div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10'>
 				{/* Section Header */}
 				<div className='flex items-center justify-between mb-8'>
-					<div className='flex items-center gap-3'>
+					<div className='flex items-center gap-3.5'>
 						<div
-							className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-md ${
+							className={`w-11 h-11 rounded-xl flex items-center justify-center shadow-xs border ${
 								isPersonalized ?
-									'bg-linear-to-br from-primary to-blue-600'
-								:	'bg-linear-to-br from-amber-500 to-orange-500'
+									'bg-primary/10 text-primary border-primary/15'
+								:	'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/15'
 							}`}>
 							{isPersonalized ?
-								<Sparkles className='w-5 h-5 text-white' />
-							:	<TrendingUp className='w-5 h-5 text-white' />}
+								<Sparkles className='w-5.5 h-5.5' />
+							:	<TrendingUp className='w-5.5 h-5.5' />}
 						</div>
-						<div>
-							<h2 className='text-2xl font-bold text-foreground'>
+						<div className='text-left'>
+							<h2 className='text-xl md:text-2xl font-extrabold text-foreground tracking-tight'>
 								{isPersonalized ? 'Gợi ý cho bạn' : 'Phòng nổi bật'}
 							</h2>
-							<p className='text-sm text-muted-foreground mt-0.5'>
+							<p className='text-xs sm:text-sm text-muted-foreground mt-0.5'>
 								{data.basedOn}
 							</p>
 						</div>
 					</div>
 					<Link
 						href='/rooms'
-						className='flex items-center gap-1 text-primary hover:bg-primary/10 px-4 py-2 rounded-lg font-medium transition-colors'>
+						className='flex items-center gap-1 text-xs sm:text-sm text-primary hover:bg-primary/8 px-3.5 py-2 rounded-xl font-bold transition-all'>
 						Xem tất cả <ChevronRight className='w-4 h-4' />
 					</Link>
 				</div>
 
-				{/* Room Grid */}
-				<div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6'>
+				{/* Room Grid with Motion Stagger */}
+				<motion.div
+					variants={containerVariants}
+					initial='hidden'
+					whileInView='show'
+					viewport={{ once: true, amount: 0.1 }}
+					className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6'
+				>
 					{data.rooms.slice(0, 4).map((room: any) => (
-						<div key={room.id} className='relative group'>
+						<motion.div key={room.id} variants={itemVariants} className='relative group h-full'>
 							{/* Match score badge */}
 							{room.matchScore && (
 								<div className='absolute top-3 left-3 z-10'>
-									<span className='inline-flex items-center gap-1 bg-linear-to-r from-primary to-blue-600 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-lg shadow-primary/25'>
+									<span className='inline-flex items-center gap-1 bg-linear-to-r from-primary to-indigo-600 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full shadow-lg shadow-primary/20'>
 										<Sparkles className='w-3 h-3' />
 										{room.matchScore}% phù hợp
 									</span>
@@ -120,16 +140,16 @@ const RoomRecommendations = () => {
 							<RoomCard room={room} />
 							{/* Match reason */}
 							{room.matchReason && (
-								<div className='mt-2 px-1'>
-									<p className='text-xs text-primary/80 font-medium line-clamp-1 flex items-center gap-1'>
-										<span className='inline-block w-1 h-1 rounded-full bg-primary/60 shrink-0' />
+								<div className='mt-2.5 px-1 text-left'>
+									<p className='text-xs text-primary font-medium line-clamp-1 flex items-center gap-1.5'>
+										<span className='inline-block w-1.5 h-1.5 rounded-full bg-primary shrink-0' />
 										{room.matchReason}
 									</p>
 								</div>
 							)}
-						</div>
+						</motion.div>
 					))}
-				</div>
+				</motion.div>
 			</div>
 		</section>
 	);
